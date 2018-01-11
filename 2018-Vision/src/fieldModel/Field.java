@@ -1,5 +1,6 @@
 package fieldModel;
 
+import java.awt.Point;
 import java.util.ArrayList;
 
 public class Field {
@@ -20,11 +21,8 @@ public class Field {
 		robots.add(new Robot());
 	}
 	
-	/*
-	 * @c
-	 */
 	/**
-	 * IDK if this is where we want to do the actual calculations, but we need to be able
+	 * idk if this is where we want to do the actual calculations, but we need to be able
 	 * to convert all the data taken into this method into absolute field coordinates to
 	 * use in the model.
 	 * 
@@ -34,6 +32,11 @@ public class Field {
 	 * @param textSize how big the bumper text is, in pixels
 	 */
 	public void addCube(int robotX, int robotY, int viewLocation, int textSize) {
-		addCube(15, 15);
+		addCube(robotX, robotY);
+	}
+	
+	public Cube getClosestCube(int probabilityThreshold, int targetX, int targetY) {
+		return cubes.get(0);
+		
 	}
 }
