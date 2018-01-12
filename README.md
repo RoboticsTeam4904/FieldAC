@@ -1,2 +1,2 @@
 # 2018-Vision
-abandon all hope ye who enter here
+abandon hope all ye who enter here
