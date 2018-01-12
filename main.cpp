@@ -1,8 +1,10 @@
 #import "field.cpp"
 #import "vision.cpp"
-main(){
+
+int main(){
+	Field f;
 	while(1){
-		vision::actuallyGetNewImage();
-		field::tick();
+		vision::captureImage();
+		f.tick();
 	}
 }

@@ -33,19 +33,19 @@ void step(Pose input[SAMPLES], float measuredForwardAccel, float measuredYawAcce
 		}
 	}
 
-int main(){
-	Pose data[SAMPLES];
-	for(int i=0; i<SAMPLES; i++){
+// int main(){
+// 	Pose data[SAMPLES];
+// 	for(int i=0; i<SAMPLES; i++){
 
-		data[i].seed();
-		cout<<data[i].forwardRate<<" ";
-	}
-	for(int i=0; i<1000; i++){
-	step(data,0,0,"");
-}
-cout<<"kys\n\n\nkys\n";
-	for(int i=0; i<SAMPLES; i++){
-		cout<<data[i].forwardRate<<" ";
-	}
+// 		data[i].seed();
+// 		cout<<data[i].forwardRate<<" ";
+// 	}
+// 	for(int i=0; i<1000; i++){
+// 	step(data,0,0,"");
+// }
+// cout<<"kys\n\n\nkys\n";
+	// for(int i=0; i<SAMPLES; i++){
+	// 	cout<<data[i].forwardRate<<" ";
+	// }
 
-}
+// }
