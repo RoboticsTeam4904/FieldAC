@@ -1,0 +1,13 @@
+compiler:
+
+before_install:
+    - sudo apt-get update
+    - sudo apt-get install -y libopencv-dev python-opencv python-numpy python-flask libdc1394-22-dev libdc1394-22 libdc1394-utils
+    - sudo ln /dev/null /dev/raw1394
+
+notifications:
+    email: none
+
+script:
+    - python server.py test
+
