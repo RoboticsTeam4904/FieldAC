@@ -7,13 +7,13 @@
 
 using namespace std;
 
-int main(){
+int main() {
 	Field f;
 	Mat frame;
 	printf("Shared memory address: %p\n", (void *)&frame);
-	std::thread cameraCapture(std::bind(vision::captureImages, &frame));
-	vision::displayImage(&frame);
-	// while(1) {
-	// 	f.tick();
-	// }
+	thread cameraCapture(bind(vision::captureImages, &frame));
+	while (1) {
+		f.tick(frame);
+	}
+	// vision::displayImage(&frame);
 }
