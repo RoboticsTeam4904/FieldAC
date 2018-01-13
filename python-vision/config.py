@@ -2,10 +2,10 @@ import cv2
 import numpy as np
 # Logging/debug settings
 # --------------
-debug = False
-extra_debug = False #step through each contour in the webcam by turning on extra_debug
-save = True
-display = False
+debug = True
+extra_debug = True #step through each contour in the webcam by turning on extra_debug
+save = False
+display = True
 
 # Camera settings
 # --------------

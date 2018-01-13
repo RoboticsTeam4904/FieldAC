@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import sys
+import os
 
 imageNum, gripImageNum = 0, 0
 colors = [(255,255,255), (255,255,0), (50,50,255)]
@@ -10,7 +11,7 @@ defaultThickness = 5
 imageName = "img"
 gripImageName = "contours"
 dataName = "data"
-allData = np.array()
+allData = np.array([])
 
 def findMatchNum():
 	i = 1
@@ -19,20 +20,20 @@ def findMatchNum():
 	return i
 
 folder = "match" + str(findMatchNum())
-os.makedirs(folder)
+#os.makedirs(folder)
 
 def printResults(contours=False, distance=False, angleToGoal=False, isVisible=True, center=False):
 	if not isVisible:
 		print "CANNOT SEE GOAL"
-	if contours:
-		print "{} contours".format(len(contours))
-	if distance:
-		print "{} feet away".format(distance)
+	# if contours:
+	# 	print "{} contours".format(len(contours))
+	# if distance:
+	# 	print "{} feet away".format(distance)
 	if angleToGoal:
 		print "{} degrees off".format(angleToGoal)
-	if center:
-		print "spike x position is {}".format(center[0])
-		print "spike y position is {}".format(center[1])
+	# if center:
+	# 	print "spike x position is {}".format(center[0])
+	# 	print "spike y position is {}".format(center[1])
 
 
 def drawImage(image, contours, targets, center=False):

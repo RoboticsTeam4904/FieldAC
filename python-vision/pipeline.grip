@@ -1,30 +1,27 @@
 <grip:Pipeline>
   <sources>
     <grip:Camera>
-      <property name="address" value="http://10.49.4.80:8080/stream/video.mjpeg"/>
+      <property name="deviceNumber" value="1"/>
     </grip:Camera>
-    <grip:ImageFile>
-      <property name="path" value="/Users/oshlern/Documents/TX1/2017-Vision/TestImages/match4/img1.jpg"/>
-    </grip:ImageFile>
   </sources>
   <steps>
     <grip:Step name="HSV Threshold">
       <grip:Input step="0" socket="0"/>
       <grip:Input step="0" socket="1">
         <value>
-          <double>37.28813559322034</double>
-          <double>110.74282673753538</double>
+          <double>9.712230215827338</double>
+          <double>45.534804753820026</double>
         </value>
       </grip:Input>
       <grip:Input step="0" socket="2">
         <value>
-          <double>122.45762711864406</double>
-          <double>255.0</double>
+          <double>142.17625899280574</double>
+          <double>218.20033955857386</double>
         </value>
       </grip:Input>
       <grip:Input step="0" socket="3">
         <value>
-          <double>187.28813559322032</double>
+          <double>123.83093525179855</double>
           <double>255.0</double>
         </value>
       </grip:Input>
@@ -35,7 +32,7 @@
       <grip:Input step="1" socket="1"/>
       <grip:Input step="1" socket="2"/>
       <grip:Input step="1" socket="3">
-        <value>1.0</value>
+        <value>4.0</value>
       </grip:Input>
       <grip:Input step="1" socket="4">
         <value>BORDER_CONSTANT</value>
@@ -53,7 +50,7 @@
     <grip:Step name="Filter Contours">
       <grip:Input step="3" socket="0"/>
       <grip:Input step="3" socket="1">
-        <value>1000.0</value>
+        <value>5000.0</value>
       </grip:Input>
       <grip:Input step="3" socket="2">
         <value>0.0</value>
@@ -117,14 +114,6 @@
   </steps>
   <connections>
     <grip:Connection>
-      <grip:Output step="2" socket="0" previewed="true"/>
-      <grip:Input step="3" socket="0"/>
-    </grip:Connection>
-    <grip:Connection>
-      <grip:Output step="0" socket="0" previewed="true"/>
-      <grip:Input step="1" socket="0"/>
-    </grip:Connection>
-    <grip:Connection>
       <grip:Output step="1" socket="0" previewed="true"/>
       <grip:Input step="2" socket="0"/>
     </grip:Connection>
@@ -133,7 +122,15 @@
       <grip:Input step="4" socket="0"/>
     </grip:Connection>
     <grip:Connection>
-      <grip:Output source="1" socket="0" previewed="true"/>
+      <grip:Output step="2" socket="0" previewed="true"/>
+      <grip:Input step="3" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="0" socket="0" previewed="true"/>
+      <grip:Input step="1" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output source="0" socket="0" previewed="true"/>
       <grip:Input step="0" socket="0"/>
     </grip:Connection>
   </connections>
@@ -150,7 +147,7 @@
     <language>C++</language>
     <className>GripVisionPipeline</className>
     <implementWpilibPipeline>false</implementWpilibPipeline>
-    <saveDir>/Users/oshlern/GRIP</saveDir>
+    <saveDir>/Users/niksure/GRIP</saveDir>
     <packageName></packageName>
     <moduleName>grip</moduleName>
   </codeGenerationSettings>

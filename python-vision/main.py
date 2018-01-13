@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from ContourFinding import filterContours, filterContoursFancy
 from SpikeFinding import findCenter
-import config, WebCam, GripRunner, autocalibrate, NetworkTabling, Printing
+import config, WebCam, GripRunner, autocalibrate, Printing
 def main():
 	lastAngle = 0
 	# WebCam.set(exposure=config.exposure, resolution=config.resolution, contrast=config.contrast, gain=config.gain)
