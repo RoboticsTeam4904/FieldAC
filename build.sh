@@ -1,1 +1,1 @@
-g++ $(pkg-config --cflags --libs opencv) main.cpp -o Vision
+g++ $(pkg-config --cflags --libs opencv) main.cpp -o Field
