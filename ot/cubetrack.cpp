@@ -2,12 +2,12 @@
 
 namespace ot { // ot stands for Object Tracking I think?
 	namespace cube {
-		void findCubes(Mat frame) {
+		void findCubes() {
 			// do stuff
 		}
 	};
 
-	void tick(Mat frame) {
-		cube::findCubes(frame);
+	void tick() {
+		cube::findCubes();
 	}
 }

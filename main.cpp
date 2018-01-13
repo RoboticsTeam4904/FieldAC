@@ -9,11 +9,10 @@ using namespace std;
 
 int main() {
 	Field f;
-	Mat frame;
-	printf("Shared memory address: %p\n", (void *)&frame);
-	thread cameraCapture(bind(vision::captureImages, &frame));
+	printf("Shared memory address: %p\n", (void *)&vision::frame);
+	thread cameraCapture(vision::captureImages);
 	while (1) {
-		f.tick(frame);
+		f.tick();
 	}
 	// vision::displayImage(&frame);
 }

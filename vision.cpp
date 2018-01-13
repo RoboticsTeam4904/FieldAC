@@ -6,22 +6,18 @@ using namespace std;
 using namespace cv;
 
 namespace vision {
-	void captureImage(Mat* frame) {
-		VideoCapture capture;
-	    capture.open( 0 );
-	    if (!capture.isOpened()) { printf("--(!)Error opening video capture\n"); return; }
-		capture.read(*frame);
-    	if(frame->empty()) {
-            printf(" --(!) No captured frame -- Break!");
-            return;
-        }
-    }
-    void captureImages(Mat* frame) {
+	Mat frame;
+	mutex frameMutex;
+
+    void captureImages() {
     	VideoCapture capture;
 	    capture.open( 0 );
 	    if (!capture.isOpened()) { printf("--(!)Error opening video capture\n"); return; }
-	    while (capture.read(*frame)) {
-	    	if(frame->empty()) {
+	    while (true) {
+	    	frameMutex.lock();
+	    	capture.read(frame);
+	    	frameMutex.unlock();
+	    	if(frame.empty()) {
 	            printf(" --(!) No captured frame -- Break!");
 	            return;
 	        }
@@ -36,5 +32,8 @@ namespace vision {
 			imshow("Image from camera", *frame);
 			if( waitKey(10) == 27 ) { return; }
 		}
+    }
+    Mat* getFrame() {
+    	return &vision::frame;
     }
 }
