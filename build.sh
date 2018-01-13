@@ -1,1 +1,1 @@
-g++ $(pkg-config --cflags --libs opencv) main.cpp -o Field
+g++ $(pkg-config --cflags --libs opencv) -std=c++11 main.cpp -o bin/Field
