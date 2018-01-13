@@ -1,6 +1,6 @@
-#import "rl/mcl.cpp"
+#import "botlocale/mcl.cpp"
 #import "objects.cpp"
-#import "ot/cubetrack.cpp"
+#import "objecttracking/cubetrack.cpp"
 
 class Field {
 public:
