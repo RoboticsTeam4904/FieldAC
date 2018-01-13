@@ -29,7 +29,7 @@ def filterContours(contours): # Find 2 largest contours.
 				else:
 					second_largest_contour = contours[i]
 					second_largest_area = temp_area
-		return largest_contour, second_largest_contour
+		return [largest_contour]#, second_largest_contour
 	else:
 		return contours
 
