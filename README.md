@@ -1,16 +1,18 @@
-# 2018-Vision
-Messing around with OpenCV and C++
+# 2018-Field
+Building a realtime model of the field and all its components.
 
-## Building instructions
+## Installation (macOS)
+
 ```bash
+brew install 
 brew install opencv
 brew install pkg-config
-pkg-config --list-all | grep opencv		# Make sure this says somethning
-pkg-config --cflags --libs opencv 		# Make sure the first directory looks like "-I/usr/local/Cellar/opencv/3.4.0/include/opencv"
+brew install cmake
+mkdir build && cd build
+cmake ../
 make
 ```
 
-The binary will be in `bin/`
 
 ## Project Structure
 
