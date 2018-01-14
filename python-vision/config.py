@@ -4,7 +4,7 @@ import numpy as np
 # --------------
 debug = True
 extra_debug = True #step through each contour in the webcam by turning on extra_debug
-save = False
+save = True
 display = True
 
 # Camera settings
@@ -15,7 +15,7 @@ contrast = 50
 displacement = (4.25 + 5)/12.0 # Vertical feet from camera to bottom of vision target + Height of target in feet
 cameraTilt = 0
 width = 8.25/12 #from centers. targets are 2x5 inches and 6.25 inches apart
-resolution = (640, 480)
+resolution = (1280, 720)
 nativeAngle  = (np.radians(64), np.radians(48)) #experimentally determined 10 pxl per deg at 640x480, going down by a v smol amount at the edge of the frame
 degPerPxl = np.divide(nativeAngle, resolution)
 
