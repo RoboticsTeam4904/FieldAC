@@ -1,6 +1,6 @@
 # Build Files
 bin/
-build/
+build/*
 
 *.o
 *.d
