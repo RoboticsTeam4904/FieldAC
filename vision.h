@@ -4,8 +4,8 @@
 #include <opencv2/core.hpp>
 
 namespace Vision {
-    cv::Mat frame;
-    std::mutex frameMutex;
+    extern cv::Mat frame;
+    extern std::mutex frameMutex;
 
     void captureImages();
     void displayImage(cv::Mat* frame);

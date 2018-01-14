@@ -24,6 +24,8 @@ void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, cons
 	}
 }
 
+void BotLocale::tick() {}
+
 // int main(){
 // 	Pose data[SAMPLES];
 // 	for(int i=0; i<SAMPLES; i++){

@@ -2,6 +2,9 @@
 
 #include <opencv2/highgui.hpp>
 
+cv::Mat Vision::frame;
+std::mutex Vision::frameMutex;
+
 void Vision::captureImages() {
 	cv::VideoCapture capture;
 	capture.open(0);
