@@ -2,7 +2,7 @@
 #define CUBETRACK_H
 
 #include <vector>
-#include "../objects.h"
+#include "../objects.hpp"
 
 namespace ObjectTracking {
     class Cube {
