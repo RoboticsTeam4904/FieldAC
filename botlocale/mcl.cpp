@@ -1,5 +1,4 @@
-#include "mcl.h"
-#include<math.h>
+#include "mcl.hpp"
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 

@@ -1,7 +1,7 @@
 #ifndef MCL_H
 #define MCL_H
 
-#include "../objects.h"
+#include "../objects.hpp"
 
 #ifndef SAMPLES
 #define SAMPLES 1000

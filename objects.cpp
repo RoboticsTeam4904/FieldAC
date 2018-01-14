@@ -1,9 +1,9 @@
-#include "objects.h"
+#include "objects.hpp"
 #include <math.h>
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
-Pose::Pose() {}
+Pose::Pose() = default;
 
 Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelYaw) {
     x = prev.x + cos(prev.yaw) * prev.rateForward + RAND*0.001-0.0005;

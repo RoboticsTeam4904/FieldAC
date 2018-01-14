@@ -4,6 +4,12 @@ build/
 
 *.o
 *.d
+*.cbp
+
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
 
 # CLion
 cmake-build-debug
