@@ -1,39 +1,38 @@
-#include <opencv2/core.hpp>
+#include "vision.h"
+
 #include <opencv2/highgui.hpp>
-#include <stdio.h>
 
-using namespace std;
-using namespace cv;
-
-namespace vision {
-	Mat frame;
-	mutex frameMutex;
-
-    void captureImages() {
-    	VideoCapture capture;
-	    capture.open( 0 );
-	    if (!capture.isOpened()) { printf("--(!)Error opening video capture\n"); return; }
-	    while (true) {
-	    	frameMutex.lock();
-	    	capture.read(frame);
-	    	frameMutex.unlock();
-	    	if(frame.empty()) {
-	            printf(" --(!) No captured frame -- Break!");
-	            return;
-	        }
-	    }
-    }
-    void displayImage(Mat* frame) {
-    	while (1) {
-    		if(frame->empty()) {
-	            printf(" --(!) No captured frame -- Break!");
-	            continue;
-	        }
-			imshow("Image from camera", *frame);
-			if( waitKey(10) == 27 ) { return; }
+void Vision::captureImages() {
+	cv::VideoCapture capture;
+	capture.open(0);
+	if (!capture.isOpened()) {
+		std::printf("--(!)Error opening video capture\n");
+		return;
+	}
+	while (true) {
+		frameMutex.lock();
+		capture.read(frame);
+		frameMutex.unlock();
+		if(frame.empty()) {
+			std::printf(" --(!) No captured frame -- Break!");
+			return;
 		}
-    }
-    Mat* getFrame() {
-    	return &vision::frame;
-    }
+	}
+}
+
+void Vision::displayImage(cv::Mat* frame) {
+	while (true) {
+		if(frame->empty()) {
+			std::printf(" --(!) No captured frame -- Break!");
+			continue;
+		}
+		cv::imshow("Image from camera", *frame);
+		if (cv::waitKey(10) == 27 ) {
+			return;
+		}
+	}
+}
+
+cv::Mat* Vision::getFrame() {
+	return &frame;
 }

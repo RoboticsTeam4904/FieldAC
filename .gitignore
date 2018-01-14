@@ -1,4 +1,10 @@
+# Build Files
+bin/
+build/
+
+*.o
+*.d
+
+# CLion
 cmake-build-debug
-bin/* 
-# built binary
 .idea/

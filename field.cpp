@@ -1,17 +1,14 @@
-#import "botlocale/mcl.cpp"
-#import "objects.cpp"
-#import "objecttracking/cubetrack.cpp"
+#include "field.h"
+#include "botlocale/mcl.h"
+#include "objecttracking/cubetrack.h"
+#include "vision.h"
+#include "bottracking/bottrack.h"
 
-class Field {
-public:
-	void tick() {
-		ot::tick();
-		Mat* lol = vision::getFrame();
-		printf("Got frame");
-		printf("%d\n", std::chrono::system_clock::now());
-	// currentBestPose= MCL:Tick();
-
-	// robottrack::tick(currentBestPose);
-	// cubetrack::tick(currentBestPose);
+void Field::tick() {
+	ObjectTracking::tick();
+    cv::Mat* lol = Vision::getFrame();
+    std::printf("Got frame");
+    std::printf("%d\n", std::chrono::system_clock::now());
+    BotLocale::tick();
+    BotTracking::tick();
 }
-};

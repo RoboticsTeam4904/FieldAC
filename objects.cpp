@@ -1,45 +1,31 @@
-#include<stdio.h>
-#include<math.h>
-#include<string>
-#include <iostream>
-#include <cstdlib>
+#include "objects.h"
+#include <math.h>
+
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
-#define SAMPLES 1000
+Pose::Pose() {}
 
-using namespace std;
+Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelYaw) {
+    x = prev.x + cos(prev.yaw) * prev.rateForward + RAND*0.001-0.0005;
+    y = prev.y + cos(prev.yaw) * prev.rateForward + RAND*0.001-0.0005;
 
+    rateForward = prev.rateForward + measuredAccelForward + RAND*0.001-0.0005;
 
-struct Pose{
-	Pose(){
+    yaw = prev.yaw + prev.rateYaw;
+    rateYaw = prev.rateYaw + measuredAccelYaw;
+}
 
-	}
-	 Pose(Pose prev, float measuredForwardAccel, float measuredYawAccel){
-		x=prev.x + cos(prev.yaw) * prev.forwardRate + RAND*0.001-0.0005;
-		y=prev.y + sin(prev.yaw) * prev.forwardRate + RAND*0.001-0.0005;
+void Pose::seed() {
+    x=RAND;
+    y=RAND;
+    rateForward=RAND;
+    rateYaw = 0;
+    yaw = 0;
+}
 
-		forwardRate = prev.forwardRate + measuredForwardAccel + RAND*0.001-0.0005;
-
-		yaw = prev.yaw + prev.yawRate ;
-		yawRate = prev.yawRate + measuredYawAccel ;
-	}
-	void seed(){
-		x=RAND;
-		y=RAND;
-		yaw=0;
-		forwardRate=RAND;
-		yawRate=0;
-	}
-	float x;
-	float y;
-	float yaw;
-	float forwardRate;
-	float yawRate;
-	float plausibility(string sensorData){
-		if(x<-10 || x>10 || y<-10 || y>10){
-			//cout<<"aoeu\n";
-			return 0.1;
-		}
-		return 1;
-	}
-};
+float Pose::plausibility(const std::string sensorData) {
+    if(x<-10 || x>10 || y<-10 || y>10) {
+        return 0.1;
+    }
+    return 1;
+}
