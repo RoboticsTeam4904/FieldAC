@@ -17,7 +17,21 @@ void Field::tick() {
 
     char currentTime[84] = "";
     sprintf(currentTime, "%s:%d", buffer, milli);
-//    printf("current time: %s \n", currentTime);
     BotLocale::tick();
     BotTracking::tick();
+}
+
+/**
+ * Singleton pattern for the field.
+ * We hide the constructor so you can't instantiate a field outside the context
+ * of the field, and then only create a Field upon the very first time `Field::getInstance` is called.
+ */
+Field::Field() = default;
+
+Field* Field::instance = nullptr;
+Field* Field::getInstance() {
+    if(!instance) {
+        instance = new Field();
+    }
+    return instance;
 }

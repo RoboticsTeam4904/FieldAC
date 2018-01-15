@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 project(2018_field)
 
 set(CMAKE_CXX_STANDARD 11)
+
 find_package( OpenCV REQUIRED )
 
 file(GLOB BOT_LCL_SRC botlocale/*.cpp)
