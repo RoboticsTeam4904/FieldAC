@@ -3,6 +3,7 @@
 
 class Field {
 public:
+    void init();
     void tick();
 };
 

@@ -8,8 +8,7 @@
 
 void Field::tick() {
 	ObjectTracking::tick();
-    cv::Mat* lol = Vision::getFrame();
-    std::printf("Got frame");
+//    std::printf("Got frame");
     timeval curTime;
     gettimeofday(&curTime, nullptr);
     int milli = curTime.tv_usec / 1000;
@@ -19,7 +18,7 @@ void Field::tick() {
 
     char currentTime[84] = "";
     sprintf(currentTime, "%s:%d", buffer, milli);
-    printf("current time: %s \n", currentTime);
+//    printf("current time: %s \n", currentTime);
     BotLocale::tick();
     BotTracking::tick();
 }

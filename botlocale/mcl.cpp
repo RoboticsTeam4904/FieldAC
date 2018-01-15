@@ -12,7 +12,7 @@ void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, cons
 		weightsSum+=weights[i];
 	}
 	for(int i=0; i<SAMPLES; i++){
-		float weight=(float)(weightsSum * RAND);
+		float weight= weightsSum * RAND;
 		for(int j=0; j<SAMPLES; j++){
 			weight-=weights[j];
 			if(weight<0){
@@ -23,21 +23,6 @@ void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, cons
 	}
 }
 
-void BotLocale::tick() {}
+void BotLocale::tick() {
 
-// int main(){
-// 	Pose data[SAMPLES];
-// 	for(int i=0; i<SAMPLES; i++){
-
-// 		data[i].seed();
-// 		cout<<data[i].forwardRate<<" ";
-// 	}
-// 	for(int i=0; i<1000; i++){
-// 	step(data,0,0,"");
-// }
-// cout<<"kys\n\n\nkys\n";
-	// for(int i=0; i<SAMPLES; i++){
-	// 	cout<<data[i].forwardRate<<" ";
-	// }
-
-// }
+}
