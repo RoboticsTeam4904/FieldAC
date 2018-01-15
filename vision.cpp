@@ -1,5 +1,6 @@
 #include "vision.hpp"
-
+//#include "darknet/arapaho.hpp"
+#include "darknet/image.h"
 #include <opencv2/highgui.hpp>
 
 cv::Mat Vision::frame;
