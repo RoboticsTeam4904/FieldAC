@@ -11,7 +11,7 @@ namespace Vision {
 
     void init();
     void captureImages();
-    bool displayImage();
+    bool displayImage(cv::Mat* frame, const std::string window);
 
     cv::Mat* getFrame();
 }

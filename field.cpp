@@ -8,7 +8,6 @@
 
 void Field::tick() {
 	ObjectTracking::tick();
-//    std::printf("Got frame");
     timeval curTime;
     gettimeofday(&curTime, nullptr);
     int milli = curTime.tv_usec / 1000;

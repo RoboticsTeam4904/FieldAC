@@ -1,6 +1,7 @@
 # Build Files
 bin/
 build/*
+build-debug/
 
 *.o
 *.d

@@ -12,8 +12,6 @@ void Vision::init() {
         std::printf("--(!) Error opening video capture\n");
         return;
     }
-
-    cv::namedWindow("OpenCV Camera", cv::WINDOW_AUTOSIZE);
 }
 
 void Vision::captureImages() {
@@ -22,19 +20,17 @@ void Vision::captureImages() {
 		devCapture.read(frame);
 		frameMutex.unlock();
 		if(frame.empty()) {
-			std::printf(" --(!) No captured frame -- Break!");
 			return;
 		}
 	}
 }
 
-bool Vision::displayImage() {
-    cv::Mat* frame = getFrame();
+bool Vision::displayImage(cv::Mat* frame, const std::string window) {
+    cv::namedWindow(window, cv::WINDOW_AUTOSIZE);
     if(frame->empty()) {
-//        std::printf(" --(!) No captured frame -- Break!");
         return false;
     }
-    cv::imshow("OpenCV Camera", *frame);
+    cv::imshow(window, *frame);
     return (cv::waitKey(10) == 27 );
 }
 
