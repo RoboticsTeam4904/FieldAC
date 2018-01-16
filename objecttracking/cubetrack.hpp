@@ -3,6 +3,8 @@
 
 #include <vector>
 #include "../objects.hpp"
+#include <opencv2/dnn.hpp>
+#include <opencv2/dnn/shape_utils.hpp>
 
 namespace ObjectTracking {
     void tick();
