@@ -27,10 +27,9 @@ static const char* params =
                 "{ style          | box   | box or line style draw }"
                 "{ min_confidence | 0.24  | min confidence      }"
                 "{ class_names    |       | File with class names, [PATH-TO-DARKNET]/data/coco.names }";
-int main(int argc, const char *argv)  {
-    CommandLineParser parser(argc, reinterpret_cast<const char *const *>(argv), params);
-    if (parser.get<bool>("help"))
-    {
+int main(int argc, const char **argv)  {
+    CommandLineParser parser(argc, argv, params);
+    if (parser.get<bool>("help")) {
         cout << about << endl;
         parser.printMessage();
         return 0;
