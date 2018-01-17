@@ -6,10 +6,10 @@
 Pose::Pose() = default;
 
 Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelYaw) {
-    x = prev.x + cos(prev.yaw) * prev.rateForward + RAND*0.001-0.0005;
-    y = prev.y + cos(prev.yaw) * prev.rateForward + RAND*0.001-0.0005;
+    x = static_cast<float>(prev.x + cos(prev.yaw) * prev.rateForward + RAND * 0.001 - 0.0005);
+    y = static_cast<float>(prev.y + cos(prev.yaw) * prev.rateForward + RAND * 0.001 - 0.0005);
 
-    rateForward = prev.rateForward + measuredAccelForward + RAND*0.001-0.0005;
+    rateForward = static_cast<float>(prev.rateForward + measuredAccelForward + RAND * 0.001 - 0.0005);
 
     yaw = prev.yaw + prev.rateYaw;
     rateYaw = prev.rateYaw + measuredAccelYaw;

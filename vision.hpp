@@ -5,15 +5,32 @@
 #include <opencv2/videoio.hpp>
 
 namespace Vision {
-    extern cv::Mat frame;
-    extern std::mutex frameMutex;
-    extern cv::VideoCapture devCapture;
+    class Camera {
+    public:
+        explicit Camera(int devCapture);
+        explicit Camera(cv::String srcCapture);
 
-    void init();
-    void captureImages();
-    bool displayImage(cv::Mat* frame, const std::string window);
+        cv::Mat frame;
+        mutable std::mutex frameMutex;
+        cv::VideoCapture devCapture;
 
-    cv::Mat* getFrame();
+        void captureImages();
+        bool displayImage(cv::Mat* frame, const std::string window);
+        cv::Mat* getFrame();
+
+        double getCapProp(int propId);
+
+        Camera& operator=(const Camera& origin) {
+            if (this != &origin) {
+                std::lock(frameMutex, origin.frameMutex);
+                std::lock_guard<std::mutex> lhs_lk(frameMutex, std::adopt_lock);
+                std::lock_guard<std::mutex> rhs_lk(origin.frameMutex, std::adopt_lock);
+                frame = origin.frame;
+                devCapture = origin.devCapture;
+            }
+            return *this;
+        }
+    };
 }
 
 #endif

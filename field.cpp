@@ -7,7 +7,7 @@
 #include <sys/time.h>
 
 void Field::tick() {
-	ObjectTracking::tick();
+//	ObjectTracking::tick();
     timeval curTime;
     gettimeofday(&curTime, nullptr);
     int milli = curTime.tv_usec / 1000;

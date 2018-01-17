@@ -2,38 +2,49 @@
 
 #include <opencv2/highgui.hpp>
 
-cv::Mat Vision::frame;
-std::mutex Vision::frameMutex;
-cv::VideoCapture Vision::devCapture = cv::VideoCapture();
-
-void Vision::init() {
-    devCapture.open(0);
-    if (!devCapture.isOpened()) {
-        std::printf("--(!) Error opening video capture\n");
-        return;
+namespace Vision {
+    Camera::Camera(cv::String srcCapture) {
+        this->devCapture = cv::VideoCapture();
+        this->devCapture.open(srcCapture);
+        if(!this->devCapture.isOpened()) {
+            std::printf("--(!) Error opening source file\n");
+            return;
+        }
     }
-}
-
-void Vision::captureImages() {
-    while (true) {
-		frameMutex.lock();
-		devCapture.read(frame);
-		frameMutex.unlock();
-		if(frame.empty()) {
-			return;
-		}
-	}
-}
-
-bool Vision::displayImage(cv::Mat* frame, const std::string window) {
-    cv::namedWindow(window, cv::WINDOW_AUTOSIZE);
-    if(frame->empty()) {
-        return false;
+    Camera::Camera(int devCapture) {
+        this->devCapture = cv::VideoCapture();
+        this->devCapture.open(devCapture);
+        if(!this->devCapture.isOpened()) {
+            std::printf("--(!) Error opening video capture\n");
+            return;
+        }
     }
-    cv::imshow(window, *frame);
-    return (cv::waitKey(10) == 27 );
-}
 
-cv::Mat* Vision::getFrame() {
-	return &frame;
+    void Camera::captureImages() {
+        while (true) {
+            frameMutex.lock();
+            devCapture.read(frame);
+            frameMutex.unlock();
+            if(frame.empty()) {
+                return;
+            }
+        }
+    }
+
+    bool Camera::displayImage(cv::Mat* frame, const std::string window) {
+        cv::namedWindow(window, cv::WINDOW_AUTOSIZE);
+        if(frame->empty()) {
+            return false;
+        }
+        cv::imshow(window, *frame);
+        return (cv::waitKey(10) == 27 );
+    }
+
+    cv::Mat* Camera::getFrame() {
+        return &frame;
+    }
+
+    double Camera::getCapProp(int propId) {
+        return devCapture.get(propId);
+    }
 }
