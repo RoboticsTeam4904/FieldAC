@@ -43,15 +43,8 @@ int main(int argc, const char **argv) {
                                                   defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
     std::printf("Beginning cube tracking...\n");
-
     std::thread cubeTrackerRun(&ObjectTracking::CubeTracker::run, cubeTracker, std::bind(&Vision::Camera::getFrame, defaultDev));
-//    cubeTracker.run(defaultDev->getFrame());
-//    defaultDev->captureImages();
     while(true) {
-//        if(cv::waitKey(10) == 27) {
-//            return -1;
-//        }
-
         if(defaultDev->displayImage(cubeTracker->getFrame(), "test display"))
             return -1;
     }

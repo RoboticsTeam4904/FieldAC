@@ -20,6 +20,12 @@ namespace Vision {
 
         double getCapProp(int propId);
 
+        /**
+         * Overloading the `=` operator.
+         * We ensure that the copying of members happens in a locked state for
+         * for both sides of the assignment, and more importantly that the locking
+         * is safely released after the assignment is completed. .
+         */
         Camera& operator=(const Camera& origin) {
             if (this != &origin) {
                 std::lock(frameMutex, origin.frameMutex);

@@ -35,7 +35,6 @@ namespace ObjectTracking {
     }
 
     void CubeTracker::run(std::function<cv::Mat ()> frameFunc) {
-        std::printf("Cube tracking is running\n");
         while(true) {
             cv::Mat frame = frameFunc();
             if(frame.empty()) {
@@ -43,8 +42,6 @@ namespace ObjectTracking {
                 break;
             }
             if(frame.cols == 0) {
-                std::printf("Image is not doing well\n");
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 continue;
             }
             if (frame.channels() == 4) {
@@ -73,8 +70,6 @@ namespace ObjectTracking {
 
                 std::size_t objectClass = std::max_element(probArrayPtr, probArrayPtr + probabilitySize) - probArrayPtr;
                 float confidence = detectionMat.at<float>(i, (int)objectClass + probabilityIndex);
-//                std::printf("Confidence: %.2f\n", confidence);
-
                 if(confidence > confidenceThreshold) {
                     float xCenter = detectionMat.at<float>(i, 0) * frame.cols;
                     float yCenter = detectionMat.at<float>(i, 1) * frame.rows;
