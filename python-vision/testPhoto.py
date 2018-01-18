@@ -1,7 +1,6 @@
 import WebCam, Printing, GripRunner, ContourFinding, SpikeFinding, autocalibrate
 n = 0
 def d():
-	print image.shape
 	while True:
 		o()
 
@@ -10,9 +9,6 @@ def s():
 	image = WebCam.getImage()
 	Printing.save(image, name="TEST" + str(n))
 	n += 1
-
-def e(exposure):
-	WebCam.set(exposure=exposure)
 
 def o():
 	image = WebCam.getImage()
@@ -23,6 +19,28 @@ def o():
 	# Printing.drawImage(image, contours, targets)
 	Printing.display(image)
 
+def dc():
+	while True:
+		oc()
+
+def oc():
+	image = WebCam.getImage()
+	contours = GripRunner.run(image)
+	Printing.drawContours(image, contours)
+	Printing.display(image)
+
+def sc():
+	image = WebCam.getImage()
+	contours = GripRunner.run(image)=
+	Printing.drawContours(image, contours)
+	global n
+	Printing.save(image, name="TEST" + str(n), contours=contours)
+	n += 1
+
 def a():
 	autocalibrate.calibrate()
 	print WebCam.getExposure()
+
+
+def e(exposure):
+	WebCam.set(exposure=exposure)

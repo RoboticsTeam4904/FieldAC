@@ -12,15 +12,16 @@ imageName = "img"
 gripImageName = "contours"
 dataName = "data"
 allData = np.array([])
+saveFolder = "TestImages"
 
 def findMatchNum():
 	i = 1
-	while os.path.exists("TestImages/" + "match" + str(i)):
+	while os.path.exists(saveFolder + "/" + "match" + str(i)):
 		i += 1
 	return i
 
 folder = "match" + str(findMatchNum())
-#os.makedirs(folder)
+os.makedirs(folder)
 
 def printResults(contours=False, distance=False, angleToGoal=False, isVisible=True, center=False):
 	if not isVisible:
@@ -61,9 +62,9 @@ def drawCenter(image, center, size=defaultThickness, color=0):
 		color = colors[color]
 	cv2.circle(image, center, size, color, size)
 
-def save(image, name=None, withGrip=False, withFolder=True):
+def save(image, name=None, withGrip=False, contours=None, withFolder=False):
 	if name != None:
-		cv2.imwrite("TestImages/" + name + ".jpg", image)
+		cv2.imwrite(saveFolder + "/" + name + ".jpg", image)
 		return
 	if withGrip:
 		global gripImageNum
@@ -73,14 +74,23 @@ def save(image, name=None, withGrip=False, withFolder=True):
 		global imageNum
 		name = imageName + str(imageNum)
 		imageNum += 1
+	if contours != None:
+		saveContours(contours, withFolder=withFolder)
 	if withFolder:
 		name = folder + "/" + name
-	cv2.imwrite("TestImages/" + name + ".jpg", image)
+	cv2.imwrite(saveFolder + "/" + name + ".jpg", image)
+
+def saveContours(contours, withFolder=False):
+	name = contoursName + str(imageNum)
+	if withFolder:
+		name = folder + "/" + name
+	np.save(saveFolder + "/" + name, contours)
 
 def saveNums(isVisible, angleToGoal, distance, frameNum):
-	data = np.array(isVisible, ayngleToGoal, distance, gripImageNum, frameNum)
+	data = np.array(isVisible, angleToGoal, distance, gripImageNum, frameNum)
 	np.append(allData, data)
-	np.save(allData, folder + "/" + dataName)
+	np.save(folder + "/" + dataName, allData)
+
 
 def display(image, name="Contours Found", doResize=True):
 	if doResize:
