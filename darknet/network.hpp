@@ -25,8 +25,7 @@ public:
     std::vector<cv::String> classNames;
     cv::VideoWriter saveWriter;
 
-    void run(std::function<cv::Mat ()> frameFunc,
-             std::map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>);
+    void run(std::function<cv::Mat ()> frameFunc, std::map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>);
 };
 
 #endif

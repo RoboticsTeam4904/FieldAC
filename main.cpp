@@ -45,5 +45,11 @@ int main(int argc, const char **argv) {
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
-    darknet->run([defaultDev]() {return defaultDev->getFrame();}, {{"person", [cubeTracker](cv::Mat frame, std::vector<Target> targets){return cubeTracker->run(frame, targets);}},});
+    darknet->run([defaultDev]() {
+        return defaultDev->getFrame();
+    }, {
+            {"person", [cubeTracker](cv::Mat frame, std::vector<Target> targets) {
+                return cubeTracker->run(frame, targets);
+            }}
+    });
 }
