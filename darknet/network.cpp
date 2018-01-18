@@ -2,7 +2,7 @@
 #include <opencv2/videoio/videoio_c.h>
 #include <opencv2/imgproc.hpp>
 #include <set>
-#include "network.h"
+#include "network.hpp"
 
 Target::Target(float xCenter, float yCenter, float width, float height, float confidence)
         : xCenter(xCenter), yCenter(yCenter), width(width), height(height), confidence(confidence) {};

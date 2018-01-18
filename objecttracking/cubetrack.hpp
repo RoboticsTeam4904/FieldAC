@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "../objects.hpp"
-#include "../darknet/network.h"
+#include "../darknet/network.hpp"
 #include <opencv2/dnn.hpp>
 #include <opencv2/dnn/shape_utils.hpp>
 #include <opencv2/videoio.hpp>

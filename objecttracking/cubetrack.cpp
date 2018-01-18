@@ -1,5 +1,5 @@
 #include "cubetrack.hpp"
-#include "../darknet/network.h"
+#include "../darknet/network.hpp"
 
 #include <opencv2/highgui.hpp>
 #include <opencv/cv.hpp>
