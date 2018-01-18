@@ -5,6 +5,7 @@ build-debug/
 
 # Darknet files
 *.weights
+*.cfg
 
 # Build intermediaries
 *.o

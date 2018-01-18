@@ -4,14 +4,14 @@
 #include "objecttracking/cubetrack.hpp"
 
 static const char* params =
-        "{ help      | false | help                }"
-        "{ dev       | 0     | camera device       }"
-        "{ src       |       | source file         }"
-        "{ cube_cfg  |       | cube model config   }"
-        "{ cube_mdl  |       | cube model weights  }"
-        "{ cube_cls  |       | cube class names    }"
-        "{ cube_save |       | cube output file    }"
-        "{ cube_cfd  | 0.5   | cube min confidence }";
+        "{ help     | false | help                }"
+        "{ dev      | 0     | camera device       }"
+        "{ src      |       | source file         }"
+        "{ net_cfg  |       | net model config   }"
+        "{ net_mdl  |       | net model weights  }"
+        "{ net_cls  |       | net class names    }"
+        "{ net_save |       | net output file    }"
+        "{ net_cfd  | 0.5   | net min confidence }";
 
 
 int main(int argc, const char **argv) {
@@ -30,22 +30,20 @@ int main(int argc, const char **argv) {
 
     std::printf("Initializing Object Tracking: Cube Tracker...\n");
     ObjectTracking::CubeTracker* cubeTracker;
-    if(parser.get<cv::String>("cube_save").empty()) {
-        cubeTracker = new ObjectTracking::CubeTracker(parser.get<cv::String>("cube_cfg"),
-                                                  parser.get<cv::String>("cube_mdl"),
-                                                  parser.get<cv::String>("cube_cls"));
+
+    std::printf("Initializing Darknet...");
+    Network* darknet;
+    if(parser.get<cv::String>("net_save").empty()) {
+        darknet = new Network(parser.get<cv::String>("net_cfg"),
+                              parser.get<cv::String>("net_mdl"),
+                              parser.get<cv::String>("net_cls"));
     } else {
-        cubeTracker = new ObjectTracking::CubeTracker(parser.get<cv::String>("cube_cfg"),
-                                                  parser.get<cv::String>("cube_mdl"),
-                                                  parser.get<cv::String>("cube_cls"),
-                                                  parser.get<cv::String>("cube_src"),
-                                                  defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
-                                                  defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
+        darknet = new Network(parser.get<cv::String>("net_cfg"),
+                              parser.get<cv::String>("net_mdl"),
+                              parser.get<cv::String>("net_cls"),
+                              parser.get<cv::String>("net_src"),
+                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
+                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
-    std::printf("Beginning cube tracking...\n");
-    std::thread cubeTrackerRun(&ObjectTracking::CubeTracker::run, cubeTracker, std::bind(&Vision::Camera::getFrame, defaultDev));
-    while(true) {
-        if(defaultDev->displayImage(cubeTracker->getFrame(), "test display"))
-            return -1;
-    }
+    darknet->run([defaultDev]() {return defaultDev->getFrame();}, {{"person", [cubeTracker](cv::Mat frame, std::vector<Target> targets){return cubeTracker->run(frame, targets);}},});
 }

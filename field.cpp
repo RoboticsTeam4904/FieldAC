@@ -18,7 +18,7 @@ void Field::tick() {
     char currentTime[84] = "";
     sprintf(currentTime, "%s:%d", buffer, milli);
     BotLocale::tick();
-    BotTracking::tick();
+//    BotTracking::tick();
 }
 
 /**

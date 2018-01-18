@@ -1,8 +1,8 @@
 #ifndef BOTTRACK_H
 #define BOTTRACK_H
 
-namespace BotTracking {
+class BotTracker {
     void tick();
-}
+};
 
 #endif
