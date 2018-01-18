@@ -16,8 +16,7 @@ struct Target {
     float confidence;
 };
 
-class Network {
-public:
+struct Network {
     Network(cv::String config, cv::String model, cv::String classNames);
     Network(cv::String config, cv::String model, cv::String classNames, cv::String save, double capWidth, double capHeight);
 
