@@ -25,26 +25,31 @@ namespace Vision {
             frameMutex.lock();
             devCapture.read(frame);
             frameMutex.unlock();
+//            std::printf("Are we getting out of here?\n");
             if(frame.empty()) {
                 return;
             }
         }
     }
 
-    bool Camera::displayImage(cv::Mat* frame, const std::string window) {
+    bool Camera::displayImage(cv::Mat frame, const std::string window) {
         cv::namedWindow(window, cv::WINDOW_AUTOSIZE);
-        if(frame->empty()) {
+//        std::printf("%d\n", frame.cols == 0);
+        if(frame.empty()) {
             return false;
         }
-        cv::imshow(window, *frame);
+        cv::imshow(window, frame);
         return (cv::waitKey(10) == 27 );
     }
 
-    cv::Mat* Camera::getFrame() {
-        return &frame;
+    cv::Mat Camera::getFrame() {
+        if(frame.empty()) {
+            std::printf("Getting an empty frame? Uh-oh...\n");
+        }
+        return frame.clone();
     }
 
     double Camera::getCapProp(int propId) {
-        return devCapture.get(propId);
+        return this->devCapture.get(propId);
     }
 }

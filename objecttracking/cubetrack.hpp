@@ -19,7 +19,25 @@ namespace ObjectTracking {
         std::vector<cv::String> classNames;
         cv::VideoWriter saveWriter;
 
-        void run(cv::Mat *frame);
+        cv::Mat frame;
+        mutable std::mutex frameMutex;
+
+        void run(std::function<cv::Mat ()> frameFunc);
+        cv::Mat getFrame();
+
+        CubeTracker& operator=(const CubeTracker& origin) {
+            if (this != &origin) {
+                std::lock(frameMutex, origin.frameMutex);
+                std::lock_guard<std::mutex> lhs_lk(frameMutex, std::adopt_lock);
+                std::lock_guard<std::mutex> rhs_lk(origin.frameMutex, std::adopt_lock);
+                darknet = origin.darknet;
+                classNames = origin.classNames;
+                saveWriter = origin.saveWriter;
+
+                frame = origin.frame;
+            }
+            return *this;
+        }
     };
 
 

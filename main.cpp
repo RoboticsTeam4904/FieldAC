@@ -17,37 +17,40 @@ static const char* params =
 int main(int argc, const char **argv) {
     cv::CommandLineParser parser(argc, argv, params);
 
+    std::printf("Initializing camera...\n");
     Vision::Camera* defaultDev;
     if (parser.get<cv::String>("src").empty()) {
         defaultDev = new Vision::Camera(parser.get<int>("dev"));
     } else {
         defaultDev = new Vision::Camera(parser.get<cv::String>("src"));
     }
-
+    std::printf("Beginning camera capture...\n");
     std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
 
-    ObjectTracking::CubeTracker cubeTracker;
+    std::printf("Initializing Object Tracking: Cube Tracker...\n");
+    ObjectTracking::CubeTracker* cubeTracker;
     if(parser.get<cv::String>("cube_save").empty()) {
-        cubeTracker = ObjectTracking::CubeTracker(parser.get<cv::String>("cube_cfg"),
+        cubeTracker = new ObjectTracking::CubeTracker(parser.get<cv::String>("cube_cfg"),
                                                   parser.get<cv::String>("cube_mdl"),
                                                   parser.get<cv::String>("cube_cls"));
     } else {
-        cubeTracker = ObjectTracking::CubeTracker(parser.get<cv::String>("cube_cfg"),
+        cubeTracker = new ObjectTracking::CubeTracker(parser.get<cv::String>("cube_cfg"),
                                                   parser.get<cv::String>("cube_mdl"),
                                                   parser.get<cv::String>("cube_cls"),
                                                   parser.get<cv::String>("cube_src"),
                                                   defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
                                                   defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
+    std::printf("Beginning cube tracking...\n");
 
-    std::thread cubeTrackerRun(&ObjectTracking::CubeTracker::run, cubeTracker, defaultDev->getFrame());
+    std::thread cubeTrackerRun(&ObjectTracking::CubeTracker::run, cubeTracker, std::bind(&Vision::Camera::getFrame, defaultDev));
 //    cubeTracker.run(defaultDev->getFrame());
 //    defaultDev->captureImages();
     while(true) {
 //        if(cv::waitKey(10) == 27) {
 //            return -1;
 //        }
-        if(defaultDev->displayImage(defaultDev->getFrame(), "test display"))
+        if(defaultDev->displayImage(cubeTracker->getFrame().clone(), "test display"))
             return -1;
     }
 }

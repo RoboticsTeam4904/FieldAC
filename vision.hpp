@@ -15,8 +15,8 @@ namespace Vision {
         cv::VideoCapture devCapture;
 
         void captureImages();
-        bool displayImage(cv::Mat* frame, const std::string window);
-        cv::Mat* getFrame();
+        bool displayImage(cv::Mat frame, const std::string window);
+        cv::Mat getFrame();
 
         double getCapProp(int propId);
 
