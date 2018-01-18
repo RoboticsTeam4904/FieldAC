@@ -38,7 +38,7 @@ namespace ObjectTracking {
         std::printf("Cube tracking is running\n");
         while(true) {
             cv::Mat frame = frameFunc();
-            if(!frame.empty()) {
+            if(frame.empty()) {
                 std::printf("Image was empty. Goodbye.\n");
                 break;
             }
@@ -52,21 +52,29 @@ namespace ObjectTracking {
             }
             cv::Mat inputBlob = cv::dnn::blobFromImage(frame, 1 / 255.F, cv::Size(416, 416), cv::Scalar(), true, false);
             std::printf("Building blob from image...\n");
+
             darknet.setInput(inputBlob, "data");
+
             cv::Mat detectionMat = darknet.forward("detection_out");
+
             std::vector<double> layersTimings;
             double tickFreq = cv::getTickFrequency();
             double timeMs = darknet.getPerfProfile(layersTimings) / tickFreq * 1000;
             cv::putText(frame, cv::format("FPS: %.2f ; time: %.2f ms", 1000.f / timeMs, timeMs),
                 cv::Point(20, 20), 0, 0.5, cv::Scalar(0, 0, 255));
-            std::printf("FPS: %.2f ; time: %.2f ms\n", 1000.f / timeMs, timeMs);
-            float confidenceThreshold = 60.f;
+            std::printf("FPS: %.2f ; time: %.2f ms ; ", 1000.f / timeMs, timeMs);
+
+            float confidenceThreshold = 0.25f;
             for (int i = 0; i < detectionMat.rows; i++) {
+
                 const int probabilityIndex = 5;
                 const int probabilitySize = detectionMat.cols - probabilityIndex;
                 float *probArrayPtr = &detectionMat.at<float>(i, probabilityIndex);
+
                 std::size_t objectClass = std::max_element(probArrayPtr, probArrayPtr + probabilitySize) - probArrayPtr;
                 float confidence = detectionMat.at<float>(i, (int)objectClass + probabilityIndex);
+//                std::printf("Confidence: %.2f\n", confidence);
+
                 if(confidence > confidenceThreshold) {
                     float xCenter = detectionMat.at<float>(i, 0) * frame.cols;
                     float yCenter = detectionMat.at<float>(i, 1) * frame.rows;
@@ -93,9 +101,6 @@ namespace ObjectTracking {
             frameMutex.lock();
             this->frame = frame;
             frameMutex.unlock();
-            if (cv::waitKey(10) == 27) {
-                break;
-            }
         }
     }
 

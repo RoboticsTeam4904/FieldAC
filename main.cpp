@@ -26,6 +26,7 @@ int main(int argc, const char **argv) {
     }
     std::printf("Beginning camera capture...\n");
     std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     std::printf("Initializing Object Tracking: Cube Tracker...\n");
     ObjectTracking::CubeTracker* cubeTracker;
@@ -50,7 +51,8 @@ int main(int argc, const char **argv) {
 //        if(cv::waitKey(10) == 27) {
 //            return -1;
 //        }
-        if(defaultDev->displayImage(cubeTracker->getFrame().clone(), "test display"))
+
+        if(defaultDev->displayImage(cubeTracker->getFrame(), "test display"))
             return -1;
     }
 }

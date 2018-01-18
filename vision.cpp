@@ -27,6 +27,7 @@ namespace Vision {
             frameMutex.unlock();
 //            std::printf("Are we getting out of here?\n");
             if(frame.empty()) {
+                std::printf("The frame was empty here");
                 return;
             }
         }
@@ -44,7 +45,7 @@ namespace Vision {
 
     cv::Mat Camera::getFrame() {
         if(frame.empty()) {
-            std::printf("Getting an empty frame? Uh-oh...\n");
+//            std::printf("Getting an empty frame? Uh-oh...\n");
         }
         return frame.clone();
     }
