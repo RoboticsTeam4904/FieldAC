@@ -34,6 +34,7 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
                   std::map<std::string, std::function<void(cv::Mat, std::vector<Target>)>> targetMap) {
     while(true) {
         cv::Mat frame = frameFunc();
+        cv::Mat annotated = frame.clone();
         if(frame.empty()) {
             std::printf("Image was empty. Goodbye.\n");
             break;
@@ -54,8 +55,8 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
         std::vector<double> layersTimings;
         double tickFreq = cv::getTickFrequency();
         double timeMs = network.getPerfProfile(layersTimings) / tickFreq * 1000;
-//        cv::putText(frame, cv::format("FPS: %.2f ; time: %.2f ms", 1000.f / timeMs, timeMs),
-//                    cv::Point(20, 20), 0, 0.5, cv::Scalar(0, 0, 255));
+        cv::putText(annotated, cv::format("FPS: %.2f ; time: %.2f ms", 1000.f / timeMs, timeMs),
+                    cv::Point(20, 20), 0, 0.5, cv::Scalar(0, 0, 255));
         std::printf("FPS: %.2f ; time: %.2f ms ; ", 1000.f / timeMs, timeMs);
 
         float confidenceThreshold = 0.25f;
@@ -84,16 +85,17 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
                     value.push_back(target);
                     targets[className.c_str()] = value;
                 }
-//                cv::Point p1(cvRound(xCenter - width / 2), cvRound(yCenter - height / 2));
-//                cv::Point p2(cvRound(xCenter + width / 2), cvRound(yCenter + height / 2));
-//                cv::Rect object(p1, p2);
-//                cv::Scalar objectRoiColor(0, 255, 0);
-//                cv::rectangle(frame, object, objectRoiColor);
-//                cv::String label = cv::format("%s: %.2f", className.c_str(), confidence);
-//                int baseLine = 0;
-//                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-//                cv::rectangle(frame, cv::Rect(p1, cv::Size(labelSize.width, labelSize.height + baseLine)), objectRoiColor, CV_FILLED);
-//                cv::putText(frame, label, p1 + cv::Point(0, labelSize.height), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,0));
+                // Adds annotations to the annotatedFrame
+                cv::Point p1(cvRound(xCenter - width / 2), cvRound(yCenter - height / 2));
+                cv::Point p2(cvRound(xCenter + width / 2), cvRound(yCenter + height / 2));
+                cv::Rect object(p1, p2);
+                cv::Scalar objectRoiColor(0, 255, 0);
+                cv::rectangle(annotated, object, objectRoiColor);
+                cv::String label = cv::format("%s: %.2f", className.c_str(), confidence);
+                int baseLine = 0;
+                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+                cv::rectangle(annotated, cv::Rect(p1, cv::Size(labelSize.width, labelSize.height + baseLine)), objectRoiColor, CV_FILLED);
+                cv::putText(annotated, label, p1 + cv::Point(0, labelSize.height), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,0));
             }
         }
         for(const auto &iter : targetMap) {
@@ -106,7 +108,15 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
         }
         std::printf("Iterated over %d rows", detectionMat.rows);
         if(saveWriter.isOpened()) {
-            saveWriter.write(frame);
+            saveWriter.write(annotated);
         }
+        frameMutex.lock();
+        this->annotatedFrame = annotated;
+        frameMutex.unlock();
     }
+}
+
+cv::Mat Network::getAnnotatedFrame() {
+    std::lock_guard<std::mutex> lkg(this->frameMutex);
+    return annotatedFrame;
 }

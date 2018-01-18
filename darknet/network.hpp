@@ -25,7 +25,11 @@ public:
     std::vector<cv::String> classNames;
     cv::VideoWriter saveWriter;
 
+    cv::Mat annotatedFrame;
+    mutable std::mutex frameMutex;
+
     void run(std::function<cv::Mat ()> frameFunc, std::map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>);
+    cv::Mat getAnnotatedFrame();
 };
 
 #endif

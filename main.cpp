@@ -45,11 +45,18 @@ int main(int argc, const char **argv) {
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
-    darknet->run([defaultDev]() {
-        return defaultDev->getFrame();
-    }, {
-            {"person", [cubeTracker](cv::Mat frame, std::vector<Target> targets) {
-                return cubeTracker->run(frame, targets);
-            }}
-    });
+    std::thread networkRun(&Network::run,
+                           darknet,
+                           [defaultDev]() {
+                               return defaultDev->getFrame();
+                           }, std::map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>
+                                   {{"person", [cubeTracker](cv::Mat frame, std::vector<Target> targets) {
+                                       return cubeTracker->run(frame, targets);
+                                   }}}
+    );
+    while(true) {
+        if(defaultDev->displayImage(darknet->getAnnotatedFrame(), "Darknet")) {
+            return -1;
+        }
+    }
 }
