@@ -31,7 +31,7 @@ def oc():
 
 def sc():
 	image = WebCam.getImage()
-	contours = GripRunner.run(image)=
+	contours = GripRunner.run(image)
 	Printing.drawContours(image, contours)
 	global n
 	Printing.save(image, name="TEST" + str(n), contours=contours)

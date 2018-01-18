@@ -1,0 +1,3 @@
+/Users/niksure/documents/workspace/2018-Field/build/CMakeFiles/rebuild_cache.dir
+/Users/niksure/documents/workspace/2018-Field/build/CMakeFiles/edit_cache.dir
+/Users/niksure/documents/workspace/2018-Field/build/CMakeFiles/field.dir
