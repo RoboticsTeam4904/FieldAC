@@ -169,10 +169,10 @@
     <deployJvmOptions>-Xmx50m -XX:-OmitStackTraceInFastThrow -XX:+HeapDumpOnOutOfMemoryError -XX:MaxNewSize=16m</deployJvmOptions>
   </settings>
   <codeGenerationSettings>
-    <language>C++</language>
-    <className>GripVisionPipeline</className>
+    <language>Python</language>
+    <className>GripPipeline</className>
     <implementWpilibPipeline>false</implementWpilibPipeline>
-    <saveDir>/Users/niksure/GRIP</saveDir>
+    <saveDir>/Users/niksure/Documents/workspace/2018-Field/python-vision</saveDir>
     <packageName></packageName>
     <moduleName>grip</moduleName>
   </codeGenerationSettings>
