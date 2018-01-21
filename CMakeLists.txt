@@ -8,7 +8,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_INSTALL_RPATH "/usr/local/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-file(GLOB DARKNET_SRC arapaho/*.cpp)
+file(GLOB DARKNET_SRC x12/*.c*)
 file(GLOB BOT_LCL_SRC botlocale/*.cpp)
 file(GLOB BOT_TRK_SRC bottracking/*.cpp)
 file(GLOB OBJ_TRK_SRC objecttracking/*.cpp)
