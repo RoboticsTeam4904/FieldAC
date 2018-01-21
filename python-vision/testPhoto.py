@@ -24,6 +24,10 @@ def dc():
 		oc()
 
 def oc():
+	try:
+		image = WebCam.getImage()
+	except Exception as e:
+		print(e)
 	image = WebCam.getImage()
 	contours = GripRunner.run(image)
 	Printing.drawContours(image, contours)
