@@ -3,6 +3,7 @@
 
 #include "layer.h"
 #include "network.h"
+#include "box.h"
 
 typedef layer detection_layer;
 

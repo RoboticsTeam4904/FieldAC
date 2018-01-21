@@ -1,15 +1,17 @@
 #include <thread>
 #include <opencv/cv.hpp>
+#include <unordered_map>
 #include "vision.hpp"
 #include "objecttracking/cubetrack.hpp"
+#include "network/network.hpp"
 
 static const char* params =
         "{ help     | false | help                }"
         "{ dev      | 0     | camera device       }"
         "{ src      |       | source file         }"
+        "{ net_dat  |       | net data file       }"
         "{ net_cfg  |       | net model config   }"
         "{ net_mdl  |       | net model weights  }"
-        "{ net_cls  |       | net class names    }"
         "{ net_save |       | net output file    }"
         "{ net_cfd  | 0.5   | net min confidence }";
 
@@ -32,31 +34,31 @@ int main(int argc, const char **argv) {
     ObjectTracking::CubeTracker* cubeTracker;
 
     std::printf("Initializing Darknet...");
-//    Network* cvsdarknet;
-//    if(parser.get<cv::String>("net_save").empty()) {
-//        cvsdarknet = new Network(parser.get<cv::String>("net_cfg"),
-//                              parser.get<cv::String>("net_mdl"),
-//                              parser.get<cv::String>("net_cls"));
-//    } else {
-//        cvsdarknet = new Network(parser.get<cv::String>("net_cfg"),
-//                              parser.get<cv::String>("net_mdl"),
-//                              parser.get<cv::String>("net_cls"),
-//                              parser.get<cv::String>("net_save"),
-//                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
-//                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
-//    }
-//    std::thread networkRun(&Network::run,
-//                           cvsdarknet,
-//                           [defaultDev]() {
-//                               return defaultDev->getFrame();
-//                           }, std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>
-//                                   {{"person", [cubeTracker](cv::Mat frame, std::vector<Target> targets) {
-//                                       return cubeTracker->run(frame, targets);
-//                                   }}}
-//    );
-//    while(true) {
-//        if(defaultDev->displayImage(cvsdarknet->getAnnotatedFrame(), "Darknet")) {
-//            return -1;
-//        }
-//    }
+    Network* network;
+    if(parser.get<cv::String>("net_save").empty()) {
+        network = new Network(parser.get<cv::String>("net_dat"),
+                              parser.get<cv::String>("net_cfg"),
+                              parser.get<cv::String>("net_mdl"));
+    } else {
+        network = new Network(parser.get<cv::String>("net_dat"),
+                              parser.get<cv::String>("net_cfg"),
+                              parser.get<cv::String>("net_mdl"),
+                              parser.get<cv::String>("net_save"),
+                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
+                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
+    }
+    std::thread networkRun(&Network::run,
+                           network,
+                           [defaultDev]() {
+                               return defaultDev->getFrame();
+                           }, std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>
+                                   {{"cube", [cubeTracker](cv::Mat frame, std::vector<Target> targets) {
+                                       return cubeTracker->run(frame, targets);
+                                   }}}
+    );
+    while(true) {
+        if(defaultDev->displayImage(defaultDev->getFrame(), "Darknet")) {
+            return -1;
+        }
+    }
 }
