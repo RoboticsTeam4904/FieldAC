@@ -31,13 +31,8 @@
 
 #define ARAPAHO_MAX_CLASSES (200)
 
-#ifdef _DEBUG
 #define DPRINTF printf
 #define EPRINTF printf
-#else
-#define DPRINTF
-#define EPRINTF printf
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 
