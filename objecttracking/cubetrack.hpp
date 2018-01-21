@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "../objects.hpp"
-#include "../darknet/network.hpp"
+//#include "../darknet/network.hpp"
 #include <opencv2/dnn.hpp>
 #include <opencv2/dnn/shape_utils.hpp>
 #include <opencv2/videoio.hpp>
@@ -14,7 +14,7 @@ namespace ObjectTracking {
     public:
         CubeTracker();
 
-        void run(cv::Mat frame, std::vector<Target> targets);
+        void run(cv::Mat frame, std::vector<Pose> targets);
     };
 
 }
