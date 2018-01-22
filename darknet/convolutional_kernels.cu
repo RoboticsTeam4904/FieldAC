@@ -2,6 +2,11 @@
 #include "curand.h"
 #include "cublas_v2.h"
 
+#ifdef CUDNN
+#pragma comment(lib, "cudnn.lib")  
+#endif
+
+extern "C" {
 #include "convolutional_layer.h"
 #include "batchnorm_layer.h"
 #include "gemm.h"
@@ -10,6 +15,7 @@
 #include "col2im.h"
 #include "utils.h"
 #include "cuda.h"
+}
 
 __global__ void binarize_kernel(float *x, int n, float *binary)
 {
@@ -115,70 +121,26 @@ void forward_convolutional_layer_gpu(convolutional_layer l, network_state state)
 
     if (l.batch_normalize) {
         forward_batchnorm_layer_gpu(l, state);
-    } else {
-        add_bias_gpu(l.output_gpu, l.biases_gpu, l.batch, l.n, l.out_w*l.out_h);
     }
+    add_bias_gpu(l.output_gpu, l.biases_gpu, l.batch, l.n, l.out_w*l.out_h);
 
     activate_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation);
     //if(l.dot > 0) dot_error_gpu(l);
     if(l.binary || l.xnor) swap_binary(&l);
-}
-
-__global__ void smooth_kernel(float *x, int n, int w, int h, int c, int size, float rate, float *delta)
-{
-    int id = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
-    if(id >= n) return;
-
-    int j = id % w;
-    id /= w;
-    int i = id % h;
-    id /= h;
-    int k = id % c;
-    id /= c;
-    int b = id;
-
-    int w_offset = -(size/2.);
-    int h_offset = -(size/2.);
-
-    int out_index = j + w*(i + h*(k + c*b));
-    int l, m;
-    for(l = 0; l < size; ++l){
-        for(m = 0; m < size; ++m){
-            int cur_h = h_offset + i + l;
-            int cur_w = w_offset + j + m;
-            int index = cur_w + w*(cur_h + h*(k + b*c));
-            int valid = (cur_h >= 0 && cur_h < h &&
-                    cur_w >= 0 && cur_w < w);
-            delta[out_index] += valid ? rate*(x[index] - x[out_index]) : 0;
-        }
-    }
-}
-
-extern "C" void smooth_layer(layer l, int size, float rate)
-{
-    int h = l.out_h;
-    int w = l.out_w;
-    int c = l.out_c;
-
-    size_t n = h*w*c*l.batch;
-
-    smooth_kernel<<<cuda_gridsize(n), BLOCK>>>(l.output_gpu, n, l.w, l.h, l.c, size, rate, l.delta_gpu);
-    check_error(cudaPeekAtLastError());
+	//cudaDeviceSynchronize();	// for correct profiling of performance
 }
 
 void backward_convolutional_layer_gpu(convolutional_layer l, network_state state)
 {
-    if(l.smooth){
-        smooth_layer(l, 5, l.smooth);
-    }
-    //constrain_ongpu(l.outputs*l.batch, 1, l.delta_gpu, 1);
     gradient_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation, l.delta_gpu);
 
+    backward_bias_gpu(l.bias_updates_gpu, l.delta_gpu, l.batch, l.n, l.out_w*l.out_h);
 
     if(l.batch_normalize){
         backward_batchnorm_layer_gpu(l, state);
+        //axpy_ongpu(l.outputs*l.batch, -state.net.decay, l.x_gpu, 1, l.delta_gpu, 1);
     } else {
-        backward_bias_gpu(l.bias_updates_gpu, l.delta_gpu, l.batch, l.n, l.out_w*l.out_h);
+        //axpy_ongpu(l.outputs*l.batch, -state.net.decay, l.output_gpu, 1, l.delta_gpu, 1);
     }
     float *original_input = state.input;
 

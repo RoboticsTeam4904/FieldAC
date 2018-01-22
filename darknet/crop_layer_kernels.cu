@@ -2,10 +2,12 @@
 #include "curand.h"
 #include "cublas_v2.h"
 
+extern "C" {
 #include "crop_layer.h"
 #include "utils.h"
 #include "cuda.h"
 #include "image.h"
+}
 
 __device__ float get_pixel_kernel(float *image, int w, int h, int x, int y, int c)
 {
@@ -178,7 +180,7 @@ __global__ void forward_crop_layer_kernel(float *input, float *rand, int size, i
     output[count] = bilinear_interpolate_kernel(input, w, h, rx, ry, k);
 }
 
-void forward_crop_layer_gpu(crop_layer layer, network_state state)
+extern "C" void forward_crop_layer_gpu(crop_layer layer, network_state state)
 {
     cuda_random(layer.rand_gpu, layer.batch*8);
 

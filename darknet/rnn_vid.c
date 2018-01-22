@@ -6,6 +6,10 @@
 
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
+#include "opencv2/core/version.hpp"
+#ifndef CV_VERSION_EPOCH
+#include "opencv2/videoio/videoio_c.h"
+#endif
 image get_image_from_stream(CvCapture *cap);
 image ipl_to_image(IplImage* src);
 
@@ -24,10 +28,10 @@ float_pair get_rnn_vid_data(network net, char **files, int n, int batch, int ste
     image out_im = get_network_image(net);
     int output_size = out_im.w*out_im.h*out_im.c;
     printf("%d %d %d\n", out_im.w, out_im.h, out_im.c);
-    float *feats = (float*)calloc(net.batch*batch*output_size, sizeof(float));
+    float *feats = calloc(net.batch*batch*output_size, sizeof(float));
     for(b = 0; b < batch; ++b){
         int input_size = net.w*net.h*net.c;
-        float *input = (float*)calloc(input_size*net.batch, sizeof(float));
+        float *input = calloc(input_size*net.batch, sizeof(float));
         char *filename = files[rand()%n];
         CvCapture *cap = cvCaptureFromFile(filename);
         int frames = cvGetCaptureProperty(cap, CV_CAP_PROP_FRAME_COUNT);
@@ -163,6 +167,7 @@ void generate_vid_rnn(char *cfgfile, char *weightfile)
     CvCapture *cap = cvCaptureFromFile("/extra/vid/ILSVRC2015/Data/VID/snippets/val/ILSVRC2015_val_00007030.mp4");
     float *feat;
     float *next;
+	next = NULL;
     image last;
     for(i = 0; i < 25; ++i){
         image im = get_image_from_stream(cap);
@@ -186,9 +191,9 @@ void generate_vid_rnn(char *cfgfile, char *weightfile)
     }
     for(i = 0; i < 30; ++i){
         next = network_predict(net, next);
-        image new1 = save_reconstruction(extractor, &last, next, "new1", i);
+        image new = save_reconstruction(extractor, &last, next, "new", i);
         free_image(last);
-        last = new1;
+        last = new;
     }
 }
 

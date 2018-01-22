@@ -13,7 +13,7 @@ file(GLOB BOT_TRK_SRC bottracking/*.cpp)
 file(GLOB OBJ_TRK_SRC objecttracking/*.cpp)
 file(GLOB CORE_SRC *.cpp)
 
-file(GLOB DARKNET_INC darknet/*.h)
+file(GLOB DARKNET_INC darknet/*.h*)
 
 link_directories(include/)
 include_directories(${CMAKE_SOURCE_DIR}/darknet/)
@@ -25,5 +25,5 @@ add_executable(field ${DARKNET_INC}
         ${OBJ_TRK_SRC}
         ${NETWORK_SRC}
         ${ARAPAHO_SRC})
-target_link_libraries(field darknet-cpp-shared)
+target_link_libraries(field darknet)
 target_link_libraries(field ${OpenCV_LIBS})

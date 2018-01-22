@@ -5,121 +5,97 @@
 #include <unordered_map>
 #include "network.hpp"
 
-#define MAX_OBJECTS_PER_FRAME (100)
-
 Target::Target(float xCenter, float yCenter, float width, float height, float confidence)
         : xCenter(xCenter), yCenter(yCenter), width(width), height(height), confidence(confidence) {};
 
-Network::Network(cv::String data, cv::String config, cv::String model) {
-    ArapahoV2Params params;
-    params.datacfg = const_cast<char *>(data.c_str());
-    params.cfgfile = const_cast<char *>(config.c_str());
-    params.weightfile = const_cast<char *>(model.c_str());
-    params.nms = 0.4;
-    params.maxClasses = 2;
-
-    network = new ArapahoV2();
-    if(!network) {
-        std::printf("ERROR: Could not initialize ArapahoV2 instance\n");
+Network::Network(cv::String classNames, cv::String config, cv::String model) {
+    network = new Detector(config, model);
+    std::ifstream classNamesFile(classNames.c_str());
+    if(classNamesFile.is_open()) {
+        std::string className;
+        while(std::getline(classNamesFile, className))
+            this->classNames.emplace_back(className);
     }
-    int expectedW = 0, expectedH = 0;
-
-    if(!network->Setup(params, expectedW, expectedH)) {
-        std::printf("ERROR: Could not setup network instance\n");
-    }
+    network->nms = 0.02;
 }
 
-Network::Network(cv::String data, cv::String config, cv::String model, cv::String save, double capWidth, double capHeight) {
-    ArapahoV2Params params;
-    params.datacfg = const_cast<char *>(data.c_str());
-    params.cfgfile = const_cast<char *>(config.c_str());
-    params.weightfile = const_cast<char *>(model.c_str());
-    params.nms = 0.4;
-    params.maxClasses = 2;
-
-    network = new ArapahoV2();
-    if(!network) {
-        std::printf("ERROR: Could not initialize ArapahoV2 instance\n");
-    }
-    int expectedW = 0, expectedH = 0;
-    if(!network->Setup(params, expectedW, expectedH)) {
-        std::printf("ERROR: Could not setup network instance\n");
+Network::Network(cv::String classNames, cv::String config, cv::String model, cv::String save, double capWidth, double capHeight) {
+    network = new Detector(config, model);
+    std::ifstream classNamesFile(classNames.c_str());
+    if(classNamesFile.is_open()) {
+        std::string className;
+        while(std::getline(classNamesFile, className))
+            this->classNames.emplace_back(className);
     }
     if(!save.empty()) {
         saveWriter.open(save, CV_FOURCC('M', 'J', 'P', 'G'), 3, cv::Size((int) capWidth, (int) capHeight), 1);
     }
+    network->nms = 0.02;
+}
+
+void Network::show_console_result(std::vector<bbox_t> const result_vec, std::vector<std::string> const obj_names) {
+    for (auto &i : result_vec) {
+        if (obj_names.size() > i.obj_id) std::cout << obj_names[i.obj_id] << " - ";
+        std::cout << "obj_id = " << i.obj_id << ",  x = " << i.x << ", y = " << i.y
+                  << ", w = " << i.w << ", h = " << i.h
+                  << std::setprecision(3) << ", prob = " << i.prob << std::endl;
+    }
+}
+
+void Network::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std::string> obj_names,
+                unsigned int wait_msec, int current_det_fps, int current_cap_fps)
+{
+    int const colors[6][3] = { { 1,0,1 },{ 0,0,1 },{ 0,1,1 },{ 0,1,0 },{ 1,1,0 },{ 1,0,0 } };
+
+    for (auto &i : result_vec) {
+        int const offset = i.obj_id * 123457 % 6;
+        int const color_scale = 150 + (i.obj_id * 123457) % 100;
+        cv::Scalar color(colors[offset][0], colors[offset][1], colors[offset][2]);
+//        color *= color_scale;
+        cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 5);
+        if (obj_names.size() > i.obj_id) {
+            std::string obj_name = obj_names[i.obj_id];
+            if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
+            cv::Size const text_size = getTextSize(obj_name, cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, 2, 0);
+            int const max_width = (text_size.width > i.w + 2) ? text_size.width : (i.w + 2);
+            cv::rectangle(mat_img, cv::Point2f(std::max((int)i.x - 3, 0), std::max((int)i.y - 30, 0)),
+                          cv::Point2f(std::min((int)i.x + max_width, mat_img.cols-1), std::min((int)i.y, mat_img.rows-1)),
+                          color, CV_FILLED, 8, 0);
+            putText(mat_img, obj_name, cv::Point2f(i.x, i.y - 10), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(0, 0, 0), 2);
+        }
+    }
+    if (current_det_fps >= 0 && current_cap_fps >= 0) {
+        std::string fps_str = "FPS detection: " + std::to_string(current_det_fps) + "   FPS capture: " + std::to_string(current_cap_fps);
+        putText(mat_img, fps_str, cv::Point2f(10, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(50, 255, 0), 2);
+    }
+    this->annotatedFrame = mat_img;
 }
 
 void Network::run(std::function<cv::Mat ()> frameFunc,
                   std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>> targetMap) {
-    box* boxes = 0;
-    std::string* labels;
+    std::shared_ptr<image_t> det_image;
     while(true) {
         cv::Mat frame = frameFunc();
         cv::Mat annotated = frame.clone();
-        std::printf("Size: %dx%d\n", frame.cols, frame.rows);
         if(frame.empty()) {
-            std::printf("Image was empty. Exiting.\n");
+            std::printf("Image was empty. Goodbye.\n");
             break;
         }
         if(frame.cols == 0) {
             continue;
         }
-        if(frame.channels() == 4) {
+        if (frame.channels() == 4) {
             cv::cvtColor(frame, frame, cv::COLOR_BGRA2BGR);
         }
-        int numObjects = 0;
-        auto detectionStartTime = std::chrono::system_clock::now();
-        network->Detect(frame, 0.0, 0.5, numObjects);
-        std::chrono::duration<double> detectionTime = (std::chrono::system_clock::now() - detectionStartTime);
-        std::printf("Detected [%d] objects in [%f] seconds\n", numObjects, detectionTime);
-        if(numObjects > 0 && numObjects < MAX_OBJECTS_PER_FRAME) {
-            boxes = new box[numObjects];
-            labels = new std::string[numObjects];
-            network->GetBoxes(boxes, labels, numObjects);
-            std::map<std::string, std::vector<Target>> targets;
-            std::map<std::string, std::vector<Target>>::iterator targetsIter;
-            for (int i = 0; i < numObjects; i++) {
-                Target target(boxes[i].x, boxes[i].y, boxes[i].w, boxes[i].h, 1);
-                targetsIter = targets.find(labels[i]);
-                if (targetsIter != targets.end()) {
-                    targetsIter->second.push_back(target);
-                } else {
-                    std::vector<Target> value;
-                    value.push_back(target);
-                    targets[labels[i]] = value;
-                }
-//                cv::Point p1(cvRound(boxes[i].x - boxes[i].w / 2), cvRound(boxes[i].y - boxes[i].h / 2));
-//                cv::Point p2(cvRound(boxes[i].x + boxes[i].w / 2), cvRound(boxes[i].y + boxes[i].h / 2));
-//                cv::Rect object(p1, p2);
-//                cv::Scalar objectRoiColor(0, 255, 0);
-//                cv::rectangle(annotated, object, objectRoiColor);
-//                auto tempLabel = labels[i];
-//                cv::String label = cv::format("%s: %.2f", tempLabel.c_str(), 1);
-//                int baseLine = 0;
-//                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-//                cv::rectangle(annotated, cv::Rect(p1, cv::Size(labelSize.width, labelSize.height + baseLine)),
-//                              objectRoiColor, CV_FILLED);
-//                cv::putText(annotated, label, p1 + cv::Point(0, labelSize.height), cv::FONT_HERSHEY_SIMPLEX, 0.5,
-//                            cv::Scalar(0, 0, 0));
-            }
-            for (const auto &iter : targetMap) {
-                targetsIter = targets.find(iter.first);
-                if (targetsIter != targets.end()) {
-                    iter.second(frame, targetsIter->second);
-                } else {
-                    iter.second(frame, std::vector<Target>());
-                }
-            }
-            if (saveWriter.isOpened()) {
-                saveWriter.write(annotated);
-            }
-//            frameMutex.lock();
-//            this->annotatedFrame = annotated;
-//            frameMutex.unlock();
-        }
-        cv::imshow("Darknet", annotated);
-
+        std::printf("Got here\n");
+        std::vector<bbox_t> result_vec = network->detect(frame);
+        std::printf("Got here too\n");
+        result_vec = network->tracking(result_vec);	// comment it - if track_id is not required
+        std::printf("And here\n");
+        this->draw_boxes(annotated, result_vec, classNames);
+        std::printf("And between\n");
+        this->show_console_result(result_vec, classNames);
+        std::printf("Gotem\n");
     }
 }
 

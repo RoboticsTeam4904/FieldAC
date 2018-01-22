@@ -12,7 +12,6 @@ COST_TYPE get_cost_type(char *s)
     if (strcmp(s, "sse")==0) return SSE;
     if (strcmp(s, "masked")==0) return MASKED;
     if (strcmp(s, "smooth")==0) return SMOOTH;
-    if (strcmp(s, "L1")==0) return L1;
     fprintf(stderr, "Couldn't find cost type %s, going with SSE\n", s);
     return SSE;
 }
@@ -26,8 +25,6 @@ char *get_cost_string(COST_TYPE a)
             return "masked";
         case SMOOTH:
             return "smooth";
-        case L1:
-            return "L1";
     }
     return "sse";
 }
@@ -35,8 +32,7 @@ char *get_cost_string(COST_TYPE a)
 cost_layer make_cost_layer(int batch, int inputs, COST_TYPE cost_type, float scale)
 {
     fprintf(stderr, "cost                                           %4d\n",  inputs);
-    cost_layer l = {};
-
+    cost_layer l = {0};
     l.type = COST;
 
     l.scale = scale;
@@ -44,9 +40,9 @@ cost_layer make_cost_layer(int batch, int inputs, COST_TYPE cost_type, float sca
     l.inputs = inputs;
     l.outputs = inputs;
     l.cost_type = cost_type;
-    l.delta = (float*)calloc(inputs*batch, sizeof(float));
-    l.output = (float*)calloc(inputs*batch, sizeof(float));
-    l.cost = (float*)calloc(1, sizeof(float));
+    l.delta = calloc(inputs*batch, sizeof(float));
+    l.output = calloc(inputs*batch, sizeof(float));
+    l.cost = calloc(1, sizeof(float));
 
     l.forward = forward_cost_layer;
     l.backward = backward_cost_layer;
@@ -64,8 +60,8 @@ void resize_cost_layer(cost_layer *l, int inputs)
 {
     l->inputs = inputs;
     l->outputs = inputs;
-    l->delta = (float*)realloc(l->delta, inputs*l->batch*sizeof(float));
-    l->output = (float*)realloc(l->output, inputs*l->batch*sizeof(float));
+    l->delta = realloc(l->delta, inputs*l->batch*sizeof(float));
+    l->output = realloc(l->output, inputs*l->batch*sizeof(float));
 #ifdef GPU
     cuda_free(l->delta_gpu);
     cuda_free(l->output_gpu);
@@ -85,8 +81,6 @@ void forward_cost_layer(cost_layer l, network_state state)
     }
     if(l.cost_type == SMOOTH){
         smooth_l1_cpu(l.batch*l.inputs, state.input, state.truth, l.delta, l.output);
-    }else if(l.cost_type == L1){
-        l1_cpu(l.batch*l.inputs, state.input, state.truth, l.delta, l.output);
     } else {
         l2_cpu(l.batch*l.inputs, state.input, state.truth, l.delta, l.output);
     }
@@ -122,18 +116,12 @@ int float_abs_compare (const void * a, const void * b)
 void forward_cost_layer_gpu(cost_layer l, network_state state)
 {
     if (!state.truth) return;
-    if(l.smooth){
-        scal_ongpu(l.batch*l.inputs, (1-l.smooth), state.truth, 1);
-        add_ongpu(l.batch*l.inputs, l.smooth * 1./l.inputs, state.truth, 1);
-    }
     if (l.cost_type == MASKED) {
         mask_ongpu(l.batch*l.inputs, state.input, SECRET_NUM, state.truth);
     }
 
     if(l.cost_type == SMOOTH){
         smooth_l1_gpu(l.batch*l.inputs, state.input, state.truth, l.delta_gpu, l.output_gpu);
-    } else if (l.cost_type == L1){
-        l1_gpu(l.batch*l.inputs, state.input, state.truth, l.delta_gpu, l.output_gpu);
     } else {
         l2_gpu(l.batch*l.inputs, state.input, state.truth, l.delta_gpu, l.output_gpu);
     }
@@ -146,10 +134,6 @@ void forward_cost_layer_gpu(cost_layer l, network_state state)
         thresh = 0;
         printf("%f\n", thresh);
         supp_ongpu(l.batch*l.inputs, thresh, l.delta_gpu, 1);
-    }
-
-    if(l.thresh){
-        supp_ongpu(l.batch*l.inputs, l.thresh*1./l.inputs, l.delta_gpu, 1);
     }
 
     cuda_pull_array(l.output_gpu, l.output, l.batch*l.inputs);

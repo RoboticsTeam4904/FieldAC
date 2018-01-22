@@ -1,8 +1,9 @@
 #ifndef DATA_H
 #define DATA_H
-
-#if defined __linux__ || defined __APPLE__ || defined PTHREAD_WINDOWS
 #include <pthread.h>
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+	#define inline __inline
 #endif
 
 #include "matrix.h"
@@ -31,7 +32,7 @@ typedef struct{
 } data;
 
 typedef enum {
-    CLASSIFICATION_DATA, DETECTION_DATA, CAPTCHA_DATA, REGION_DATA, IMAGE_DATA, COMPARE_DATA, WRITING_DATA, SWAG_DATA, TAG_DATA, OLD_CLASSIFICATION_DATA, STUDY_DATA, DET_DATA, SUPER_DATA, LETTERBOX_DATA, REGRESSION_DATA
+    CLASSIFICATION_DATA, DETECTION_DATA, CAPTCHA_DATA, REGION_DATA, IMAGE_DATA, COMPARE_DATA, WRITING_DATA, SWAG_DATA, TAG_DATA, OLD_CLASSIFICATION_DATA, STUDY_DATA, DET_DATA, SUPER_DATA
 } data_type;
 
 typedef struct load_args{
@@ -71,18 +72,11 @@ typedef struct{
     float left, right, top, bottom;
 } box_label;
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void free_data(data d);
 
-#if defined __linux__ || defined __APPLE__ || defined PTHREAD_WINDOWS
 pthread_t load_data(load_args args);
 
 pthread_t load_data_in_thread(load_args args);
-#endif
 
 void print_letters(float *pred, int n);
 data load_data_captcha(char **paths, int n, int m, int k, int w, int h);
@@ -93,7 +87,6 @@ data load_data_tag(char **paths, int n, int m, int k, int min, int max, int size
 matrix load_image_augment_paths(char **paths, int n, int min, int max, int size, float angle, float aspect, float hue, float saturation, float exposure);
 data load_data_super(char **paths, int n, int m, int w, int h, int scale);
 data load_data_augment(char **paths, int n, int m, char **labels, int k, tree *hierarchy, int min, int max, int size, float angle, float aspect, float hue, float saturation, float exposure);
-data load_data_regression(char **paths, int n, int m, int min, int max, int size, float angle, float aspect, float hue, float saturation, float exposure);
 data load_go(char *filename);
 
 box_label *read_boxes(char *filename, int *n);
@@ -117,11 +110,5 @@ data *split_data(data d, int part, int total);
 data concat_data(data d1, data d2);
 data concat_datas(data *d, int n);
 void fill_truth(char *path, char **labels, int k, float *truth);
-data copy_data(data d);
-
-#ifdef __cplusplus
-}
-#endif
-
 
 #endif

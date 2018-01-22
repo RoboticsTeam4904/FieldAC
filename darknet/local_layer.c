@@ -26,7 +26,7 @@ int local_out_width(local_layer l)
 local_layer make_local_layer(int batch, int h, int w, int c, int n, int size, int stride, int pad, ACTIVATION activation)
 {
     int i;
-    local_layer l = {};
+    local_layer l = {0};
     l.type = LOCAL;
 
     l.h = h;
@@ -47,20 +47,19 @@ local_layer make_local_layer(int batch, int h, int w, int c, int n, int size, in
     l.outputs = l.out_h * l.out_w * l.out_c;
     l.inputs = l.w * l.h * l.c;
 
-    l.weights = (float*)calloc(c*n*size*size*locations, sizeof(float));
-    l.weight_updates = (float*)calloc(c*n*size*size*locations, sizeof(float));
+    l.weights = calloc(c*n*size*size*locations, sizeof(float));
+    l.weight_updates = calloc(c*n*size*size*locations, sizeof(float));
 
-    l.biases = (float*)calloc(l.outputs, sizeof(float));
-    l.bias_updates = (float*)calloc(l.outputs, sizeof(float));
+    l.biases = calloc(l.outputs, sizeof(float));
+    l.bias_updates = calloc(l.outputs, sizeof(float));
 
     // float scale = 1./sqrt(size*size*c);
     float scale = sqrt(2./(size*size*c));
     for(i = 0; i < c*n*size*size; ++i) l.weights[i] = scale*rand_uniform(-1,1);
 
-
-    l.output = (float*)calloc(l.batch*out_h * out_w * n, sizeof(float));
-    l.delta  = (float*)calloc(l.batch*out_h * out_w * n, sizeof(float));
-    l.workspace_size = out_h*out_w*size*size*c;
+    l.col_image = calloc(out_h*out_w*size*size*c, sizeof(float));
+    l.output = calloc(l.batch*out_h * out_w * n, sizeof(float));
+    l.delta  = calloc(l.batch*out_h * out_w * n, sizeof(float));
     
     l.forward = forward_local_layer;
     l.backward = backward_local_layer;
@@ -77,6 +76,7 @@ local_layer make_local_layer(int batch, int h, int w, int c, int n, int size, in
     l.biases_gpu = cuda_make_array(l.biases, l.outputs);
     l.bias_updates_gpu = cuda_make_array(l.bias_updates, l.outputs);
 
+    l.col_image_gpu = cuda_make_array(l.col_image, out_h*out_w*size*size*c);
     l.delta_gpu = cuda_make_array(l.delta, l.batch*out_h*out_w*n);
     l.output_gpu = cuda_make_array(l.output, l.batch*out_h*out_w*n);
 
@@ -102,11 +102,11 @@ void forward_local_layer(const local_layer l, network_state state)
     for(i = 0; i < l.batch; ++i){
         float *input = state.input + i*l.w*l.h*l.c;
         im2col_cpu(input, l.c, l.h, l.w, 
-                l.size, l.stride, l.pad, state.workspace);
+                l.size, l.stride, l.pad, l.col_image);
         float *output = l.output + i*l.outputs;
         for(j = 0; j < locations; ++j){
             float *a = l.weights + j*l.size*l.size*l.c*l.n;
-            float *b = state.workspace + j;
+            float *b = l.col_image + j;
             float *c = output + j;
 
             int m = l.n;
@@ -133,11 +133,11 @@ void backward_local_layer(local_layer l, network_state state)
     for(i = 0; i < l.batch; ++i){
         float *input = state.input + i*l.w*l.h*l.c;
         im2col_cpu(input, l.c, l.h, l.w, 
-                l.size, l.stride, l.pad, state.workspace);
+                l.size, l.stride, l.pad, l.col_image);
 
         for(j = 0; j < locations; ++j){ 
             float *a = l.delta + i*l.outputs + j;
-            float *b = state.workspace + j;
+            float *b = l.col_image + j;
             float *c = l.weight_updates + j*l.size*l.size*l.c*l.n;
             int m = l.n;
             int n = l.size*l.size*l.c;
@@ -150,7 +150,7 @@ void backward_local_layer(local_layer l, network_state state)
             for(j = 0; j < locations; ++j){ 
                 float *a = l.weights + j*l.size*l.size*l.c*l.n;
                 float *b = l.delta + i*l.outputs + j;
-                float *c = state.workspace + j;
+                float *c = l.col_image + j;
 
                 int m = l.size*l.size*l.c;
                 int n = 1;
@@ -159,7 +159,7 @@ void backward_local_layer(local_layer l, network_state state)
                 gemm(1,0,m,n,k,1,a,m,b,locations,0,c,locations);
             }
 
-            col2im_cpu(state.workspace, l.c,  l.h,  l.w,  l.size,  l.stride, l.pad, state.delta+i*l.c*l.h*l.w);
+            col2im_cpu(l.col_image, l.c,  l.h,  l.w,  l.size,  l.stride, l.pad, state.delta+i*l.c*l.h*l.w);
         }
     }
 }
@@ -192,11 +192,11 @@ void forward_local_layer_gpu(const local_layer l, network_state state)
     for(i = 0; i < l.batch; ++i){
         float *input = state.input + i*l.w*l.h*l.c;
         im2col_ongpu(input, l.c, l.h, l.w, 
-                l.size, l.stride, l.pad, state.workspace);
+                l.size, l.stride, l.pad, l.col_image_gpu);
         float *output = l.output_gpu + i*l.outputs;
         for(j = 0; j < locations; ++j){
             float *a = l.weights_gpu + j*l.size*l.size*l.c*l.n;
-            float *b = state.workspace + j;
+            float *b = l.col_image_gpu + j;
             float *c = output + j;
 
             int m = l.n;
@@ -222,11 +222,11 @@ void backward_local_layer_gpu(local_layer l, network_state state)
     for(i = 0; i < l.batch; ++i){
         float *input = state.input + i*l.w*l.h*l.c;
         im2col_ongpu(input, l.c, l.h, l.w, 
-                l.size, l.stride, l.pad, state.workspace);
+                l.size, l.stride, l.pad, l.col_image_gpu);
 
         for(j = 0; j < locations; ++j){ 
             float *a = l.delta_gpu + i*l.outputs + j;
-            float *b = state.workspace + j;
+            float *b = l.col_image_gpu + j;
             float *c = l.weight_updates_gpu + j*l.size*l.size*l.c*l.n;
             int m = l.n;
             int n = l.size*l.size*l.c;
@@ -239,7 +239,7 @@ void backward_local_layer_gpu(local_layer l, network_state state)
             for(j = 0; j < locations; ++j){ 
                 float *a = l.weights_gpu + j*l.size*l.size*l.c*l.n;
                 float *b = l.delta_gpu + i*l.outputs + j;
-                float *c = state.workspace + j;
+                float *c = l.col_image_gpu + j;
 
                 int m = l.size*l.size*l.c;
                 int n = 1;
@@ -248,7 +248,7 @@ void backward_local_layer_gpu(local_layer l, network_state state)
                 gemm_ongpu(1,0,m,n,k,1,a,m,b,locations,0,c,locations);
             }
 
-            col2im_ongpu(state.workspace, l.c,  l.h,  l.w,  l.size,  l.stride, l.pad, state.delta+i*l.c*l.h*l.w);
+            col2im_ongpu(l.col_image_gpu, l.c,  l.h,  l.w,  l.size,  l.stride, l.pad, state.delta+i*l.c*l.h*l.w);
         }
     }
 }

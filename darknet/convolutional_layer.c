@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifdef CUDNN
+#pragma comment(lib, "cudnn.lib")  
+#endif
+
 #ifdef AI2
 #include "xnor_layer.h"
 #endif
@@ -23,11 +27,11 @@ void swap_binary(convolutional_layer *l)
     l->weights = l->binary_weights;
     l->binary_weights = swap;
 
-#ifdef GPU
+    #ifdef GPU
     swap = l->weights_gpu;
     l->weights_gpu = l->binary_weights_gpu;
     l->binary_weights_gpu = swap;
-#endif
+    #endif
 }
 
 void binarize_weights(float *weights, int n, int size, float *binary)
@@ -80,15 +84,23 @@ int convolutional_out_width(convolutional_layer l)
 
 image get_convolutional_image(convolutional_layer l)
 {
-    return float_to_image(l.out_w,l.out_h,l.out_c,l.output);
+    int h,w,c;
+    h = convolutional_out_height(l);
+    w = convolutional_out_width(l);
+    c = l.n;
+    return float_to_image(w,h,c,l.output);
 }
 
 image get_convolutional_delta(convolutional_layer l)
 {
-    return float_to_image(l.out_w,l.out_h,l.out_c,l.delta);
+    int h,w,c;
+    h = convolutional_out_height(l);
+    w = convolutional_out_width(l);
+    c = l.n;
+    return float_to_image(w,h,c,l.delta);
 }
 
-static size_t get_workspace_size(layer l){
+size_t get_workspace_size(layer l){
 #ifdef CUDNN
     if(gpu_index >= 0){
         size_t most = 0;
@@ -119,7 +131,7 @@ static size_t get_workspace_size(layer l){
         if (s > most) most = s;
         return most;
     }
-#endif
+    #endif
     return (size_t)l.out_h*l.out_w*l.size*l.size*l.c*sizeof(float);
 }
 
@@ -133,10 +145,13 @@ void cudnn_convolutional_setup(layer *l)
 
     cudnnSetTensor4dDescriptor(l->srcTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, l->batch, l->c, l->h, l->w); 
     cudnnSetTensor4dDescriptor(l->dstTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, l->batch, l->out_c, l->out_h, l->out_w); 
-    cudnnSetTensor4dDescriptor(l->normTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l->out_c, 1, 1); 
     cudnnSetFilter4dDescriptor(l->weightDesc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, l->n, l->c, l->size, l->size); 
-    cudnnSetConvolution2dDescriptor(l->convDesc, l->pad, l->pad, l->stride, l->stride, 1, 1, CUDNN_CROSS_CORRELATION);
-    cudnnGetConvolutionForwardAlgorithm(cudnn_handle(),
+#if(CUDNN_MAJOR >= 6)
+	cudnnSetConvolution2dDescriptor(l->convDesc, l->pad, l->pad, l->stride, l->stride, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT);	// cudnn 6.0
+#else
+	cudnnSetConvolution2dDescriptor(l->convDesc, l->pad, l->pad, l->stride, l->stride, 1, 1, CUDNN_CROSS_CORRELATION);	// cudnn 5.1
+#endif
+	cudnnGetConvolutionForwardAlgorithm(cudnn_handle(),
             l->srcTensorDesc,
             l->weightDesc,
             l->convDesc,
@@ -167,7 +182,7 @@ void cudnn_convolutional_setup(layer *l)
 convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int n, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int binary, int xnor, int adam)
 {
     int i;
-    convolutional_layer l = {};
+    convolutional_layer l = {0};
     l.type = CONVOLUTIONAL;
 
     l.h = h;
@@ -182,62 +197,61 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.pad = padding;
     l.batch_normalize = batch_normalize;
 
-    l.weights = (float*)calloc(c*n*size*size, sizeof(float));
-    l.weight_updates = (float*)calloc(c*n*size*size, sizeof(float));
+    l.weights = calloc(c*n*size*size, sizeof(float));
+    l.weight_updates = calloc(c*n*size*size, sizeof(float));
 
-    l.biases = (float*)calloc(n, sizeof(float));
-    l.bias_updates = (float*)calloc(n, sizeof(float));
+    l.biases = calloc(n, sizeof(float));
+    l.bias_updates = calloc(n, sizeof(float));
 
     // float scale = 1./sqrt(size*size*c);
     float scale = sqrt(2./(size*size*c));
     for(i = 0; i < c*n*size*size; ++i) l.weights[i] = scale*rand_uniform(-1, 1);
-    int out_w = convolutional_out_width(l);
     int out_h = convolutional_out_height(l);
+    int out_w = convolutional_out_width(l);
     l.out_h = out_h;
     l.out_w = out_w;
     l.out_c = n;
     l.outputs = l.out_h * l.out_w * l.out_c;
     l.inputs = l.w * l.h * l.c;
 
-    l.output = (float*)calloc(l.batch*l.outputs, sizeof(float));
-    l.delta  = (float*)calloc(l.batch*l.outputs, sizeof(float));
+    l.output = calloc(l.batch*l.outputs, sizeof(float));
+    l.delta  = calloc(l.batch*l.outputs, sizeof(float));
 
     l.forward = forward_convolutional_layer;
     l.backward = backward_convolutional_layer;
     l.update = update_convolutional_layer;
     if(binary){
-        l.binary_weights = (float*)calloc(c*n*size*size, sizeof(float));
-        l.cweights = (char*)calloc(c*n*size*size, sizeof(char));
-        l.scales = (float*)calloc(n, sizeof(float));
+        l.binary_weights = calloc(c*n*size*size, sizeof(float));
+        l.cweights = calloc(c*n*size*size, sizeof(char));
+        l.scales = calloc(n, sizeof(float));
     }
     if(xnor){
-        l.binary_weights = (float*)calloc(c*n*size*size, sizeof(float));
-        l.binary_input = (float*)calloc(l.inputs*l.batch, sizeof(float));
+        l.binary_weights = calloc(c*n*size*size, sizeof(float));
+        l.binary_input = calloc(l.inputs*l.batch, sizeof(float));
     }
 
     if(batch_normalize){
-        l.scales = (float*)calloc(n, sizeof(float));
-        l.scale_updates = (float*)calloc(n, sizeof(float));
+        l.scales = calloc(n, sizeof(float));
+        l.scale_updates = calloc(n, sizeof(float));
         for(i = 0; i < n; ++i){
             l.scales[i] = 1;
         }
 
-        l.mean = (float*)calloc(n, sizeof(float));
-        l.variance = (float*)calloc(n, sizeof(float));
+        l.mean = calloc(n, sizeof(float));
+        l.variance = calloc(n, sizeof(float));
 
-        l.mean_delta = (float*)calloc(n, sizeof(float));
-        l.variance_delta = (float*)calloc(n, sizeof(float));
+        l.mean_delta = calloc(n, sizeof(float));
+        l.variance_delta = calloc(n, sizeof(float));
 
-        l.rolling_mean = (float*)calloc(n, sizeof(float));
-        l.rolling_variance = (float*)calloc(n, sizeof(float));
-        l.x = (float*)calloc(l.batch*l.outputs, sizeof(float));
-        l.x_norm = (float*)calloc(l.batch*l.outputs, sizeof(float));
-
+        l.rolling_mean = calloc(n, sizeof(float));
+        l.rolling_variance = calloc(n, sizeof(float));
+        l.x = calloc(l.batch*l.outputs, sizeof(float));
+        l.x_norm = calloc(l.batch*l.outputs, sizeof(float));
     }
     if(adam){
         l.adam = 1;
-        l.m = (float*)calloc(c*n*size*size, sizeof(float));
-        l.v = (float*)calloc(c*n*size*size, sizeof(float));
+        l.m = calloc(c*n*size*size, sizeof(float));
+        l.v = calloc(c*n*size*size, sizeof(float));
     }
 
 #ifdef GPU
@@ -285,7 +299,6 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
             l.x_norm_gpu = cuda_make_array(l.output, l.batch*out_h*out_w*n);
         }
 #ifdef CUDNN
-        cudnnCreateTensorDescriptor(&l.normTensorDesc);
         cudnnCreateTensorDescriptor(&l.srcTensorDesc);
         cudnnCreateTensorDescriptor(&l.dstTensorDesc);
         cudnnCreateFilterDescriptor(&l.weightDesc);
@@ -351,22 +364,18 @@ void resize_convolutional_layer(convolutional_layer *l, int w, int h)
     int out_w = convolutional_out_width(*l);
     int out_h = convolutional_out_height(*l);
 
-#if 1
-    printf("resize_convolutional_layer: out_w, out_h = [%d, %d], new out_w, out_h [%d, %d], batch, outputs [%d, %d] \n", l->out_w, l->out_h, out_w, out_h, l->batch, l->outputs);
-#endif
     l->out_w = out_w;
     l->out_h = out_h;
 
     l->outputs = l->out_h * l->out_w * l->out_c;
     l->inputs = l->w * l->h * l->c;
 
-    l->output = (float*)realloc(l->output, l->batch*l->outputs*sizeof(float));
-    l->delta  = (float*)realloc(l->delta,  l->batch*l->outputs*sizeof(float));
+    l->output = realloc(l->output, l->batch*l->outputs*sizeof(float));
+    l->delta  = realloc(l->delta,  l->batch*l->outputs*sizeof(float));
     if(l->batch_normalize){
-        l->x = (float*)realloc(l->x, l->batch*l->outputs*sizeof(float));
-        l->x_norm  = (float*)realloc(l->x_norm, l->batch*l->outputs*sizeof(float));
+        l->x = realloc(l->x, l->batch*l->outputs*sizeof(float));
+        l->x_norm  = realloc(l->x_norm, l->batch*l->outputs*sizeof(float));
     }
-
 
 #ifdef GPU
     cuda_free(l->delta_gpu);
@@ -425,8 +434,8 @@ void backward_bias(float *bias_updates, float *delta, int batch, int n, int size
 
 void forward_convolutional_layer(convolutional_layer l, network_state state)
 {
-    int out_h = l.out_h;
-    int out_w = l.out_w;
+    int out_h = convolutional_out_height(l);
+    int out_w = convolutional_out_width(l);
     int i;
 
     fill_cpu(l.outputs*l.batch, 0, l.output, 1);
@@ -457,9 +466,8 @@ void forward_convolutional_layer(convolutional_layer l, network_state state)
 
     if(l.batch_normalize){
         forward_batchnorm_layer(l, state);
-    } else {
-        add_bias(l.output, l.biases, l.batch, l.n, out_h*out_w);
     }
+    add_bias(l.output, l.biases, l.batch, l.n, out_h*out_w);
 
     activate_array(l.output, m*n*l.batch, l.activation);
     if(l.binary || l.xnor) swap_binary(&l);
@@ -470,14 +478,14 @@ void backward_convolutional_layer(convolutional_layer l, network_state state)
     int i;
     int m = l.n;
     int n = l.size*l.size*l.c;
-    int k = l.out_w*l.out_h;
+    int k = convolutional_out_height(l)*
+        convolutional_out_width(l);
 
     gradient_array(l.output, m*k*l.batch, l.activation, l.delta);
+    backward_bias(l.bias_updates, l.delta, l.batch, l.n, k);
 
     if(l.batch_normalize){
         backward_batchnorm_layer(l, state);
-    } else {
-        backward_bias(l.bias_updates, l.delta, l.batch, l.n, k);
     }
 
     for(i = 0; i < l.batch; ++i){
@@ -554,7 +562,7 @@ void rescale_weights(convolutional_layer l, float scale, float trans)
 
 image *get_weights(convolutional_layer l)
 {
-    image *weights = (image*)calloc(l.n, sizeof(image));
+    image *weights = calloc(l.n, sizeof(image));
     int i;
     for(i = 0; i < l.n; ++i){
         weights[i] = copy_image(get_convolutional_weight(l, i));

@@ -2,12 +2,16 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "bugfixes.h"
-#include "image.h"
+#include <stdint.h>
 #include "layer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "image.h"
 #include "data.h"
 #include "tree.h"
-
 
 typedef enum {
     CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
@@ -15,12 +19,9 @@ typedef enum {
 
 typedef struct network{
     float *workspace;
-#ifdef _ENABLE_COOLVISION_93b0d61c8570df0292b51b3c0fc8d23655274eb5
-    size_t workspace_size;
-#endif
     int n;
     int batch;
-    int *seen;
+	int *seen;
     float epoch;
     int subdivisions;
     float momentum;
@@ -48,7 +49,6 @@ typedef struct network{
     float eps;
 
     int inputs;
-    int notruth;
     int h, w, c;
     int max_crop;
     int min_crop;
@@ -64,6 +64,7 @@ typedef struct network{
     #ifdef GPU
     float **input_gpu;
     float **truth_gpu;
+	int wait_stream;
     #endif
 } network;
 
@@ -77,10 +78,6 @@ typedef struct network_state {
     network net;
 } network_state;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef GPU
 float train_networks(network *nets, int n, data d, int interval);
 void sync_nets(network *nets, int n, int interval);
@@ -92,7 +89,6 @@ float *get_network_output_gpu(network net);
 void forward_network_gpu(network net, network_state state);
 void backward_network_gpu(network net, network_state state);
 void update_network_gpu(network net);
-void harmless_update_network_gpu(network net);
 #endif
 
 float get_current_rate(network net);
@@ -113,8 +109,6 @@ float train_network_datum(network net, float *x, float *y);
 
 matrix network_predict_data(network net, data test);
 float *network_predict(network net, float *input);
-void set_batch_network(network *net, int b);
-
 float network_accuracy(network net, data d);
 float *network_accuracies(network net, data d, int n);
 float network_accuracy_multi(network net, data d, int n);
@@ -131,19 +125,16 @@ int get_predicted_class_network(network net);
 void print_network(network net);
 void visualize_network(network net);
 int resize_network(network *net, int w, int h);
+void set_batch_network(network *net, int b);
 int get_network_input_size(network net);
 float get_network_cost(network net);
-network load_network(char *cfg, char *weights, int clear);
-load_args get_base_args(network net);
 
 int get_network_nuisance(network net);
 int get_network_background(network net);
 
-
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif
 

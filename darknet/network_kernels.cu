@@ -2,6 +2,7 @@
 #include "curand.h"
 #include "cublas_v2.h"
 
+extern "C" {
 #include <stdio.h>
 #include <time.h>
 #include <assert.h>
@@ -33,7 +34,7 @@
 #include "route_layer.h"
 #include "shortcut_layer.h"
 #include "blas.h"
-
+}
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
@@ -49,10 +50,10 @@ void forward_network_gpu(network net, network_state state)
         if(l.delta_gpu){
             fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
         }
-        //if(l.c ==3 && i > 5) state.input = *net.input_gpu;
         l.forward_gpu(l, state);
+		if(net.wait_stream)
+			cudaStreamSynchronize(get_cuda_stream());
         state.input = l.output_gpu;
-        if(l.truth) state.truth = l.output_gpu;
     }
 }
 
@@ -65,7 +66,7 @@ void backward_network_gpu(network net, network_state state)
     for(i = net.n-1; i >= 0; --i){
         state.index = i;
         layer l = net.layers[i];
-        if(l.stopbackward) break;
+        if (l.stopbackward) break;
         if(i == 0){
             state.input = original_input;
             state.delta = original_delta;
@@ -88,16 +89,9 @@ void update_network_gpu(network net)
         layer l = net.layers[i];
         l.t = get_current_batch(net);
         if(l.update_gpu){
-            l.update_gpu(l, update_batch, rate*l.learning_rate_scale, net.momentum, net.decay);
+            l.update_gpu(l, update_batch, rate, net.momentum, net.decay);
         }
     }
-}
-
-void harmless_update_network_gpu(network net)
-{
-    net.learning_rate = 0;
-    net.momentum = 1;
-    update_network_gpu(net);
 }
 
 void forward_backward_network_gpu(network net, float *x, float *y)
@@ -110,16 +104,17 @@ void forward_backward_network_gpu(network net, float *x, float *y)
     if(net.layers[net.n-1].truths) y_size = net.layers[net.n-1].truths*net.batch;
     if(!*net.input_gpu){
         *net.input_gpu = cuda_make_array(x, x_size);
-        if(!net.notruth) *net.truth_gpu = cuda_make_array(y, y_size);
+        *net.truth_gpu = cuda_make_array(y, y_size);
     }else{
         cuda_push_array(*net.input_gpu, x, x_size);
-        if(!net.notruth) cuda_push_array(*net.truth_gpu, y, y_size);
+        cuda_push_array(*net.truth_gpu, y, y_size);
     }
     state.input = *net.input_gpu;
     state.delta = 0;
     state.truth = *net.truth_gpu;
     state.train = 1;
     forward_network_gpu(net, state);
+	cudaStreamSynchronize(get_cuda_stream());
     backward_network_gpu(net, state);
 }
 
@@ -138,8 +133,6 @@ typedef struct {
     data d;
     float *err;
 } train_args;
-
-#if defined __linux__ || defined __APPLE__ || defined PTHREAD_WINDOWS
 
 void *train_thread(void *ptr)
 {
@@ -160,7 +153,6 @@ pthread_t train_network_in_thread(network net, data d, float *err)
     if(pthread_create(&thread, 0, train_thread, ptr)) error("Thread creation failed");
     return thread;
 }
-#endif
 
 void pull_updates(layer l)
 {
@@ -192,7 +184,7 @@ void update_layer(layer l, network net)
     float rate = get_current_rate(net);
     l.t = get_current_batch(net);
     if(l.update_gpu){
-        l.update_gpu(l, update_batch, rate*l.learning_rate_scale, net.momentum, net.decay);
+        l.update_gpu(l, update_batch, rate, net.momentum, net.decay);
     }
 }
 
@@ -317,7 +309,6 @@ typedef struct{
     int j;
 } sync_args;
 
-
 void *sync_layer_thread(void *ptr)
 {
     sync_args args = *(sync_args*)ptr;
@@ -326,7 +317,6 @@ void *sync_layer_thread(void *ptr)
     return 0;
 }
 
-#if defined __linux__ || defined __APPLE__ || defined PTHREAD_WINDOWS
 pthread_t sync_layer_in_thread(network *nets, int n, int j)
 {
     pthread_t thread;
@@ -337,7 +327,6 @@ pthread_t sync_layer_in_thread(network *nets, int n, int j)
     if(pthread_create(&thread, 0, sync_layer_thread, ptr)) error("Thread creation failed");
     return thread;
 }
-
 
 void sync_nets(network *nets, int n, int interval)
 {
@@ -357,13 +346,6 @@ void sync_nets(network *nets, int n, int interval)
     }
     free(threads);
 }
-#else
-void sync_nets(network *nets, int n, int interval)
-{
-	error("Sync_nets unsupported in Windows");
-}
-#endif
-
 
 float train_networks(network *nets, int n, data d, int interval)
 {
@@ -371,7 +353,6 @@ float train_networks(network *nets, int n, data d, int interval)
     int batch = nets[0].batch;
     int subdivisions = nets[0].subdivisions;
     assert(batch * subdivisions * n == d.X.rows);
-#if defined __linux__ || defined __APPLE__ || defined PTHREAD_WINDOWS
     pthread_t *threads = (pthread_t *) calloc(n, sizeof(pthread_t));
     float *errors = (float *) calloc(n, sizeof(float));
 
@@ -396,12 +377,7 @@ float train_networks(network *nets, int n, data d, int interval)
     free(threads);
     free(errors);
     return (float)sum/(n);
-#else
-	error("Training for GPUs > 1 not supported in Windows...");
-	return 0.f;
-#endif
 }
-
 
 float *get_network_output_layer_gpu(network net, int i)
 {
@@ -419,7 +395,8 @@ float *get_network_output_gpu(network net)
 
 float *network_predict_gpu(network net, float *input)
 {
-    cuda_set_device(net.gpu_index);
+	if (net.gpu_index != cuda_get_device())
+		cuda_set_device(net.gpu_index);
     int size = get_network_input_size(net) * net.batch;
     network_state state;
     state.index = 0;

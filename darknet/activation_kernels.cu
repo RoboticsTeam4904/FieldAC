@@ -2,9 +2,10 @@
 #include "curand.h"
 #include "cublas_v2.h"
 
+extern "C" {
 #include "activations.h"
 #include "cuda.h"
-
+}
 
 
 __device__ float lhtan_activate_kernel(float x)
@@ -151,13 +152,13 @@ __global__ void gradient_array_kernel(float *x, int n, ACTIVATION a, float *delt
     if(i < n) delta[i] *= gradient_kernel(x[i], a);
 }
 
-void activate_array_ongpu(float *x, int n, ACTIVATION a) 
+extern "C" void activate_array_ongpu(float *x, int n, ACTIVATION a) 
 {
-    activate_array_kernel<<<cuda_gridsize(n), BLOCK>>>(x, n, a);
+    activate_array_kernel<<<cuda_gridsize(n), BLOCK, 0, get_cuda_stream()>>>(x, n, a);
     check_error(cudaPeekAtLastError());
 }
 
-void gradient_array_ongpu(float *x, int n, ACTIVATION a, float *delta) 
+extern "C" void gradient_array_ongpu(float *x, int n, ACTIVATION a, float *delta) 
 {
     gradient_array_kernel<<<cuda_gridsize(n), BLOCK>>>(x, n, a, delta);
     check_error(cudaPeekAtLastError());

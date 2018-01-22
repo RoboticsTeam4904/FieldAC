@@ -3,13 +3,13 @@
 #include <math.h>
 #include <stdlib.h>
 
-box float_to_box(float *f, int stride)
+box float_to_box(float *f)
 {
     box b;
     b.x = f[0];
-    b.y = f[1*stride];
-    b.w = f[2*stride];
-    b.h = f[3*stride];
+    b.y = f[1];
+    b.w = f[2];
+    b.h = f[3];
     return b;
 }
 
@@ -232,7 +232,7 @@ dbox diou(box a, box b)
 
 typedef struct{
     int index;
-    int classtype;
+    int class;
     float **probs;
 } sortable_bbox;
 
@@ -240,54 +240,26 @@ int nms_comparator(const void *pa, const void *pb)
 {
     sortable_bbox a = *(sortable_bbox *)pa;
     sortable_bbox b = *(sortable_bbox *)pb;
-    float diff = a.probs[a.index][b.classtype] - b.probs[b.index][b.classtype];
+    float diff = a.probs[a.index][b.class] - b.probs[b.index][b.class];
     if(diff < 0) return 1;
     else if(diff > 0) return -1;
     return 0;
 }
 
-void do_nms_obj(box *boxes, float **probs, int total, int classes, float thresh)
-{
-    int i, j, k;
-    sortable_bbox *s = (sortable_bbox*)calloc(total, sizeof(sortable_bbox));
-
-    for(i = 0; i < total; ++i){
-        s[i].index = i;       
-        s[i].classtype = classes;
-        s[i].probs = probs;
-    }
-
-    qsort(s, total, sizeof(sortable_bbox), nms_comparator);
-    for(i = 0; i < total; ++i){
-        if(probs[s[i].index][classes] == 0) continue;
-        box a = boxes[s[i].index];
-        for(j = i+1; j < total; ++j){
-            box b = boxes[s[j].index];
-            if (box_iou(a, b) > thresh){
-                for(k = 0; k < classes+1; ++k){
-                    probs[s[j].index][k] = 0;
-                }
-            }
-        }
-    }
-    free(s);
-}
-
-
 void do_nms_sort(box *boxes, float **probs, int total, int classes, float thresh)
 {
     int i, j, k;
-    sortable_bbox *s = (sortable_bbox*)calloc(total, sizeof(sortable_bbox));
+    sortable_bbox *s = calloc(total, sizeof(sortable_bbox));
 
     for(i = 0; i < total; ++i){
         s[i].index = i;       
-        s[i].classtype = 0;
+        s[i].class = 0;
         s[i].probs = probs;
     }
 
     for(k = 0; k < classes; ++k){
         for(i = 0; i < total; ++i){
-            s[i].classtype = k;
+            s[i].class = k;
         }
         qsort(s, total, sizeof(sortable_bbox), nms_comparator);
         for(i = 0; i < total; ++i){
@@ -339,7 +311,7 @@ box decode_box(box b, box anchor)
     box decode;
     decode.x = b.x * anchor.w + anchor.x;
     decode.y = b.y * anchor.h + anchor.y;
-    decode.w = pow(2.f, b.w) * anchor.w;
-    decode.h = pow(2.f, b.h) * anchor.h;
+    decode.w = pow(2., b.w) * anchor.w;
+    decode.h = pow(2., b.h) * anchor.h;
     return decode;
 }

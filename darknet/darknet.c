@@ -13,7 +13,7 @@
 #endif
 
 extern void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top);
-extern void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh, float hier_thresh);
+extern void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh);
 extern void run_voxel(int argc, char **argv);
 extern void run_yolo(int argc, char **argv);
 extern void run_detector(int argc, char **argv);
@@ -24,7 +24,6 @@ extern void run_nightmare(int argc, char **argv);
 extern void run_dice(int argc, char **argv);
 extern void run_compare(int argc, char **argv);
 extern void run_classifier(int argc, char **argv);
-extern void run_regressor(int argc, char **argv);
 extern void run_char_rnn(int argc, char **argv);
 extern void run_vid_rnn(int argc, char **argv);
 extern void run_tag(int argc, char **argv);
@@ -32,7 +31,6 @@ extern void run_cifar(int argc, char **argv);
 extern void run_go(int argc, char **argv);
 extern void run_art(int argc, char **argv);
 extern void run_super(int argc, char **argv);
-extern void run_lsd(int argc, char **argv);
 
 void average(int argc, char *argv[])
 {
@@ -97,7 +95,7 @@ void speed(char *cfgfile, int tics)
     set_batch_network(&net, 1);
     int i;
     time_t start = time(0);
-    image im = make_image(net.w, net.h, net.c*net.batch);
+    image im = make_image(net.w, net.h, net.c);
     for(i = 0; i < tics; ++i){
         network_predict(net, im.data);
     }
@@ -131,9 +129,7 @@ void oneoff(char *cfgfile, char *weightfile, char *outfile)
     network net = parse_network_cfg(cfgfile);
     int oldn = net.layers[net.n - 2].n;
     int c = net.layers[net.n - 2].c;
-    scal_cpu(oldn*c, .1, net.layers[net.n - 2].weights, 1);
-    scal_cpu(oldn, 0, net.layers[net.n - 2].biases, 1);
-    net.layers[net.n - 2].n = 9418;
+    net.layers[net.n - 2].n = 9372;
     net.layers[net.n - 2].biases += 5;
     net.layers[net.n - 2].weights += 5*c;
     if(weightfile){
@@ -152,24 +148,12 @@ void oneoff(char *cfgfile, char *weightfile, char *outfile)
     save_weights(net, outfile);
 }
 
-void oneoff2(char *cfgfile, char *weightfile, char *outfile, int l)
-{
-    gpu_index = -1;
-    network net = parse_network_cfg(cfgfile);
-    if(weightfile){
-        load_weights_upto(&net, weightfile, 0, net.n);
-        load_weights_upto(&net, weightfile, l, net.n);
-    }
-    *net.seen = 0;
-    save_weights_upto(net, outfile, net.n);
-}
-
 void partial(char *cfgfile, char *weightfile, char *outfile, int max)
 {
     gpu_index = -1;
     network net = parse_network_cfg(cfgfile);
     if(weightfile){
-        load_weights_upto(&net, weightfile, 0, max);
+        load_weights_upto(&net, weightfile, max);
     }
     *net.seen = 0;
     save_weights_upto(net, outfile, max);
@@ -244,12 +228,12 @@ layer normalize_layer(layer l, int n)
 {
     int j;
     l.batch_normalize=1;
-    l.scales = (float*)calloc(n, sizeof(float));
+    l.scales = calloc(n, sizeof(float));
     for(j = 0; j < n; ++j){
         l.scales[j] = 1;
     }
-    l.rolling_mean = (float*)calloc(n, sizeof(float));
-    l.rolling_variance = (float*)calloc(n, sizeof(float));
+    l.rolling_mean = calloc(n, sizeof(float));
+    l.rolling_variance = calloc(n, sizeof(float));
     return l;
 }
 
@@ -394,14 +378,12 @@ int main(int argc, char **argv)
         run_voxel(argc, argv);
     } else if (0 == strcmp(argv[1], "super")){
         run_super(argc, argv);
-    } else if (0 == strcmp(argv[1], "lsd")){
-        run_lsd(argc, argv);
     } else if (0 == strcmp(argv[1], "detector")){
         run_detector(argc, argv);
     } else if (0 == strcmp(argv[1], "detect")){
         float thresh = find_float_arg(argc, argv, "-thresh", .24);
         char *filename = (argc > 4) ? argv[4]: 0;
-        test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh, .5);
+        test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh);
     } else if (0 == strcmp(argv[1], "cifar")){
         run_cifar(argc, argv);
     } else if (0 == strcmp(argv[1], "go")){
@@ -416,8 +398,6 @@ int main(int argc, char **argv)
         predict_classifier("cfg/imagenet1k.data", argv[2], argv[3], argv[4], 5);
     } else if (0 == strcmp(argv[1], "classifier")){
         run_classifier(argc, argv);
-    } else if (0 == strcmp(argv[1], "regressor")){
-        run_regressor(argc, argv);
     } else if (0 == strcmp(argv[1], "art")){
         run_art(argc, argv);
     } else if (0 == strcmp(argv[1], "tag")){
@@ -454,8 +434,6 @@ int main(int argc, char **argv)
         speed(argv[2], (argc > 3 && argv[3]) ? atoi(argv[3]) : 0);
     } else if (0 == strcmp(argv[1], "oneoff")){
         oneoff(argv[2], argv[3], argv[4]);
-    } else if (0 == strcmp(argv[1], "oneoff2")){
-        oneoff2(argv[2], argv[3], argv[4], atoi(argv[5]));
     } else if (0 == strcmp(argv[1], "partial")){
         partial(argv[2], argv[3], argv[4], atoi(argv[5]));
     } else if (0 == strcmp(argv[1], "average")){

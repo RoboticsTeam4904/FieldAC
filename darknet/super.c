@@ -7,7 +7,7 @@
 #include "opencv2/highgui/highgui_c.h"
 #endif
 
-void train_super(char *cfgfile, char *weightfile, int clear)
+void train_super(char *cfgfile, char *weightfile)
 {
     char *train_images = "/data/imagenet/imagenet1k.train.list";
     char *backup_directory = "/home/pjreddie/backup/";
@@ -19,7 +19,6 @@ void train_super(char *cfgfile, char *weightfile, int clear)
     if(weightfile){
         load_weights(&net, weightfile);
     }
-    if(clear) *net.seen = 0;
     printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net.learning_rate, net.momentum, net.decay);
     int imgs = net.batch*net.subdivisions;
     int i = *net.seen/imgs;
@@ -40,21 +39,16 @@ void train_super(char *cfgfile, char *weightfile, int clear)
     args.d = &buffer;
     args.type = SUPER_DATA;
 
-#ifdef __linux__
     pthread_t load_thread = load_data_in_thread(args);
-#endif
     clock_t time;
     //while(i*imgs < N*120){
     while(get_current_batch(net) < net.max_batches){
         i += 1;
         time=clock();
-#ifdef __linux__
         pthread_join(load_thread, 0);
-#endif
         train = buffer;
-#ifdef __linux__
         load_thread = load_data_in_thread(args);
-#endif
+
         printf("Loaded: %lf seconds\n", sec(clock()-time));
 
         time=clock();
@@ -129,8 +123,7 @@ void run_super(int argc, char **argv)
     char *cfg = argv[3];
     char *weights = (argc > 4) ? argv[4] : 0;
     char *filename = (argc > 5) ? argv[5] : 0;
-    int clear = find_arg(argc, argv, "-clear");
-    if(0==strcmp(argv[2], "train")) train_super(cfg, weights, clear);
+    if(0==strcmp(argv[2], "train")) train_super(cfg, weights);
     else if(0==strcmp(argv[2], "test")) test_super(cfg, weights, filename);
     /*
     else if(0==strcmp(argv[2], "valid")) validate_super(cfg, weights);

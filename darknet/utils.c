@@ -3,13 +3,16 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
-#ifdef __linux__
-#include <unistd.h>
-#endif
 #include <float.h>
 #include <limits.h>
-
+#ifdef WIN32
+#include "unistd.h"
+#else
+#include <unistd.h>
+#endif
 #include "utils.h"
+
+#pragma warning(disable: 4996)
 
 int *read_map(char *filename)
 {
@@ -20,7 +23,7 @@ int *read_map(char *filename)
     if(!file) file_error(filename);
     while((str=fgetl(file))){
         ++n;
-        map = (int*)realloc(map, n*sizeof(int));
+        map = realloc(map, n*sizeof(int));
         map[n-1] = atoi(str);
     }
     return map;
@@ -33,7 +36,7 @@ void sorta_shuffle(void *arr, size_t n, size_t size, size_t sections)
         size_t start = n*i/sections;
         size_t end = n*(i+1)/sections;
         size_t num = end-start;
-		shuffle((char*)arr + (start*size), num, size);
+        shuffle((char*)arr+(start*size), num, size);
     }
 }
 
@@ -43,9 +46,9 @@ void shuffle(void *arr, size_t n, size_t size)
     void *swp = calloc(1, size);
     for(i = 0; i < n-1; ++i){
         size_t j = i + rand()/(RAND_MAX / (n-i)+1);
-        memcpy(swp,          (char*)arr+(j*size), size);
-		memcpy((char*)arr + (j*size), (char*)arr + (i*size), size);
-		memcpy((char*)arr + (i*size), swp, size);
+        memcpy(swp,			(char*)arr+(j*size), size);
+        memcpy((char*)arr+(j*size), (char*)arr+(i*size), size);
+        memcpy((char*)arr+(i*size), swp,          size);
     }
 }
 
@@ -123,6 +126,7 @@ char *basecfg(char *cfgfile)
     {
         c = next+1;
     }
+	if(!next) while ((next = strchr(c, '\\'))) { c = next + 1; }
     c = copy_string(c);
     next = strchr(c, '.');
     if (next) *next = 0;
@@ -230,7 +234,7 @@ void strip(char *s)
     size_t offset = 0;
     for(i = 0; i < len; ++i){
         char c = s[i];
-        if(c==' '||c=='\t'||c=='\n') ++offset;
+        if(c==' '||c=='\t'||c=='\n'||c =='\r') ++offset;
         else s[i-offset] = c;
     }
     s[len-offset] = '\0';
@@ -252,8 +256,7 @@ void strip_char(char *s, char bad)
 void free_ptrs(void **ptrs, int n)
 {
     int i;
-    for(i = 0; i < n; ++i) 
-		free(ptrs[i]);
+    for(i = 0; i < n; ++i) free(ptrs[i]);
     free(ptrs);
 }
 
@@ -261,7 +264,7 @@ char *fgetl(FILE *fp)
 {
     if(feof(fp)) return 0;
     size_t size = 512;
-    char *line = (char*)malloc(size*sizeof(char));
+    char *line = malloc(size*sizeof(char));
     if(!fgets(line, size, fp)){
         free(line);
         return 0;
@@ -272,7 +275,7 @@ char *fgetl(FILE *fp)
     while((line[curr-1] != '\n') && !feof(fp)){
         if(curr == size-1){
             size *= 2;
-            line = (char*)realloc(line, size*sizeof(char));
+            line = realloc(line, size*sizeof(char));
             if(!line) {
                 printf("%ld\n", size);
                 malloc_error();
@@ -283,6 +286,7 @@ char *fgetl(FILE *fp)
         fgets(&line[curr], readsize, fp);
         curr = strlen(line);
     }
+    if(line[curr-2] == '\r') line[curr-2] = '\0';
     if(line[curr-1] == '\n') line[curr-1] = '\0';
 
     return line;
@@ -291,24 +295,14 @@ char *fgetl(FILE *fp)
 int read_int(int fd)
 {
     int n = 0;
-#ifdef __linux__
     int next = read(fd, &n, sizeof(int));
-#else
-	int next = 0;
-	printf("Unsupported operation on Windows ..\n");
-#endif
     if(next <= 0) return -1;
     return n;
 }
 
 void write_int(int fd, int n)
 {
-#ifdef __linux__
     int next = write(fd, &n, sizeof(int));
-#else
-	int next = 0;
-	printf("Unsupported operation on Windows ..\n");
-#endif
     if(next <= 0) error("read failed");
 }
 
@@ -316,12 +310,7 @@ int read_all_fail(int fd, char *buffer, size_t bytes)
 {
     size_t n = 0;
     while(n < bytes){
-#ifdef __linux__
         int next = read(fd, buffer + n, bytes-n);
-#else
-	int next = 0;
-	printf("Unsupported operation on Windows ..\n");
-#endif
         if(next <= 0) return 1;
         n += next;
     }
@@ -332,12 +321,7 @@ int write_all_fail(int fd, char *buffer, size_t bytes)
 {
     size_t n = 0;
     while(n < bytes){
-#ifdef __linux__
         size_t next = write(fd, buffer + n, bytes-n);
-#else
-	int next = 0;
-	printf("Unsupported operation on Windows ..\n");
-#endif
         if(next <= 0) return 1;
         n += next;
     }
@@ -348,12 +332,7 @@ void read_all(int fd, char *buffer, size_t bytes)
 {
     size_t n = 0;
     while(n < bytes){
-#ifdef __linux__
         int next = read(fd, buffer + n, bytes-n);
-#else
-int next = 0;
-printf("Unsupported operation on Windows ..\n");
-#endif
         if(next <= 0) error("read failed");
         n += next;
     }
@@ -363,12 +342,7 @@ void write_all(int fd, char *buffer, size_t bytes)
 {
     size_t n = 0;
     while(n < bytes){
-#ifdef __linux__
         size_t next = write(fd, buffer + n, bytes-n);
-#else
-	int next = 0;
-	printf("Unsupported operation on Windows ..\n");
-#endif
         if(next <= 0) error("write failed");
         n += next;
     }
@@ -377,7 +351,7 @@ void write_all(int fd, char *buffer, size_t bytes)
 
 char *copy_string(char *s)
 {
-    char *copy = (char*)malloc(strlen(s)+1);
+    char *copy = malloc(strlen(s)+1);
     strncpy(copy, s, strlen(s)+1);
     return copy;
 }
@@ -413,7 +387,7 @@ int count_fields(char *line)
 
 float *parse_fields(char *line, int n)
 {
-    float *field = (float*)calloc(n, sizeof(float));
+    float *field = calloc(n, sizeof(float));
     char *c, *p, *end;
     int count = 0;
     int done = 0;
@@ -635,24 +609,54 @@ float rand_uniform(float min, float max)
         max = swap;
     }
     return ((float)rand()/RAND_MAX * (max - min)) + min;
+	//return (random_float() * (max - min)) + min;
 }
 
 float rand_scale(float s)
 {
-    float scale = rand_uniform(1, s);
-    if(rand()%2) return scale;
+    float scale = rand_uniform_strong(1, s);
+    if(random_gen()%2) return scale;
     return 1./scale;
 }
 
 float **one_hot_encode(float *a, int n, int k)
 {
     int i;
-    float **t = (float**)calloc(n, sizeof(float*));
+    float **t = calloc(n, sizeof(float*));
     for(i = 0; i < n; ++i){
-        t[i] = (float*)calloc(k, sizeof(float));
+        t[i] = calloc(k, sizeof(float));
         int index = (int)a[i];
         t[i][index] = 1;
     }
     return t;
 }
 
+unsigned int random_gen()
+{
+	unsigned int rnd = 0;
+#ifdef WIN32
+	rand_s(&rnd);
+#else
+	rnd = rand();
+#endif
+	return rnd;
+}
+
+float random_float()
+{
+#ifdef WIN32
+	return ((float)random_gen() / (float)UINT_MAX);
+#else
+	return ((float)random_gen() / (float)RAND_MAX);
+#endif
+}
+
+float rand_uniform_strong(float min, float max)
+{
+	if (max < min) {
+		float swap = min;
+		min = max;
+		max = swap;
+	}
+	return (random_float() * (max - min)) + min;
+}

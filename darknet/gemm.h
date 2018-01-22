@@ -19,10 +19,6 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *C, int ldc);
 
 #ifdef GPU
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA, 
         float *A_gpu, int lda, 
         float *B_gpu, int ldb,
@@ -34,9 +30,5 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *B, int ldb,
         float BETA,
         float *C, int ldc);
-#ifdef __cplusplus
-}
-#endif
-
 #endif
 #endif

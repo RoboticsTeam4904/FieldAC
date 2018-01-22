@@ -7,7 +7,8 @@
 #include <opencv2/videoio.hpp>
 #include <set>
 #include <unordered_map>
-#include "../arapaho/arapaho.hpp"
+#define OPENCV 1
+#include "../darknet/yolo_v2_class.hpp"
 
 struct Target {
     Target(float xCenter, float yCenter, float width, float height, float confidence);
@@ -19,11 +20,11 @@ struct Target {
 };
 
 struct Network {
-    Network(cv::String data, cv::String config, cv::String model);
-    Network(cv::String data, cv::String config, cv::String model, cv::String save, double capWidth, double capHeight);
+    Network(cv::String classNames, cv::String config, cv::String model);
+    Network(cv::String classNames, cv::String config, cv::String model, cv::String save, double capWidth, double capHeight);
 
-    ArapahoV2* network;
-    std::vector<cv::String> classNames;
+    Detector* network;
+    std::vector<std::string> classNames;
     cv::VideoWriter saveWriter;
 
     cv::Mat annotatedFrame;
@@ -31,6 +32,9 @@ struct Network {
 
     void run(std::function<cv::Mat ()> frameFunc, std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>);
     cv::Mat getAnnotatedFrame();
+
+    void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std::string> obj_names, unsigned int wait_msec = 0, int current_det_fps = -1, int current_cap_fps = -1);
+    void show_console_result(std::vector<bbox_t> const result_vec, std::vector<std::string> const obj_names);
 };
 
 #endif

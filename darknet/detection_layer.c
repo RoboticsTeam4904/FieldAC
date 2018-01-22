@@ -12,7 +12,7 @@
 
 detection_layer make_detection_layer(int batch, int inputs, int n, int side, int classes, int coords, int rescore)
 {
-    detection_layer l = {};
+    detection_layer l = {0};
     l.type = DETECTION;
 
     l.n = n;
@@ -25,11 +25,11 @@ detection_layer make_detection_layer(int batch, int inputs, int n, int side, int
     l.w = side;
     l.h = side;
     assert(side*side*((1 + l.coords)*l.n + l.classes) == inputs);
-    l.cost = (float*)calloc(1, sizeof(float));
+    l.cost = calloc(1, sizeof(float));
     l.outputs = l.inputs;
     l.truths = l.side*l.side*(1+l.coords+l.classes);
-    l.output = (float*)calloc(batch*l.outputs, sizeof(float));
-    l.delta = (float*)calloc(batch*l.outputs, sizeof(float));
+    l.output = calloc(batch*l.outputs, sizeof(float));
+    l.delta = calloc(batch*l.outputs, sizeof(float));
 
     l.forward = forward_detection_layer;
     l.backward = backward_detection_layer;
@@ -58,7 +58,7 @@ void forward_detection_layer(const detection_layer l, network_state state)
             int index = b*l.inputs;
             for (i = 0; i < locations; ++i) {
                 int offset = i*l.classes;
-                softmax(l.output + index + offset, l.classes, 1, 1,
+                softmax(l.output + index + offset, l.classes, 1,
                         l.output + index + offset);
             }
         }
@@ -101,13 +101,13 @@ void forward_detection_layer(const detection_layer l, network_state state)
                     avg_allcat += l.output[class_index+j];
                 }
 
-                box truth = float_to_box(state.truth + truth_index + 1 + l.classes, 1);
+                box truth = float_to_box(state.truth + truth_index + 1 + l.classes);
                 truth.x /= l.side;
                 truth.y /= l.side;
 
                 for(j = 0; j < l.n; ++j){
                     int box_index = index + locations*(l.classes + l.n) + (i*l.n + j) * l.coords;
-                    box out = float_to_box(l.output + box_index, 1);
+                    box out = float_to_box(l.output + box_index);
                     out.x /= l.side;
                     out.y /= l.side;
 
@@ -146,7 +146,7 @@ void forward_detection_layer(const detection_layer l, network_state state)
                 int box_index = index + locations*(l.classes + l.n) + (i*l.n + best_index) * l.coords;
                 int tbox_index = truth_index + 1 + l.classes;
 
-                box out = float_to_box(l.output + box_index, 1);
+                box out = float_to_box(l.output + box_index);
                 out.x /= l.side;
                 out.y /= l.side;
                 if (l.sqrt) {
@@ -182,7 +182,7 @@ void forward_detection_layer(const detection_layer l, network_state state)
         }
 
         if(0){
-            float *costs = (float*)calloc(l.batch*locations*l.n, sizeof(float));
+            float *costs = calloc(l.batch*locations*l.n, sizeof(float));
             for (b = 0; b < l.batch; ++b) {
                 int index = b*l.inputs;
                 for (i = 0; i < locations; ++i) {
@@ -259,11 +259,11 @@ void forward_detection_layer_gpu(const detection_layer l, network_state state)
         return;
     }
 
-    float *in_cpu = (float*)calloc(l.batch*l.inputs, sizeof(float));
+    float *in_cpu = calloc(l.batch*l.inputs, sizeof(float));
     float *truth_cpu = 0;
     if(state.truth){
         int num_truth = l.batch*l.side*l.side*(1+l.coords+l.classes);
-        truth_cpu = (float*)calloc(num_truth, sizeof(float));
+        truth_cpu = calloc(num_truth, sizeof(float));
         cuda_pull_array(state.truth, truth_cpu, num_truth);
     }
     cuda_pull_array(state.input, in_cpu, l.batch*l.inputs);

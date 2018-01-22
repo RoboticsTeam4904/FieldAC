@@ -4,12 +4,12 @@
 #include <time.h>
 #include "list.h"
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+	#define snprintf(buf,len, format,...) _snprintf_s(buf, len,len, format, __VA_ARGS__)
+#endif
+
 #define SECRET_NUM -1234
 #define TWO_PI 6.2831853071795864769252866
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 int *read_map(char *filename);
 void shuffle(void *arr, size_t n, size_t size);
@@ -63,11 +63,9 @@ int find_arg(int argc, char* argv[], char *arg);
 char *find_char_arg(int argc, char **argv, char *arg, char *def);
 int sample_array(float *a, int n);
 void print_statistics(float *a, int n);
-
-
-#ifdef __cplusplus
-}
-#endif
+unsigned int random_gen();
+float random_float();
+float rand_uniform_strong(float min, float max);
 
 #endif
 
