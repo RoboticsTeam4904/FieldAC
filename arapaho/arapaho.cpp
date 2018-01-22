@@ -88,7 +88,6 @@ bool ArapahoV2::Setup(
     DPRINTF("net.layers[0].batch = %d\n", net.layers[0].batch);
 
     load_weights(&net, p.weightfile);
-    net.layers[0].
     set_batch_network(&net, 1);
     l = net.layers[net.n - 1];
     DPRINTF("Setup: layers = %d, %d, %d\n", l.w, l.h, l.n);
