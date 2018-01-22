@@ -2,10 +2,7 @@
 #define CUBETRACK_H
 
 #include <vector>
-#include "../objects.hpp"
 #include "../network/network.hpp"
-#include <opencv2/dnn.hpp>
-#include <opencv2/dnn/shape_utils.hpp>
 #include <opencv2/videoio.hpp>
 
 namespace ObjectTracking {

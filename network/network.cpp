@@ -35,7 +35,7 @@ Network::Network(cv::String data, cv::String config, cv::String model, cv::Strin
     params.cfgfile = const_cast<char *>(config.c_str());
     params.weightfile = const_cast<char *>(model.c_str());
     params.nms = 0.4;
-    params.maxClasses = 2;
+    params.maxClasses = 80;
 
     network = new ArapahoV2();
     if(!network) {
@@ -70,7 +70,7 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
         }
         int numObjects = 0;
         auto detectionStartTime = std::chrono::system_clock::now();
-        network->Detect(frame, 0.0, 0.5, numObjects);
+        network->Detect(frame, 0.2, 0.5, numObjects);
         std::chrono::duration<double> detectionTime = (std::chrono::system_clock::now() - detectionStartTime);
         std::printf("Detected [%d] objects in [%f] seconds\n", numObjects, detectionTime);
         if(numObjects > 0 && numObjects < MAX_OBJECTS_PER_FRAME) {
@@ -89,19 +89,19 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
                     value.push_back(target);
                     targets[labels[i]] = value;
                 }
-//                cv::Point p1(cvRound(boxes[i].x - boxes[i].w / 2), cvRound(boxes[i].y - boxes[i].h / 2));
-//                cv::Point p2(cvRound(boxes[i].x + boxes[i].w / 2), cvRound(boxes[i].y + boxes[i].h / 2));
-//                cv::Rect object(p1, p2);
-//                cv::Scalar objectRoiColor(0, 255, 0);
-//                cv::rectangle(annotated, object, objectRoiColor);
-//                auto tempLabel = labels[i];
-//                cv::String label = cv::format("%s: %.2f", tempLabel.c_str(), 1);
-//                int baseLine = 0;
-//                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-//                cv::rectangle(annotated, cv::Rect(p1, cv::Size(labelSize.width, labelSize.height + baseLine)),
-//                              objectRoiColor, CV_FILLED);
-//                cv::putText(annotated, label, p1 + cv::Point(0, labelSize.height), cv::FONT_HERSHEY_SIMPLEX, 0.5,
-//                            cv::Scalar(0, 0, 0));
+                cv::Point p1(cvRound(boxes[i].x - boxes[i].w / 2), cvRound(boxes[i].y - boxes[i].h / 2));
+                cv::Point p2(cvRound(boxes[i].x + boxes[i].w / 2), cvRound(boxes[i].y + boxes[i].h / 2));
+                cv::Rect object(p1, p2);
+                cv::Scalar objectRoiColor(0, 255, 0);
+                cv::rectangle(annotated, object, objectRoiColor);
+                auto tempLabel = labels[i];
+                cv::String label = cv::format("%s: %.2f", tempLabel.c_str(), 1);
+                int baseLine = 0;
+                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+                cv::rectangle(annotated, cv::Rect(p1, cv::Size(labelSize.width, labelSize.height + baseLine)),
+                              objectRoiColor, CV_FILLED);
+                cv::putText(annotated, label, p1 + cv::Point(0, labelSize.height), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+                            cv::Scalar(0, 0, 0));
             }
             for (const auto &iter : targetMap) {
                 targetsIter = targets.find(iter.first);

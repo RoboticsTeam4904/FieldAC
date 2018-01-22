@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.9)
+set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_CXX_COMPILER "g++")
 project(2018_field)
 
 set(CMAKE_CXX_STANDARD 11)
 
 find_package( OpenCV REQUIRED )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_C_COMPILER "g++")
+set(CMAKE_CXX_COMPILER "g++")
 
 file(GLOB ARAPAHO_SRC arapaho/*.cpp)
 file(GLOB NETWORK_SRC network/*.cpp)

@@ -21,17 +21,16 @@ namespace Vision {
     }
 
     void Camera::captureImages() {
-//        while (true) {
-//            frameMutex.lock();
-//            devCapture.read(frame);
-//            frameMutex.unlock();
-////            std::printf("Are we getting out of here?\n");
-//            if(frame.empty()) {
-//                std::printf("The frame was empty here");
-//                return;
-//            }
-//        }
-        return;
+        while (true) {
+            frameMutex.lock();
+            devCapture.read(frame);
+            frameMutex.unlock();
+//            std::printf("Are we getting out of here?\n");
+            if(frame.empty()) {
+                std::printf("The frame was empty here");
+                return;
+            }
+        }
     }
 
     bool Camera::displayImage(cv::Mat frame, const std::string window) {
@@ -45,9 +44,9 @@ namespace Vision {
     }
 
     cv::Mat Camera::getFrame() {
-        frameMutex.lock();
-        devCapture.read(frame);
-        frameMutex.unlock();
+//        frameMutex.lock();
+//        devCapture.read(frame);
+//        frameMutex.unlock();
         return frame;
     }
 
