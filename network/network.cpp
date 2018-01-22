@@ -96,6 +96,12 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
         std::printf("And between\n");
         this->show_console_result(result_vec, classNames);
         std::printf("Gotem\n");
+        this->frameMutex.lock();
+        this->annotatedFrame = annotated;
+        this->frameMutex.unlock();
+        if(this->saveWriter.isOpened()) {
+            this->saveWriter.write(annotatedFrame);
+        }
     }
 }
 
