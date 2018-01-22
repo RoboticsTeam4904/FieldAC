@@ -79,6 +79,7 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
         cv::Mat annotated = frame.clone();
         if(frame.empty()) {
             std::printf("Image was empty. Goodbye.\n");
+            saveWriter.release();
             break;
         }
         if(frame.cols == 0) {
