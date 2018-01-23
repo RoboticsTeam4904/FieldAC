@@ -14,7 +14,15 @@ areaWeight = 0.5
 quadWeight = 5
 weights = np.array([sizeWeight, ratioWeight, rotationWeight, rectangularWeight, areaWeight, quadWeight])
 
-maxArea, minArea = 30000, 500
+maxArea, minArea = 300000, 400
+
+def filterMinArea(contours, min_area=400, max_area=None):
+	filtered_contours = []
+	for contour in contours:
+		area = cv2.contourArea(contour, False)
+		if min_area < area:
+			filtered_contours.append(contour)
+	return filtered_contours
 
 def filterContours(contours): # Find 2 largest contours.
 	numContours = len(contours)
