@@ -16,7 +16,7 @@ weights = np.array([sizeWeight, ratioWeight, rotationWeight, rectangularWeight, 
 
 maxArea, minArea = 300000, 400
 
-def filterMinArea(contours, min_area=400, max_area=None):
+def filterMinArea(contours, min_area=400):
 	filtered_contours = []
 	for contour in contours:
 		area = cv2.contourArea(contour, False)
