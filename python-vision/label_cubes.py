@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 import time
 import os
-from grip_edited import pipeline
+from grip_edited import GripPipeline
+
+pipeline = GripPipeline()
 
 def filterMinArea(contours, min_area=400):
 	filtered_contours = []
