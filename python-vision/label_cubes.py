@@ -1,30 +1,47 @@
 import cv2
 import numpy as np
-import GripRunner, ContourFinding, Printing
-
-min_area = 500
+import GripRunner, ContourFinding
+import time
+import os
 
 # returns list of length len(img_names) with each element as a list of the bounding boxes of cubes in that image
-def label(img_names):
+def label(img_names, debug=False):
 	bounding_boxes = []
+	img_times = []
 	for img_name in img_names:
-		# print img_name
+		start_time = time.time()
+		if debug:
+			print img_name
 		img = cv2.imread(img_name)
 		height, width, _ = img.shape
-		# print width, height
+		if debug:
+			print width, height
 		contours = GripRunner.run(img)
 		filtered_contours = ContourFinding.filterMinArea(contours, min_area=width*height/2500.0)
+		if len(filtered_contours) == 0:
+			bounding_boxes.append(np.array([]))
+			continue
 		boxes = np.array([cv2.boundingRect(contour) for contour in filtered_contours]) #X,Y,W,H
 		X, Y, W, H = boxes[:,0], boxes[:,1], boxes[:,2], boxes[:,3]
-		# print X, Y, W, H
+		if debug:
+			print X, Y, W, H
 		X, Y = np.add(X, np.true_divide(W,2)), np.add(Y, np.true_divide(H,2))
 		X, Y, W, H = np.true_divide(X, width), np.true_divide(Y, height), np.true_divide(W, width), np.true_divide(H, height)
-		# print X, Y, W, H
+		if debug:
+			print X, Y, W, H
 		boxes = np.rot90(np.array([X,Y,W,H]))
 		bounding_boxes.append(boxes)
-	# print bounding_boxes
+		img_times.append(time.time()-start_time)
+	print np.average(img_times)
+	if debug:
+		print bounding_boxes
 	return bounding_boxes
+
+def labelFolder(folder_name):
+	img_names = os.listdir(folder_name)
+	label(img_names)
 
 if __name__ == '__main__':
 	img_names = ['TestImages/TEST' + str(i) + '.jpg' for i in range(1,14)]
-	print label(img_names)
+	# img_names = os.listdir(folder_name)
+	bounding_boxes = label(img_names)
