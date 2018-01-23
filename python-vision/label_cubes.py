@@ -1,8 +1,16 @@
 import cv2
 import numpy as np
-import GripRunner, ContourFinding
 import time
 import os
+from grip_edited import pipeline
+
+def filterMinArea(contours, min_area=400):
+	filtered_contours = []
+	for contour in contours:
+		area = cv2.contourArea(contour, False)
+		if min_area < area:
+			filtered_contours.append(contour)
+	return filtered_contours
 
 # returns list of length len(img_names) with each element as a list of the bounding boxes of cubes in that image
 def label(img_names, debug=False):
@@ -16,8 +24,9 @@ def label(img_names, debug=False):
 		height, width, _ = img.shape
 		if debug:
 			print width, height
-		contours = GripRunner.run(img)
-		filtered_contours = ContourFinding.filterMinArea(contours, min_area=width*height/2500.0)
+		pipeline.process(img)
+		contours = pipeline.filter_contours_output
+		filtered_contours = filterMinArea(contours, min_area=width*height/2500.0)
 		if len(filtered_contours) == 0:
 			bounding_boxes.append(np.array([]))
 			continue
