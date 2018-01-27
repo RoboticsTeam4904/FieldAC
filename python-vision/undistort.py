@@ -40,25 +40,23 @@ def undistort(cbrow=sys.argv[1], cbcol=sys.argv[2], fileName=sys.argv[3]): # num
         cv2.waitKey(500)
 
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
-    dist = np.array([-0.13615181, 0.53005398, 0, 0, 0]) # no translation
-    h,  w = img.shape[:2]
+    dist = normalize(np.array([dist[0][i] if i < 2 else 0.0 for i in range(len(dist[0]))]))
+    #dist = np.array([-0.13615181, 0.53005398, 0, 0, 0]) # no translation 
     newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
 
-    # # undistort
-    # dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
-
-    # # crop the image
-    # x,y,w,h = roi
-    # dst = dst[y:y+h, x:x+w]
-    # cv2.imwrite('calibresult.png',dst)
-    # undistort
     mapx,mapy = cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(w,h),5)
     dst = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
-    print(dst)
 
     # crop the image
     x,y,w,h = roi
     dst = dst[y:y+h, x:x+w]
-    cv2.imwrite('calibresult.png',dst)
+    cv2.imwrite('calibresult2.png',dst)
+    print('done')
+
+def normalize(v):
+    norm = np.linalg.norm(v)
+    if norm == 0: 
+       return v
+    return v / norm
 
 undistort()
