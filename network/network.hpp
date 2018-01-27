@@ -1,5 +1,5 @@
-#ifndef FRC_NETWORK_H
-#define FRC_NETWORK_H
+#ifndef PROV_NETWORK_H
+#define PROV_NETWORK_H
 
 #include <opencv2/core/cvstd.hpp>
 #include <opencv2/core/mat.hpp>

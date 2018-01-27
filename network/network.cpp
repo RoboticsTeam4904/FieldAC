@@ -28,7 +28,7 @@ Network::Network(cv::String classNames, cv::String config, cv::String model, cv:
             this->classNames.emplace_back(className);
     }
     if(!save.empty()) {
-        saveWriter.open(save, CV_FOURCC('M', 'J', 'P', 'G'), 3, cv::Size((int) capWidth, (int) capHeight), 1);
+        saveWriter.open(save, CV_FOURCC('X', '2', '6', '4'), 3, cv::Size((int) capWidth, (int) capHeight), 1);
     }
     network->nms = 0.02;
 }
