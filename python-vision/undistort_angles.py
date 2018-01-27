@@ -35,6 +35,8 @@ def calcBoardDists(corners_board_coords, corners_x_and_y_board_coords):
 
 corners, row, col = findCorners(img)
 
+# -----------Calculate board_dists, an array of tuples of x and y distances to the center along the board-----------
+
 distortion_mtx = calculateDistortionMatrix(corners, row, col, imshape)
 corners_x_and_y = [([corner[0], 0], [0, corner[1]]) for corner in corners]
 corners_undistorted = undistortCorners(corners, distortion_mtx, dst)
@@ -44,7 +46,18 @@ corner_lines = undistortCorners(corners, row, col, imshape)
 corners_board_coords = calcBoardCoords(corners) = [[[i,j] for j in range(len(corners[i]))] for i in range(len(corners))]
 corners_x_and_y_board_coords = calcBoardCoords(corners_x_and_y)
 board_dists = calcBoardDists(corners_board_coords, corners_x_and_y_board_coords)
+
+# -----------Calculate true_dists, an array of scalar distances from vertices to camera-----------
+
+# make sure you know which way the coordinates go (indeces order vs top right and such)
 true_dists = np.zeros_like(corners) #array of floats
+true_dists[0,0] = dist_to_top_left
+true_dists[0,col-1] = dist_to_top_right
+true_dists[row-1,0] = dist_to_bottom_left
+true_dists[row-1,col-1] = dist_to_bottom_right
+
+width = side_length*row
+height = side_length*col
 
 def calcAngle(a, b, c):
     return arccos((a^2 + b^2 - c^2)/(2*a*b))
@@ -52,21 +65,23 @@ def calcAngle(a, b, c):
 def calcDist(theta, a, b):
     return sqrt(a^2 + b^2 - 2*a*b*cos(theta))
 
-width = side_length*row
-height = side_length*col
-top_left_to_right_angle = calcAngle(dist_top_left, width, dist_top_right)
-top_left_to_down_angle = calcAngle(dist_top_left, height, dist_bottom_left)
-bottom_right_to_left_angle = calcAngle(dist_bottom_right, width, dist_bottom_left)
-bottom_right_to_up_angle = calcAngle(dist_bottom_right, height, dist_top_right)
-
-# make sure you know which way the coordinates go (indeces order vs top right and such)
+top_left_to_down_angle = calcAngle(true_dists[0,0], height, true_dists[row-1,0])
+top_right_to_down_angle = calcAngle(true_dists[0,col-1], height, true_dists[row-1,col-1])
 for i in range(1,row-1): # Don't include corners
-    true_dists[i,0] = calcDist(top_left_to_right_angle, row*i, dist_top_left) # need new angles for inner grid dists
-    true_dists[1,col-1]
-for j in range(1,col-1):
-    true_dists[0,j]
-    true_dists[row-1,j]
+    true_dists[i,0] = calcDist(top_left_to_down_angle, side_length*i, true_dists[0,0]) # need new angles for inner grid dists
+    true_dists[i,col-1] = calcDist(top_right_to_down_angle, side_length*i, true_dists[0,col-1])
 
+top_left_to_right_angle = calcAngle(true_dists[0,0], width, true_dists[0,col-1])
+bottom_left_to_right_angle = calcAngle(true_dists[row-1,0], width, true_dists[row-1,col-1])
+for j in range(1,col-1):
+    true_dists[0,j] = calcDist(top_left_to_right_angle, side_length*j, true_dists[0,0])
+    true_dists[row-1,j] = calcDist(bottom_left_to_right_angle, side_length*j, true_dists[row-1,0])
+
+for i in range(1,row-1):
+    angle_right = calcAngle(true_dists[i, 0], height, true_dists[i,col-1])
+    for j in range(1,col-1):
+        true_dists[i,j] = calcDist(angle_right, side_length*j, true_dists[i,0])
+                                                                                            
 accurate_corners = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)) #not linear?
 pixel_coords = np.reshape(accurate_corners, (row,col))
 

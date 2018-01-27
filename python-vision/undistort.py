@@ -12,7 +12,7 @@ def undistort(cbrow=sys.argv[1], cbcol=sys.argv[2], fileName=sys.argv[3]): # num
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
     objp = np.zeros((cbrow*cbcol,3), np.float32)
     objp[:,:2] = np.mgrid[0:cbcol,0:cbrow].T.reshape(-1,2)
-
+    # print objp
     # Arrays to store object points and image points from all the images.
     objpoints = [] # 3d point in real world space
     imgpoints = [] # 2d points in image plane.
@@ -32,18 +32,25 @@ def undistort(cbrow=sys.argv[1], cbcol=sys.argv[2], fileName=sys.argv[3]): # num
         objpoints.append(objp)
 
         corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
+        # print corners2
         imgpoints.append(corners2)
 
         # Draw and display the corners
-        img = cv2.drawChessboardCorners(img, (7,7), corners2,ret)
+        img = cv2.drawChessboardCorners(img, (cbrow,cbcol), corners2,ret)
         cv2.imshow('img',img)
         cv2.waitKey(500)
 
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
-    dist = np.array([-0.13615181, 0.53005398, 0, 0, 0]) # no translation
+    print dist, dist.shape, type(dist), type(dist[0]), type(dist[0][0]), dist[0]
+    dist = np.array([dist[0][i] if i < 2 else 0.0 for i in range(len(dist[0]))])
+    # dist = np.divide(dist, 1000)
+    # print dist, dist.shape, type(dist), type(dist[0])#, type(dist[0][0])
+    # dist = np.array([-0.1, 0.5, 0, 0, 0])#np.array([-0.13615181, 0.53005398, 0, 0, 0]) # no translation
+    # print dist, dist.shape, type(dist), type(dist[0])
+    # [[  84.4306755  -11538.7003   4.81769907   1.86578607 -1.10839572]]
     h,  w = img.shape[:2]
-    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
-
+    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),0.2)
+    print "test"
     # # undistort
     # dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
 
@@ -54,7 +61,8 @@ def undistort(cbrow=sys.argv[1], cbcol=sys.argv[2], fileName=sys.argv[3]): # num
     # undistort
     mapx,mapy = cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(w,h),5)
     dst = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
-    print(dst)
+    print "test"
+    # print(dst)
 
     # crop the image
     x,y,w,h = roi
