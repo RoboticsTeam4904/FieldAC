@@ -2,12 +2,12 @@
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
-void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelYaw, std::string sensorData){
+void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral, const float measuredAccelYaw, std::string sensorData){
 	Pose n[SAMPLES];
 	float weights[SAMPLES];
 	float weightsSum=0;
 	for(int i=0; i<SAMPLES; i++){
-		n[i]=Pose(input[i],measuredAccelForward,measuredAccelYaw);
+		n[i]=Pose(input[i],measuredAccelForward,measuredAccelLateral, measuredAccelYaw);
 		weights[i]=n[i].plausibility(sensorData);
 		weightsSum+=weights[i];
 	}

@@ -17,4 +17,11 @@ namespace ObjectTracking {
         }
     }
 
+    void CubeTracker::run(std::function<std::vector<Target>(std::string object)> targetFetch) {
+        std::vector<Target> targets = targetFetch("cube");
+        if(targets != this->lastTargets) {
+
+        }
+    }
+
 }
