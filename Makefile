@@ -123,6 +123,60 @@ field/fast:
 	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/build
 .PHONY : field/fast
 
+botlocale/jetsonGPIO.o: botlocale/jetsonGPIO.cpp.o
+
+.PHONY : botlocale/jetsonGPIO.o
+
+# target to build an object file
+botlocale/jetsonGPIO.cpp.o:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/botlocale/jetsonGPIO.cpp.o
+.PHONY : botlocale/jetsonGPIO.cpp.o
+
+botlocale/jetsonGPIO.i: botlocale/jetsonGPIO.cpp.i
+
+.PHONY : botlocale/jetsonGPIO.i
+
+# target to preprocess a source file
+botlocale/jetsonGPIO.cpp.i:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/botlocale/jetsonGPIO.cpp.i
+.PHONY : botlocale/jetsonGPIO.cpp.i
+
+botlocale/jetsonGPIO.s: botlocale/jetsonGPIO.cpp.s
+
+.PHONY : botlocale/jetsonGPIO.s
+
+# target to generate assembly for a file
+botlocale/jetsonGPIO.cpp.s:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/botlocale/jetsonGPIO.cpp.s
+.PHONY : botlocale/jetsonGPIO.cpp.s
+
+botlocale/lidar.o: botlocale/lidar.cpp.o
+
+.PHONY : botlocale/lidar.o
+
+# target to build an object file
+botlocale/lidar.cpp.o:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/botlocale/lidar.cpp.o
+.PHONY : botlocale/lidar.cpp.o
+
+botlocale/lidar.i: botlocale/lidar.cpp.i
+
+.PHONY : botlocale/lidar.i
+
+# target to preprocess a source file
+botlocale/lidar.cpp.i:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/botlocale/lidar.cpp.i
+.PHONY : botlocale/lidar.cpp.i
+
+botlocale/lidar.s: botlocale/lidar.cpp.s
+
+.PHONY : botlocale/lidar.s
+
+# target to generate assembly for a file
+botlocale/lidar.cpp.s:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/botlocale/lidar.cpp.s
+.PHONY : botlocale/lidar.cpp.s
+
 botlocale/mcl.o: botlocale/mcl.cpp.o
 
 .PHONY : botlocale/mcl.o
@@ -177,33 +231,6 @@ bottracking/bottrack.cpp.s:
 	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/bottracking/bottrack.cpp.s
 .PHONY : bottracking/bottrack.cpp.s
 
-darknet/network.o: darknet/network.cpp.o
-
-.PHONY : darknet/network.o
-
-# target to build an object file
-darknet/network.cpp.o:
-	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/darknet/network.cpp.o
-.PHONY : darknet/network.cpp.o
-
-darknet/network.i: darknet/network.cpp.i
-
-.PHONY : darknet/network.i
-
-# target to preprocess a source file
-darknet/network.cpp.i:
-	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/darknet/network.cpp.i
-.PHONY : darknet/network.cpp.i
-
-darknet/network.s: darknet/network.cpp.s
-
-.PHONY : darknet/network.s
-
-# target to generate assembly for a file
-darknet/network.cpp.s:
-	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/darknet/network.cpp.s
-.PHONY : darknet/network.cpp.s
-
 field.o: field.cpp.o
 
 .PHONY : field.o
@@ -257,6 +284,33 @@ main.s: main.cpp.s
 main.cpp.s:
 	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/main.cpp.s
 .PHONY : main.cpp.s
+
+network/network.o: network/network.cpp.o
+
+.PHONY : network/network.o
+
+# target to build an object file
+network/network.cpp.o:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/network/network.cpp.o
+.PHONY : network/network.cpp.o
+
+network/network.i: network/network.cpp.i
+
+.PHONY : network/network.i
+
+# target to preprocess a source file
+network/network.cpp.i:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/network/network.cpp.i
+.PHONY : network/network.cpp.i
+
+network/network.s: network/network.cpp.s
+
+.PHONY : network/network.s
+
+# target to generate assembly for a file
+network/network.cpp.s:
+	$(MAKE) -f CMakeFiles/field.dir/build.make CMakeFiles/field.dir/network/network.cpp.s
+.PHONY : network/network.cpp.s
 
 objects.o: objects.cpp.o
 
@@ -348,21 +402,27 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... field"
+	@echo "... botlocale/jetsonGPIO.o"
+	@echo "... botlocale/jetsonGPIO.i"
+	@echo "... botlocale/jetsonGPIO.s"
+	@echo "... botlocale/lidar.o"
+	@echo "... botlocale/lidar.i"
+	@echo "... botlocale/lidar.s"
 	@echo "... botlocale/mcl.o"
 	@echo "... botlocale/mcl.i"
 	@echo "... botlocale/mcl.s"
 	@echo "... bottracking/bottrack.o"
 	@echo "... bottracking/bottrack.i"
 	@echo "... bottracking/bottrack.s"
-	@echo "... darknet/network.o"
-	@echo "... darknet/network.i"
-	@echo "... darknet/network.s"
 	@echo "... field.o"
 	@echo "... field.i"
 	@echo "... field.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... network/network.o"
+	@echo "... network/network.i"
+	@echo "... network/network.s"
 	@echo "... objects.o"
 	@echo "... objects.i"
 	@echo "... objects.s"
