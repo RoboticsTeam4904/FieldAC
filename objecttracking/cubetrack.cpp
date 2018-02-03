@@ -1,17 +1,19 @@
 #include "cubetrack.hpp"
-#include "../network/network.hpp"
-#include <opencv2/highgui.hpp>
-#include <opencv/cv.hpp>
-#include <fstream>
 #include <thread>
+#include <utility>
 
 namespace ObjectTracking {
     CubeTracker::CubeTracker() = default;
 
-    void CubeTracker::run(cv::Mat frame, std::vector<Target> targets) {
-        for(const auto &target : targets) {
-            std::printf("Found target: xCenter: %f.2, yCenter: %f.2, width: %f.2, height: %f.2, confidence: %f.2\n",
-            target.xCenter, target.yCenter, target.width, target.height, target.confidence);
+    void CubeTracker::update(std::vector<Target> targetsUpdate) {
+        this->targetsLast = std::move(this->targets);
+        this->targets = std::move(targetsUpdate);
+    }
+
+    void CubeTracker::run(std::function<cv::Mat ()> fetchFrame) {
+        auto frame := fetchFrame();
+        if(this->targets != this->targetsLast) {
+
         }
     }
 
