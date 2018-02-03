@@ -11,7 +11,7 @@ namespace ObjectTracking {
     }
 
     void CubeTracker::run(std::function<cv::Mat ()> fetchFrame) {
-        auto frame := fetchFrame();
+        cv::Mat frame = fetchFrame();
         if(this->targets != this->targetsLast) {
 
         }
