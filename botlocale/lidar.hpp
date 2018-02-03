@@ -11,4 +11,18 @@ class lidar {
 };
 
 
+class lidarscan{
+	float distances[360];
+	lidarscan(){
+
+	}
+	~lidarscan(){
+
+	}
+	float compare(const lidarscan& oth){
+		
+	}
+}
+
+
 #endif //INC_2018_FIELD_LIDAR_HPP

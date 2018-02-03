@@ -2,13 +2,14 @@
 #define MCL_H
 
 #include "../objects.hpp"
+#include "lidar.hpp"
 
 #ifndef SAMPLES
 #define SAMPLES 1000
 #endif
 
 namespace BotLocale {
-    void step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelYaw, std::string sensorData);
+    void step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,const float measuredAccelYaw, std::string sensorData);
     void tick();
 }
 
