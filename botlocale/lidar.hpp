@@ -19,8 +19,16 @@ class lidarscan{
 	~lidarscan(){
 
 	}
-	float compare(const lidarscan& oth){
-		
+	float compare(const lidarscan& expected){
+		float err=0;
+		for(int i=0; i<360; i++){
+			if(distances[i] < expected.distances[i]){
+				err += (expected.distances[i]-distances[i]) * 0.1;
+			}else{
+				err += (distances[i]-expected.distances[i]);
+			}
+		}
+		return err;
 	}
 }
 
