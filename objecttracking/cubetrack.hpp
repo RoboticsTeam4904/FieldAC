@@ -18,7 +18,6 @@ namespace ObjectTracking {
         std::vector<Target> targets;
 
         void update(std::vector<Target>);
-
         void run(std::function<cv::Mat ()>);
     };
 
