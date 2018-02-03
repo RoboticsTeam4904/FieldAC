@@ -64,7 +64,7 @@ int main(int argc, const char **argv) {
                            network,
                            [defaultDev]() {
                                return defaultDev->getFrame();
-                           }, std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>
+                           }, std::unordered_map<std::string, std::function<void(std::vector<Target>)>>
                            {
                                    {"cube", [cubeTracker](std::vector<Target> targets) {
                                        return cubeTracker->update(targets);
