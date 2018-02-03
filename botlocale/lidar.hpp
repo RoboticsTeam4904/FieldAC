@@ -50,6 +50,7 @@ public:
 	}
 };
 lidarscan getAtLocation(int xCm, int yCm){
+	
 }
 lidarscan generateExpected(const Pose& 🅱️ose){
 	return lidarscan(getAtLocation((int)🅱️ose.x,(int)🅱️ose.y), (int)(🅱️ose.yaw*180/3.14159));
