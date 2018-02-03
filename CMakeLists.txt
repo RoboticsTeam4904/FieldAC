@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 11)
 find_package( OpenCV REQUIRED )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-file(GLOB ARAPAHO_SRC arapaho/*.cpp)
 file(GLOB NETWORK_SRC network/*.cpp)
 file(GLOB BOT_LCL_SRC botlocale/*.cpp)
 file(GLOB BOT_TRK_SRC bottracking/*.cpp)
@@ -23,7 +22,6 @@ add_executable(field ${DARKNET_INC}
         ${BOT_LCL_SRC}
         ${BOT_TRK_SRC}
         ${OBJ_TRK_SRC}
-        ${NETWORK_SRC}
-        ${ARAPAHO_SRC})
+        ${NETWORK_SRC})
 target_link_libraries(field darknet)
 target_link_libraries(field ${OpenCV_LIBS})

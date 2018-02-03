@@ -13,10 +13,13 @@ namespace ObjectTracking {
     class CubeTracker {
     public:
         CubeTracker();
-        std::vector<Target> lastTargets;
+        mutable std::mutex mutexTargets;
+        std::vector<Target> targetsLast;
+        std::vector<Target> targets;
 
-        void run(cv::Mat frame, std::vector<Target> targets);
-        void run(std::function<std::vector<Target> (std::string object)>);
+        void update(std::vector<Target>);
+
+        void run(std::function<cv::Mat ()>);
     };
 
 }

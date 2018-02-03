@@ -72,7 +72,7 @@ void Network::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::v
 }
 
 void Network::run(std::function<cv::Mat ()> frameFunc,
-                  std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>> targetMap) {
+                  std::unordered_map<std::string, std::function<void(std::vector<Target>)>> targetMap) {
     std::shared_ptr<image_t> det_image;
     while(true) {
         cv::Mat frame = frameFunc();

@@ -47,27 +47,39 @@ int main(int argc, const char **argv) {
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
-    network->run([defaultDev]() {
-        return defaultDev->getFrame();
-    },
-                 {
-                         {"cube", [cubeTracker](cv::Mat frame, std::vector<Target> targets) {
-                             return cubeTracker->run(frame, targets);
-                         }}
-                 }
-    );
-//    std::thread networkRun(&Network::run,
-//                           network,
-//                           [defaultDev]() {
-//                               return defaultDev->getFrame();
-//                           }, std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>
-//                                   {{"person", [cubeTracker](cv::Mat frame, std::vector<Target> targets) {
-//                                       return cubeTracker->run(frame, targets);
-//                                   }}}
+//    This code is non-threaded but also serves as a
+//    slightly cleaner demonstration of what's really being run.
+//
+//    network->run([defaultDev]() {
+//        return defaultDev->getFrame();
+//    },
+//                 {
+//                         {"cube", [cubeTracker](std::vector<Target> targets) {
+//                             return cubeTracker->update(targets);
+//                         }}
+//                 }
 //    );
-//    while(true) {
-//        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
-//            return -1;
-//        }
-//    }
+
+    std::thread networkRun(&Network::run,
+                           network,
+                           [defaultDev]() {
+                               return defaultDev->getFrame();
+                           }, std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>
+                           {
+                                   {"cube", [cubeTracker](std::vector<Target> targets) {
+                                       return cubeTracker->update(targets);
+                                   }}}
+    );
+
+    std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
+                            cubeTracker,
+                             [defaultDev]() {
+                                 return defaultDev->getFrame();
+                             }
+    );
+    while(true) {
+        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
+            return -1;
+        }
+    }
 }

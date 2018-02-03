@@ -30,7 +30,7 @@ struct Network {
     cv::Mat annotatedFrame;
     mutable std::mutex frameMutex;
 
-    void run(std::function<cv::Mat ()> frameFunc, std::unordered_map<std::string, std::function<void(cv::Mat, std::vector<Target>)>>);
+    void run(std::function<cv::Mat ()> frameFunc, std::unordered_map<std::string, std::function<void(std::vector<Target>)>>);
     cv::Mat getAnnotatedFrame();
 
     void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std::string> obj_names, unsigned int wait_msec = 0, int current_det_fps = -1, int current_cap_fps = -1);
