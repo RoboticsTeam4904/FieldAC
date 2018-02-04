@@ -4,6 +4,7 @@
 #include "vision.hpp"
 #include "objecttracking/cubetrack.hpp"
 #include "network/network.hpp"
+#include "network/target.hpp"
 
 static const char* params =
         "{ help     | false | help                }"

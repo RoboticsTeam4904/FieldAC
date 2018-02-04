@@ -22,7 +22,3 @@ void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, cons
 		}
 	}
 }
-
-void BotLocale::tick() {
-
-}

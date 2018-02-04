@@ -1,13 +1,8 @@
 #include "field.hpp"
-#include "vision.hpp"
-#include "botlocale/mcl.hpp"
-#include "objecttracking/cubetrack.hpp"
-#include "bottracking/bottrack.hpp"
 
 #include <sys/time.h>
 
 void Field::tick() {
-//	ObjectTracking::tick();
     timeval curTime;
     gettimeofday(&curTime, nullptr);
     int milli = curTime.tv_usec / 1000;
@@ -17,8 +12,6 @@ void Field::tick() {
 
     char currentTime[84] = "";
     sprintf(currentTime, "%s:%d", buffer, milli);
-    BotLocale::tick();
-//    BotTracking::tick();
 }
 
 /**

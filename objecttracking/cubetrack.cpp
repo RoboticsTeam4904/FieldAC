@@ -1,13 +1,12 @@
 #include "cubetrack.hpp"
 #include <thread>
-#include <utility>
 
 namespace ObjectTracking {
     CubeTracker::CubeTracker() = default;
 
     void CubeTracker::update(std::vector<Target> targetsUpdate) {
-        this->targetsLast = std::move(this->targets);
-        this->targets = std::move(targetsUpdate);
+        this->targetsLast = this->targets;
+        this->targets = targetsUpdate;
     }
 
     void CubeTracker::run(std::function<cv::Mat ()> fetchFrame) {

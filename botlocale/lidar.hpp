@@ -15,9 +15,7 @@ class lidarscan{
 public:
 	float distances[360];
 	int offset;
-	lidarscan(){
-
-	}
+	lidarscan(){}
 	lidarscan(const lidarscan& other,int newOffset) {
 		memcpy(distances, other.distances, 360*(sizeof(float)));
 		offset=other.offset+newOffset;
@@ -49,12 +47,4 @@ public:
 		return err;
 	}
 };
-lidarscan getAtLocation(int xCm, int yCm){
-	
-}
-lidarscan generateExpected(const Pose& pose){
-	return lidarscan(getAtLocation((int)pose.x,(int)pose.y), (int)(pose.yaw*180/3.14159));
-}
-
-
 #endif //INC_2018_FIELD_LIDAR_HPP
