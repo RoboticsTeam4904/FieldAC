@@ -78,7 +78,7 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
             this->show_console_result(item);
         }
         for(auto pair : targetMap) {
-            if(targetMapInter[pair.first].size() > 0)
+            if(!targetMapInter[pair.first].empty())
                 pair.second(targetMapInter[pair.first]);
         }
         this->frameMutex.lock();
