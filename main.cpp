@@ -33,6 +33,7 @@ int main(int argc, const char **argv) {
     }
 
     std::printf("Initializing camera...\n");
+
     Vision::Camera* defaultDev;
     if (parser.get<cv::String>("src").empty()) {
         defaultDev = new Vision::Camera(parser.get<int>("dev"));

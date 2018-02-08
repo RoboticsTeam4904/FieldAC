@@ -11,8 +11,8 @@ namespace ObjectTracking {
 
     void CubeTracker::run(std::function<cv::Mat ()> fetchFrame) {
         cv::Mat frame = fetchFrame();
-        if(this->targets != this->targetsLast) {
-
-        }
+        // TODO: C++ thrashed me and wouldn't let me check if the past targets were equal.
+        // TODO: Hopefully I don't prank myself and someone else in the future fixes this
+        // TODO: In all honestly it will probably be me though.
     }
 }

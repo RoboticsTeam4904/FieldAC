@@ -10,6 +10,7 @@ Target::Target(float xCenter, float yCenter, float width, float height, float co
 
 Network::Network(cv::String classNames, cv::String config, cv::String model) {
     network = new Detector(config, model);
+
     std::ifstream classNamesFile(classNames.c_str());
     if(classNamesFile.is_open()) {
         std::string className;
