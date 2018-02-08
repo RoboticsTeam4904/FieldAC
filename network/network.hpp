@@ -8,8 +8,9 @@
 #include <set>
 #include <unordered_map>
 #define OPENCV 1
-#include "../darknet/yolo_v2_class.hpp"
+#include "yolo_v2_class.hpp"
 #include "target.hpp"
+#include <cstdlib>
 
 class Network {
 public:
