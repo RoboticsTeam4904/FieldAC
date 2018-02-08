@@ -14,18 +14,32 @@ set(DARKNET_LIBSO_NAME libdarknet.so)
 
 include(DownloadProject.cmake)
 
-download_project(PROJ darknet
-        GIT_REPOSITORY https://github.com/AlexeyAB/darknet
-        GIT_TAG 51d99f5)
-
 file(GLOB NETWORK_SRC network/*.cpp)
 file(GLOB BOT_LCL_SRC botlocale/*.cpp)
 file(GLOB BOT_TRK_SRC bottracking/*.cpp)
 file(GLOB OBJ_TRK_SRC objecttracking/*.cpp)
 file(GLOB CORE_SRC *.cpp)
 
+download_project(PROJ darknet
+        GIT_REPOSITORY https://github.com/AlexeyAB/darknet
+        GIT_TAG 51d99f5)
+
+download_project(PROJ rplidar
+        URL https://download.slamtec.com/api/download/rplidar-sdk/1.5.7
+        URL_MD5 e2a894e706f9ec6118967101c11d1dee
+        DOWNLOAD_NAME rplidar-sdk.zip
+        DOWNLOAD_NO_PROGRESS 1)
+
+set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
+execute_process(COMMAND uname -s
+        OUTPUT_VARIABLE RPLIDAR_PLATFORM
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(rplidar_OUTPUT_DIR ${rplidar_SOURCE_DIR}/sdk/output/${RPLIDAR_PLATFORM}/Release/)
+
+include_directories(${rplidar_SDK_DIR}/include/)
 include_directories(${darknet_SOURCE_DIR}/src/)
 link_directories(include/)
+link_directories(${rplidar_OUTPUT_DIR})
 
 add_executable(field ${CORE_SRC}
         ${BOT_LCL_SRC}
@@ -42,6 +56,16 @@ add_custom_command(TARGET field
         BYPRODUCTS ${CMAKE_SOURCE_DIR}/include/${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/${DARKNET_LIBSO_NAME}
         WORKING_DIRECTORY ${darknet_SOURCE_DIR})
 
+message(STATUS ${rplidar_SDK_DIR})
+
+add_custom_command(TARGET field
+        PRE_LINK
+        COMMAND make build_sdk
+        WORKING_DIRECTORY ${rplidar_SDK_DIR}
+        COMMENT "Building ${rplidar_SDK_DIR}"
+        BYPRODUCTS ${rplidar_OUTPUT_DIR}/librplidar_sdk.a)
+
+target_link_libraries(field rplidar_sdk)
 target_link_libraries(field darknet)
 target_link_libraries(field ${OpenCV_LIBS})
 
