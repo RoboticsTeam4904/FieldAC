@@ -33,12 +33,16 @@ Network::Network(cv::String classNames, cv::String config, cv::String model, cv:
     network->nms = 0.02;
 }
 
-void Network::show_console_result(std::vector<bbox_t> const result_vec, std::vector<std::string> const obj_names) {
+void Network::show_console_result(std::vector<bbox_t> const result_vec) {
     for (auto &i : result_vec) {
-        std::cout << "obj_id = " << i.obj_id << ",  x = " << i.x << ", y = " << i.y
-                  << ", w = " << i.w << ", h = " << i.h
-                  << ", prob = " << i.prob << std::endl;
+        this->show_console_result(i);
     }
+}
+
+void Network::show_console_result(bbox_t const result) {
+    std::cout << "obj_id = " << result.obj_id << ",  x = " << result.x << ", y = " << result.y
+              << ", w = " << result.w << ", h = " << result.h
+              << ", prob = " << result.prob << std::endl;
 }
 
 void Network::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec) {
@@ -50,7 +54,9 @@ void Network::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec) {
 void Network::run(std::function<cv::Mat ()> frameFunc,
                   std::unordered_map<std::string, std::function<void(std::vector<Target>)>> targetMap) {
     std::shared_ptr<image_t> det_image;
+    std::unordered_map<std::string, std::vector<Target>> targetMapInter;
     while(true) {
+        targetMapInter = {};
         cv::Mat frame = frameFunc();
         cv::Mat annotated = frame.clone();
         if(frame.empty()) {
@@ -64,14 +70,15 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
         if (frame.channels() == 4) {
             cv::cvtColor(frame, frame, cv::COLOR_BGRA2BGR);
         }
-        std::printf("Got here\n");
         std::vector<bbox_t> result_vec = network->detect(frame);
-        std::printf("Got here too\n");
-//        result_vec = network->tracking(result_vec);	// comment it - if track_id is not required
         this->draw_boxes(annotated, result_vec);
-        std::printf("And between\n");
-        this->show_console_result(result_vec, classNames);
-        std::printf("Gotem\n");
+        for(auto &item : result_vec) {
+            targetMapInter[classNames[item.obj_id]].emplace_back(Target(item));
+            this->show_console_result(item);
+        }
+        for(auto pair : targetMap) {
+            pair.second(targetMapInter[pair.first]);
+        }
         this->frameMutex.lock();
         this->annotatedFrame = annotated;
         this->frameMutex.unlock();
@@ -82,6 +89,5 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
 }
 
 cv::Mat Network::getAnnotatedFrame() {
-//    std::lock_guard<std::mutex> lkg(this->frameMutex);
     return annotatedFrame;
 }

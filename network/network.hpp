@@ -22,7 +22,8 @@ public:
     cv::Mat getAnnotatedFrame();
 
     void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec);
-    void show_console_result(std::vector<bbox_t> const result_vec, std::vector<std::string> const obj_names);
+    void show_console_result(std::vector<bbox_t> const result_vec);
+    void show_console_result(bbox_t const result);
 private:
     Detector* network;
     std::vector<std::string> classNames;
