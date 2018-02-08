@@ -5,8 +5,10 @@ namespace ObjectTracking {
     CubeTracker::CubeTracker() = default;
 
     void CubeTracker::update(std::vector<Target> targetsUpdate) {
+        this->mutexTargets.lock();
         this->targetsLast = this->targets;
         this->targets = targetsUpdate;
+        this->mutexTargets.unlock();
     }
 
     void CubeTracker::run(std::function<cv::Mat ()> fetchFrame) {
