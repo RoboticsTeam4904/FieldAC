@@ -42,7 +42,6 @@ namespace Vision {
     }
 
     cv::Mat Camera::getFrame() {
-        devCapture.read(frame);
         return frame;
     }
 

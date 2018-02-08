@@ -91,7 +91,7 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
         std::printf("Got here\n");
         std::vector<bbox_t> result_vec = network->detect(frame);
         std::printf("Got here too\n");
-        result_vec = network->tracking(result_vec);	// comment it - if track_id is not required
+//        result_vec = network->tracking(result_vec);	// comment it - if track_id is not required
         std::printf("And here\n");
         this->draw_boxes(annotated, result_vec, classNames);
         std::printf("And between\n");
