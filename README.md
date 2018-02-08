@@ -3,7 +3,18 @@ Building a realtime model of the field and all its components.
 
 # Table of Contents
 
-[[toc]]
+* [FRC Field Model](#frc-field-model)
+* [Table of Contents](#table-of-contents)
+* [About](#about)
+  * [Field Model](#field-model)
+  * [Object Tracking](#object-tracking)
+  * [Robot Localization](#robot-localization)
+  * [Robot Tracking](#robot-tracking)
+* [Getting Started](#getting-started)
+  * [Project Structure](#project-structure)
+  * [Dependencies](#dependencies)
+  * [Installation (macOS)](#installation-macos)
+  * [Installation (Ubuntu 16.04/Jetson TX1)](#installation-ubuntu-1604-jetson-tx1)
 
 # About
 
@@ -94,4 +105,27 @@ make
 mkdir build && cd build
 cmake ../
 make
+```
+
+## Usage
+
+```shell
+Usage: field [params] 
+
+	--dev (value:0)
+		Capture Device
+	--help (value:true)
+		help
+	--net_cfd (value:0.5)
+		[Network] Minimum identification confidence threshold
+	--net_cfg
+		[Network] Model ".cfg" file
+	--net_cls
+		[Network] ".names" file for identifiable classes
+	--net_mdl
+		[Network] Model ".weights" file
+	--net_save
+		[Network] Detection output file. Shows what the network detects
+	--src
+		Source Video file. Overrides any specified capture device
 ```

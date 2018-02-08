@@ -6,19 +6,32 @@
 #include "network/network.hpp"
 #include "network/target.hpp"
 
+static const char* about =
+        "FRC Field Model by Bot Provoking (https://github.com/roboticsteam4904/2018-field)\n"
+        "Constructs a real time model of the field and all its dynamic constituent pieces\n"
+        "such as other robots; small yearly game pieces like cubes, gears, or balls;\n"
+        "and provides functionality for localization within the model.\n\n";
+
 static const char* params =
-        "{ help     | false | help                }"
-        "{ dev      | 0     | camera device       }"
-        "{ src      |       | source file         }"
-        "{ net_cls  |       | net class names     }"
-        "{ net_cfg  |       | net model config    }"
-        "{ net_mdl  |       | net model weights   }"
-        "{ net_save |       | net output file     }"
-        "{ net_cfd  | 0.5   | net min confidence  }";
+        "{ help     | false | help                                                            }"
+        "{ dev      | 0     | Capture Device                                                  }"
+        "{ src      |       | Source Video file. Overrides any specified capture device       }"
+        "{ net_cls  |       | [Network] \".names\" file for identifiable classes              }"
+        "{ net_cfg  |       | [Network] Model \".cfg\" file                                   }"
+        "{ net_mdl  |       | [Network] Model \".weights\" file                               }"
+        "{ net_save |       | [Network] Detection output file. Shows what the network detects }"
+        "{ net_cfd  | 0.5   | [Network] Minimum identification confidence threshold           }";
 
 
 int main(int argc, const char **argv) {
     cv::CommandLineParser parser(argc, argv, params);
+
+    if (parser.get<bool>("help")) {
+        // Compiler advises to treat string like so.
+        std::printf("%s", about);
+        parser.printMessage();
+        return 0;
+    }
 
     std::printf("Initializing camera...\n");
     Vision::Camera* defaultDev;
