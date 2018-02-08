@@ -15,6 +15,7 @@ Building a realtime model of the field and all its components.
   * [Dependencies](#dependencies)
   * [Installation (macOS)](#installation-macos)
   * [Installation (Ubuntu 16.04/Jetson TX1)](#installation-ubuntu-1604-jetson-tx1)
+  * [Usage](#usage)
 
 # About
 
