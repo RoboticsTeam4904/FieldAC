@@ -38,8 +38,8 @@ set(rplidar_OUTPUT_DIR ${rplidar_SOURCE_DIR}/sdk/output/${RPLIDAR_PLATFORM}/Rele
 
 include_directories(${rplidar_SDK_DIR}/include/)
 include_directories(${darknet_SOURCE_DIR}/src/)
-link_directories(include/)
 link_directories(${rplidar_OUTPUT_DIR})
+link_directories(${CMAKE_BINARY_DIR})
 
 add_executable(field ${CORE_SRC}
         ${BOT_LCL_SRC}
@@ -50,7 +50,6 @@ add_executable(field ${CORE_SRC}
 add_custom_command(TARGET field
         PRE_LINK
         COMMAND make obj libdarknet.so GPU=${DARKNET_GPU} CUDNN=${DARKNET_CUDNN} OPENCV=1 DEBUG=${DARKNET_DEBUG} OPENMP=${DARKNET_OPEPNMP} LIBSO=1 LIBNAMESO=${DARKNET_LIBSO_NAME}
-        COMMAND cp ${DARKNET_LIBSO_NAME} ${CMAKE_SOURCE_DIR}/include/
         COMMAND cp ${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/
         COMMENT "Building ${DARKNET_LIBSO_NAME}..."
         BYPRODUCTS ${CMAKE_SOURCE_DIR}/include/${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/${DARKNET_LIBSO_NAME}
