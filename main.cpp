@@ -22,7 +22,6 @@ static const char* params =
         "{ net_save |       | [Network] Detection output file. Shows what the network detects }"
         "{ net_cfd  | 0.5   | [Network] Minimum identification confidence threshold           }";
 
-
 int main(int argc, const char **argv) {
     cv::CommandLineParser parser(argc, argv, params);
 

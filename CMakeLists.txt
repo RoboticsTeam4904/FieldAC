@@ -55,8 +55,6 @@ add_custom_command(TARGET field
         BYPRODUCTS ${CMAKE_SOURCE_DIR}/include/${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/${DARKNET_LIBSO_NAME}
         WORKING_DIRECTORY ${darknet_SOURCE_DIR})
 
-message(STATUS ${rplidar_SDK_DIR})
-
 add_custom_command(TARGET field
         PRE_LINK
         COMMAND make build_sdk
