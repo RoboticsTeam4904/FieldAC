@@ -11,7 +11,7 @@ include(DownloadProject.cmake)
 
 download_project(PROJ darknet
         GIT_REPOSITORY https://github.com/AlexeyAB/darknet
-        GIT_TAG master)
+        GIT_TAG 51d99f5)
 
 file(GLOB NETWORK_SRC network/*.cpp)
 file(GLOB BOT_LCL_SRC botlocale/*.cpp)
