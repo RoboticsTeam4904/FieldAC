@@ -2,10 +2,15 @@ cmake_minimum_required(VERSION 3.9)
 project(2018_field)
 
 set(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 find_package( OpenCV REQUIRED )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(DARKNET_GPU 0)
+set(DARKNET_CUDNN 0)
+set(DARKNET_DEBUG 0)
+set(DARKNET_OPENMP 0)
+set(DARKNET_LIBSO_NAME libdarknet.so)
 
 include(DownloadProject.cmake)
 
@@ -30,9 +35,11 @@ add_executable(field ${CORE_SRC}
 
 add_custom_command(TARGET field
         PRE_LINK
-        COMMAND make obj libdarknet.so GPU=0 CUDNN=0 OPENCV=1 DEBUG=1 OPENMP=0 LIBSO=1 LIBNAMESO=libdarknet.so
-        COMMAND cp libdarknet.so ${CMAKE_SOURCE_DIR}/include/
-        COMMAND cp libdarknet.so ${CMAKE_BINARY_DIR}/
+        COMMAND make obj libdarknet.so GPU=${DARKNET_GPU} CUDNN=${DARKNET_CUDNN} OPENCV=1 DEBUG=${DARKNET_DEBUG} OPENMP=${DARKNET_OPEPNMP} LIBSO=1 LIBNAMESO=${DARKNET_LIBSO_NAME}
+        COMMAND cp ${DARKNET_LIBSO_NAME} ${CMAKE_SOURCE_DIR}/include/
+        COMMAND cp ${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/
+        COMMENT "Building ${DARKNET_LIBSO_NAME}..."
+        BYPRODUCTS ${CMAKE_SOURCE_DIR}/include/${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/${DARKNET_LIBSO_NAME}
         WORKING_DIRECTORY ${darknet_SOURCE_DIR})
 
 target_link_libraries(field darknet)
