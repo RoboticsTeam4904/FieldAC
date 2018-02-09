@@ -30,6 +30,12 @@ download_project(PROJ rplidar
         DOWNLOAD_NAME rplidar-sdk.zip
         DOWNLOAD_NO_PROGRESS 1)
 
+download_project(PROJ nlohmann-json
+        URL https://github.com/nlohmann/json/releases/download/v3.1.0/include.zip
+        URL_MD5 a88e64482a9a6f2222d7cc79df5790e1
+        DOWNLOAD_NAME nlohmann-json.zip
+        DOWNLOAD_NO_PROGRESS 1)
+
 set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
 execute_process(COMMAND uname -s
         OUTPUT_VARIABLE RPLIDAR_PLATFORM
@@ -38,6 +44,7 @@ set(rplidar_OUTPUT_DIR ${rplidar_SOURCE_DIR}/sdk/output/${RPLIDAR_PLATFORM}/Rele
 
 include_directories(${rplidar_SDK_DIR}/include/)
 include_directories(${darknet_SOURCE_DIR}/src/)
+include_directories(${nlohmann-json_SOURCE_DIR}/nlohmann/)
 link_directories(${rplidar_OUTPUT_DIR})
 link_directories(${CMAKE_BINARY_DIR})
 
