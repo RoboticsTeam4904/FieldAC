@@ -35,16 +35,35 @@ def undistortCorners(corners, distortion_mtx, dst):
 
 # corners, row, col = findCorners(img)
 
+# # -----------Calculate board_dists, an array of tuples of x and y distances to the center along the board-----------
+
 # distortion_mtx = calculateDistortionMatrix(corners, row, col, imshape)
 # corners_x_and_y = [([corner[0], 0], [0, corner[1]]) for corner in corners]
 # corners_undistorted = undistortCorners(corners, distortion_mtx, dst)
 # corners_x_and_y_undistorted = undistortCorners(corners_x_and_y, distortion_mtx, dst)
+# # center_undistorted
+# # subtract from undistorted
+
 # corner_lines = undistortCorners(corners, row, col, imshape)
 
 # corners_board_coords = calcBoardCoords(corners) = [[[i,j] for j in range(len(corners[i]))] for i in range(len(corners))]
 # corners_x_and_y_board_coords = calcBoardCoords(corners_x_and_y)
 # board_dists = calcBoardDists(corners_board_coords, corners_x_and_y_board_coords)
+
+# center_board_coords = [] # to calculate
+
+# # -----------Calculate true_dists, an array of scalar distances from vertices to camera-----------
+
+# # make sure you know which way the coordinates go (indeces order vs top right and such)
 # true_dists = np.zeros_like(corners) #array of floats
+# true_dists[0,0] = dist_to_top_left
+# true_dists[0,col-1] = dist_to_top_right
+# true_dists[row-1,0] = dist_to_bottom_left
+# true_dists[row-1,col-1] = dist_to_bottom_right
+
+# width = side_length*row
+# height = side_length*col
+# >>>>>>> a671c77f9ee724cffd97dc1f941391244817b205
 
 def calcAngle(a, b, c):
     return arccos((a^2 + b^2 - c^2)/(2*a*b))
@@ -53,8 +72,8 @@ def calcDist(theta, a, b):
     return sqrt(a^2 + b^2 - 2*a*b*cos(theta))
 
 #width = side_length*row
-width = 1080
-height = 1920
+width = 1920
+height = 1080
 # height = side_length*col
 # top_left_to_right_angle = calcAngle(dist_top_left, width, dist_top_right)
 # top_left_to_down_angle = calcAngle(dist_top_left, height, dist_bottom_left)
@@ -70,12 +89,12 @@ def findCenterTile():
     x, y = center
 
     #finds corners that are above and to the left of the center
-    for lineNum in range(len(corner_coords)):
-        if corner_coords[lineNum][0][0] < y and corner_coords[lineNum][0][1] > x:
-            print(corner_coords[lineNum][0][0], corner_coords[lineNum][0][1], lineNum)
-            dists.append(np.linalg.norm(center - corner_coords[lineNum][0]))
-            coords.append(lineNum)
+    for coordNum in range(len(corner_coords)):
+        if corner_coords[coordNum][0][0] < x and corner_coords[coordNum][0][1] > y:
+            dists.append(np.linalg.norm(center - corner_coords[coordNum][0]))
+            coords.append(coordNum)
 
+    #finds top left corner
     idx = dists.index(min(dists))
     coord = coords[idx]
 
@@ -86,7 +105,8 @@ def findCenterTile():
     bottom_right_corner = corner_coords[coord + cbrow + 1]
 
     tile_pixel_coords = np.array([top_left_corner, top_right_corner, bottom_left_corner, bottom_right_corner])
-    boardCoords = np.array([[(coord + 1) // cbrow, (coord + 1) % cbrow], [(coord + cbrow + 1) // cbrow, (coord + cbrow + 1) % cbrow], [coord // cbrow, coord % cbrow], [(coord + cbrow) // cbrow, (coord + cbrow) % cbrow]])
+    boardCoords = np.array([[coord // cbrow, coord % cbrow], [(coord + cbrow) // cbrow, (coord + cbrow) % cbrow], [(coord + 1) // cbrow, (coord + 1) % cbrow], [(coord + cbrow + 1) // cbrow, (coord + cbrow + 1) % cbrow]])
+
     return tile_pixel_coords, boardCoords
 
 
@@ -98,19 +118,21 @@ def findCenterBoordCoords():
     u_2 = np.subtract(tr, tl)
 
     #mathematica equation
-    x = (1/(2*(-u_1[0][1]*u_2[0][0] + u_1[0][0]*u_2[0][1])))*(-center[1]*u_1[0][0] - tl[0][1]*u_1[0][0] - center[0]*u_1[0][1] + tl[0][0]*u_1[0][1] + bl[0][1]*u_2[0][0] + center[1]*u_2[0] - bl[0]*u_2[0][1] + center[0]*u_2[0][1] - math.sqrt((center[1]*u_1[0][0] + tl[0][1]*u_1[0][0] + center[0]*u_1[0][1] - tl[0][0]*u_1[0][1] - bl[0][1]*u_2[0][0] - center[1]*u_2[0][0] + bl[0][0]*u_2[0][1] - center[0]*u_2[0][1])**2 - 4*(bl[0][1]*center[0] + bl[0][0]*center[1] - bl[0][1]*tl[0][0] - center[1]*tl[0][0] + bl[0][0]*tl[0][1] - center[0]*tl[0][1])*(-u_1[0][1]*u_2[0][0] + u_1[0][0]*u_2[0][1])))
+    x = (1/(2*(-u_1[0][1]*u_2[0][0] + u_1[0][0]*u_2[0][1])))*(-center[1]*u_1[0][0] - tl[0][1]*u_1[0][0] - center[0]*u_1[0][1] + tl[0][0]*u_1[0][1] + bl[0][1]*u_2[0][0] + center[1]*u_2[0][0] - bl[0][0]*u_2[0][1] + center[0]*u_2[0][1] + math.sqrt((center[1]*u_1[0][0] + tl[0][1]*u_1[0][0] + center[0]*u_1[0][1] - tl[0][0]*u_1[0][1] - bl[0][1]*u_2[0][0] - center[1]*u_2[0][0] + bl[0][0]*u_2[0][1] - center[0]*u_2[0][1])**2 - 4*(bl[0][1]*center[0] + bl[0][0]*center[1] - bl[0][1]*tl[0][0] - center[1]*tl[0][0] + bl[0][0]*tl[0][1] - center[0]*tl[0][1])*(-u_1[0][1]*u_2[0][0] + u_1[0][0]*u_2[0][1])))
     p_1 = bl + x*u_1
     L = tl - bl + x*(u_2 - u_1)
     y_1 = (center[0] - p_1[0][0])/L[0][0]
     y_2 = (center[1] - p_1[0][1])/L[0][1]
  
-    print(y_1, y_2)
     if y_1 != y_2:
-        print("RIP calculations")
+        diff = y_1 - y_2
+        print("diff: " , str(diff))
+        if diff > 50:
+            print("Rip calculations")
 
-    center_board_coords = np.array([bd_bl[0] + x, y_1]) 
+    center_board_coords = np.array([bd_bl[0] + x, bd_bl[1] + max(y_1, y_2)]) 
+    return center_board_coords
 
-    print(center_board_coords)
 
 # # make sure you know which way the coordinates go (indices order vs top right and such)
 # for i in range(1,row-1): # Don't include corners
@@ -122,6 +144,43 @@ def findCenterBoordCoords():
 
 # accurate_corners = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)) #not linear?
 # pixel_coords = np.reshape(accurate_corners, (row,col))
+# =======
+# angles_right = np.zeros((row))
+# angles_down = np.zeros((col))
+
+# angles_down[0] = calcAngle(true_dists[0,0], height, true_dists[row-1,0])
+# angles_down[col-1] = calcAngle(true_dists[0,col-1], height, true_dists[row-1,col-1])
+# for i in range(1,row-1): # Don't include corners
+#     true_dists[i,0] = calcDist(angles_down[0], side_length*i, true_dists[0,0]) # need new angles for inner grid dists
+#     true_dists[i,col-1] = calcDist(angles_down[col-1], side_length*i, true_dists[0,col-1])
+#     angles_right[i] = calcAngle(true_dists[i,0], width, true_dists[i,col-1])
+
+# angles_right[0] = calcAngle(true_dists[0,0], width, true_dists[0,col-1]) # Only needed to get angles_right, could otherwise just iterate using angle downs
+# angles_right[row-1] = calcAngle(true_dists[row-1,0], width, true_dists[row-1,col-1])
+# for j in range(1,col-1):
+#     true_dists[0,j] = calcDist(angles_right[0], side_length*j, true_dists[0,0])
+#     true_dists[row-1,j] = calcDist(angles_right[row-1], side_length*j, true_dists[row-1,0])
+#     angles_down[j] = calcAngle(true_dists[0,j], height, true_dists[row-1,j])
+
+# for i in range(row):
+#     for j in range(col):
+#         dist = calcDist(angles_down[j], side_length*i, true_dists[0,j])
+#         if 0 < i < row-1 and 0 < j < col-1: # doesn't actually matter, will just reset to same value
+#             true_dists[i,j] = dist
+#         # x_axis_analog = (center_board_coords[0], j)
+#         # y_axis_analog = (i, center_board_coords[1])
+#         x_analog_dist = calcDist(angles_down[j], side_length*center_board_coords[0], true_dists[0,j])
+#         y_analog_dist = calcDist(angles_right[i], side_length*center_board_coords[1], true_dists[i,0])
+#         y_theta = calcAngle(dist, x_analog_dist, abs(i-center_board_coords[0]))
+#         x_theta = calcAngle(dist, y_analog_dist, abs(j-center_board_coords[1]))
+
+# true_dists_x_and_y = np.zeros_like(corn)
+# for i in range(row):
+#     for 
+                                                                                            
+# accurate_corners = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)) #not linear?
+# pixel_coords = np.reshape(accurate_corners, (row,col))
+# >>>>>>> a671c77f9ee724cffd97dc1f941391244817b205
 
  
 # dst = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
