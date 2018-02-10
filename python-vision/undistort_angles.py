@@ -129,8 +129,16 @@ def findCenterBoordCoords():
         print("diff: " , str(diff))
         if diff > 50:
             print("Rip calculations")
+    print(y_1, y_2)
 
-    center_board_coords = np.array([bd_bl[0] + x, bd_bl[1] + max(y_1, y_2)]) 
+    if y_1 > 0 and y_1 < 1:
+        y = y_1
+    elif y_2 > 0 and y_2 < 1:
+        y = y_2
+    else:
+        y = 0
+    center_board_coords = np.array([bd_bl[0] + x, bd_bl[1] + y]) 
+    print center_board_coords
     return center_board_coords
 
 
