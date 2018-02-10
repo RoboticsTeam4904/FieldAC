@@ -32,7 +32,9 @@ download_project(PROJ rplidar
 
 download_project(PROJ nlohmann-json
         URL https://github.com/nlohmann/json/releases/download/v3.1.0/include.zip
-        URL_MD5 a88e64482a9a6f2222d7cc79df5790e1)
+        URL_MD5 a88e64482a9a6f2222d7cc79df5790e1
+        DOWNLOAD_NAME nlohmann-json.zip
+        DOWNLOAD_NO_PROGRESS 1)
 
 set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
 execute_process(COMMAND uname -s
