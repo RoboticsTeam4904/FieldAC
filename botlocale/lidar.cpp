@@ -3,9 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+Lidar::Lidar(std::string path, _u32 baudrate = 115200) : path(path), baudrate(baudrate) {
+    this->driver = rplidar::RPlidarDriver::CreateDriver(rplidar::RPlidarDriver::DRIVER_TYPE_SERIALPORT);
+    if (!this->driver) {
+        fprintf(stderr, "insufficent memory, exit\n");
+        exit(-2);
+    }
+}
 
-using namespace rp::standalone::rplidar;
-
+Lidar::run();
 
 bool checkRPLIDARHealth(RPlidarDriver * drv)
 {

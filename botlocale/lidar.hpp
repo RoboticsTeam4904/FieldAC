@@ -5,19 +5,29 @@
 #ifndef PROV_LIDAR_HPP
 #define PROV_LIDAR_HPP
 
-//#include <rplidar.h>
-//#include <rptypes.h>
+#include <rplidar.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
 #include "../objects.hpp"
 
 #ifndef _countof
 #define _countof(_Array) (int)((sizeof(_Array)) / (sizeof(_Array[0])))
 #endif
 
-//using namespace rp::standalone;
+using namespace rp::standalone;
 
 class Lidar {
+protected:
+	_u32 baudrate;
+	std::string path;
+	u_result result;
 public:
-//	Lidar(rplidar::_u32);
+	rplidar::RPlidarDriver *driver;
+public:
+	Lidar(std::string path, _u32 baudrate = 115200);
+	void run();
+	bool checkHealth();
 };
 
 class LidarScan {
