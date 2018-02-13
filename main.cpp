@@ -5,6 +5,13 @@
 #include "objecttracking/cubetrack.hpp"
 #include "network/network.hpp"
 #include "network/target.hpp"
+#include <signal.h>
+
+bool ctrl_c_pressed;
+void ctrlc(int)
+{
+    ctrl_c_pressed = true;
+}
 
 static const char* about =
         "FRC Field Model by Bot Provoking (https://github.com/roboticsteam4904/2018-field)\n"
@@ -73,7 +80,7 @@ int main1(int argc, const char **argv) {
 //                         }}
 //                 }
 //    );
-
+    signal(SIGINT, ctrlc);
     std::thread networkRun(&Network::run,
                            network,
                            [defaultDev]() {
@@ -91,9 +98,13 @@ int main1(int argc, const char **argv) {
                                  return defaultDev->getFrame();
                              }
     );
+
     while(true) {
         if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
             return -1;
+        }
+        if (ctrl_c_pressed){
+            break;
         }
     }
 }

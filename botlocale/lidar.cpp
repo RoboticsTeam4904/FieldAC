@@ -2,7 +2,7 @@
 #include <rplidar.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
+
 
 using namespace rp::standalone::rplidar;
 
@@ -30,14 +30,7 @@ bool checkRPLIDARHealth(RPlidarDriver * drv)
         return false;
     }
 }
-
-bool ctrl_c_pressed;
-void ctrlc(int)
-{
-    ctrl_c_pressed = true;
-}
-
-int main(int argc, const char * argv[]) {
+void initLidar(){
     const char * opt_com_path = NULL;
     _u32         opt_com_baudrate = 115200;
     u_result     op_result;
@@ -107,13 +100,11 @@ int main(int argc, const char * argv[]) {
         goto on_finished;
     }
 
-    signal(SIGINT, ctrlc);
-
     drv->startMotor();
     // start scan...
     drv->startScan();
-
-    // fetech result and print it out...
+}
+void lidarThread(){
     while (1) {
         rplidar_response_measurement_node_t nodes[360*2];
         size_t   count = _countof(nodes);
@@ -135,7 +126,8 @@ int main(int argc, const char * argv[]) {
             break;
         }
     }
-
+}
+void exitLidar(){
     drv->stop();
     drv->stopMotor();
     // done!
@@ -143,6 +135,7 @@ int main(int argc, const char * argv[]) {
     RPlidarDriver::DisposeDriver(drv);
     return 0;
 }
+
 
 LidarScan::LidarScan() = default;
 LidarScan::LidarScan(const LidarScan& other, int newOffset) {
