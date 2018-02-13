@@ -99,6 +99,8 @@ int main1(int argc, const char **argv) {
                              }
     );
 
+    std::thread lidarRun(&lidarThread, &ctrl_c_pressed);
+
     while(true) {
         if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
             return -1;

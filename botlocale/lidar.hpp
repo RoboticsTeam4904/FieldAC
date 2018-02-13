@@ -17,6 +17,8 @@
 
 using namespace rp::standalone;
 
+void lidarThread(bool* stop);
+
 class Lidar {
 protected:
 	_u32 baudrate;
