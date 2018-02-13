@@ -81,7 +81,7 @@ void initLidar(){
     // start scan...
     drv->startScan();
 }
-void lidarThread(){
+void lidarThread(bool* stop){
     while (1) {
         rplidar_response_measurement_node_t nodes[360*2];
         size_t   count = _countof(nodes);
@@ -99,7 +99,7 @@ void lidarThread(){
             }
         }
 
-        if (ctrl_c_pressed){
+        if (*stop){
             break;
         }
     }
