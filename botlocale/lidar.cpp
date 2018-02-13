@@ -28,59 +28,40 @@ bool Lidar::checkHealth() {
     }
 };
 
-void Lidar::run() {
-    auto resp = this->driver->connect(this->path.c_str(), baudrate);
-    if(IS_FAIL(resp)) {
-        std::fprintf(stderr, "Error; cannot get device info.\n");
+void Lidar::run(bool* stop) {
+    auto connResp = this->driver->connect(this->path.c_str(), baudrate);
+    if(IS_FAIL(connResp)) {
+        std::fprintf(stderr, "Error; cannot bind to the specified serial port %s.\n", this->path.c_str());
         //TODO: Figure out where to handle the errors ohhhh noooo.
     }
 
-    rplidar_response_device_info_t 
+    rplidar_response_device_info_t devInfo;
+    auto deviResp = this->driver->getDeviceInfo(devInfo);
+    if(IS_FAIL(deviResp)) {
+        std::fprintf(stderr, "Error; cannot get device info.\n");
+        //TODO: Figure out where to handle the errors please.
+    }
+
+    std::printf("RPLIDAR S/N: ");
+    for(int pos = 0; pos < 16;pos++) {
+        std::printf("%02X", devInfo.serialnum[pos]);
+    }
+    std::printf("\n");
+
+    std::printf("Firmware Ver: %d.%02d\n"
+                "Hardware Rev: %d\n",
+                devInfo.firmware_version>>8,
+                devInfo.firmware_version & 0xFF,
+                (int) devInfo.hardware_version);
+
+    if(!this->checkHealth()) {
+        //TODO: Remember the stuff about handling errors yep here too fam.
+    }
+
+    this->driver->startMotor();
+    this->driver->startScan();
 };
 
-void initLidar(){
-    // make connection...
-    if (IS_FAIL(drv->connect(opt_com_path, opt_com_baudrate))) {
-        fprintf(stderr, "Error, cannot bind to the specified serial port %s.\n"
-                , opt_com_path);
-        goto on_finished;
-    }
-
-    rplidar_response_device_info_t devinfo;
-
-    // retrieving the device info
-    ////////////////////////////////////////
-    op_result = drv->getDeviceInfo(devinfo);
-
-    if (IS_FAIL(op_result)) {
-        fprintf(stderr, "Error, cannot get device info.\n");
-        goto on_finished;
-    }
-
-    // print out the device serial number, firmware and hardware version number..
-    printf("RPLIDAR S/N: ");
-    for (int pos = 0; pos < 16 ;++pos) {
-        printf("%02X", devinfo.serialnum[pos]);
-    }
-
-    printf("\n"
-                   "Firmware Ver: %d.%02d\n"
-                   "Hardware Rev: %d\n"
-            , devinfo.firmware_version>>8
-            , devinfo.firmware_version & 0xFF
-            , (int)devinfo.hardware_version);
-
-
-
-    // check health...
-    if (!checkRPLIDARHealth(drv)) {
-        goto on_finished;
-    }
-
-    drv->startMotor();
-    // start scan...
-    drv->startScan();
-}
 void lidarThread(bool* stop){
     while (1) {
         rplidar_response_measurement_node_t nodes[360*2];

@@ -27,7 +27,7 @@ public:
 	rplidar::RPlidarDriver *driver;
 public:
 	Lidar(std::string path, _u32 baudrate = 115200);
-	void run();
+	void run(bool* stop);
 	bool checkHealth();
 };
 
