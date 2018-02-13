@@ -1,14 +1,11 @@
-//
-// Created by Howard Stark on 1/27/18.
-//
-
 #ifndef PROV_LIDAR_HPP
 #define PROV_LIDAR_HPP
 
+#include <cstddef>
 #include <rplidar.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
+#include <cstdio>
+#include <cstdlib>
+#include <csignal>
 #include "../objects.hpp"
 
 #ifndef _countof
@@ -17,8 +14,6 @@
 
 using namespace rp::standalone;
 
-void lidarThread(bool* stop);
-
 class Lidar {
 protected:
 	_u32 baudrate;
@@ -26,8 +21,9 @@ protected:
 public:
 	rplidar::RPlidarDriver *driver;
 public:
-	Lidar(std::string path, _u32 baudrate = 115200);
+	Lidar(std::string path, _u32 baudrate);
 	void run(bool* stop);
+	void stop();
 	bool checkHealth();
 };
 

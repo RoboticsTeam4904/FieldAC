@@ -5,7 +5,9 @@
 #include "objecttracking/cubetrack.hpp"
 #include "network/network.hpp"
 #include "network/target.hpp"
+#include "botlocale/lidar.hpp"
 #include <signal.h>
+#include <unitypes.h>
 
 bool ctrl_c_pressed;
 void ctrlc(int)
@@ -20,16 +22,18 @@ static const char* about =
         "and provides functionality for localization within the model.\n\n";
 
 static const char* params =
-        "{ help     | false | help                                                            }"
-        "{ dev      | 0     | Capture Device                                                  }"
-        "{ src      |       | Source Video file. Overrides any specified capture device       }"
-        "{ net_cls  |       | [Network] \".names\" file for identifiable classes              }"
-        "{ net_cfg  |       | [Network] Model \".cfg\" file                                   }"
-        "{ net_mdl  |       | [Network] Model \".weights\" file                               }"
-        "{ net_save |       | [Network] Detection output file. Shows what the network detects }"
-        "{ net_cfd  | 0.5   | [Network] Minimum identification confidence threshold           }";
+        "{ help     | false  | help                                                            }"
+        "{ dev      | 0      | Capture Device                                                  }"
+        "{ src      |        | Source Video file. Overrides any specified capture device       }"
+        "{ net_cls  |        | [Network] \".names\" file for identifiable classes              }"
+        "{ net_cfg  |        | [Network] Model \".cfg\" file                                   }"
+        "{ net_mdl  |        | [Network] Model \".weights\" file                               }"
+        "{ net_save |        | [Network] Detection output file. Shows what the network detects }"
+        "{ net_cfd  | 0.5    | [Network] Minimum identification confidence threshold           }"
+        "{ ldr_dev  |        | [LIDAR] Path to the *nix device (eg. /dev/ttyUSB0)              }"
+        "{ ldr_baud | 115200 | [LIDAR] Baudrate for serial communications                      }";
 
-int main1(int argc, const char **argv) {
+int main(int argc, const char **argv) {
     cv::CommandLineParser parser(argc, argv, params);
 
     if (parser.get<bool>("help")) {
@@ -68,6 +72,10 @@ int main1(int argc, const char **argv) {
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
+
+    std::printf("Initializing Lidar...\n");
+    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
+                             parser.get<uint32_t>("ldr_baud"));
 //    This code is non-threaded but also serves as a
 //    slightly cleaner demonstration of what's really being run.
 //
@@ -80,6 +88,7 @@ int main1(int argc, const char **argv) {
 //                         }}
 //                 }
 //    );
+
     signal(SIGINT, ctrlc);
     std::thread networkRun(&Network::run,
                            network,
@@ -93,13 +102,15 @@ int main1(int argc, const char **argv) {
     );
 
     std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
-                            cubeTracker,
+                             cubeTracker,
                              [defaultDev]() {
                                  return defaultDev->getFrame();
                              }
     );
 
-    std::thread lidarRun(&lidarThread, &ctrl_c_pressed);
+    std::thread lidarRun(&Lidar::run,
+                         lidar,
+                         &ctrl_c_pressed);
 
     while(true) {
         if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
