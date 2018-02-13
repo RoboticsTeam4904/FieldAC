@@ -24,7 +24,7 @@ bool Lidar::checkHealth() {
     }
 };
 
-void Lidar::run(bool* stop) {
+void Lidar::run(const bool* stop) {
     auto connResp = this->driver->connect(this->path.c_str(), baudrate);
     if(IS_FAIL(connResp)) {
         std::fprintf(stderr, "Error; cannot bind to the specified serial port %s.\n", this->path.c_str());
@@ -39,8 +39,8 @@ void Lidar::run(bool* stop) {
     }
 
     std::printf("RPLIDAR S/N: ");
-    for(int pos = 0; pos < 16;pos++) {
-        std::printf("%02X", devInfo.serialnum[pos]);
+    for (unsigned char pos : devInfo.serialnum) {
+        std::printf("%02X", pos);
     }
     std::printf("\n");
 
@@ -51,7 +51,7 @@ void Lidar::run(bool* stop) {
                 (int) devInfo.hardware_version);
 
     if(!this->checkHealth()) {
-        //TODO: Remember the stuff about handling errors yep here too fam.
+        this->stop();
     }
 
     this->driver->startMotor();
@@ -65,10 +65,14 @@ void Lidar::run(bool* stop) {
         auto scanResp = this->driver->grabScanData(nodes, count);
         if(IS_OK(scanResp)) {
             this->driver->ascendScanData(nodes, count);
+            LidarScan tmp;
+
             for(int pos = 0; pos < (int) count; pos++) {
+                float angle = (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
+                tmp.distances[((int)(angle+0.5f)) % 360] = nodes[pos].distance_q2 / 4.0f;
                 std::printf("%s theta: %03.2f Dist: %08.2f Q: %d\n",
                             (nodes[pos].sync_quality & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ?"S ":"  ",
-                            (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f,
+                            (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f,
                             nodes[pos].distance_q2/4.0f,
                             nodes[pos].sync_quality >> RPLIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
             }

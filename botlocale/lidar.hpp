@@ -22,13 +22,13 @@ public:
 	rplidar::RPlidarDriver *driver;
 public:
 	Lidar(std::string path, _u32 baudrate);
-	void run(bool* stop);
+	void run(const bool* stop);
 	void stop();
 	bool checkHealth();
 };
 
 class LidarScan {
-protected:
+public:
 	float distances[360];
 	int offset;
 public:
