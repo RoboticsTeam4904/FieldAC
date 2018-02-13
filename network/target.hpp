@@ -1,5 +1,5 @@
-#ifndef INC_2018_FIELD_TARGET_HPP
-#define INC_2018_FIELD_TARGET_HPP
+#ifndef PROV_TARGET_HPP
+#define PROV_TARGET_HPP
 
 struct Target {
     Target(float xCenter, float yCenter, float width, float height, float confidence);

@@ -1,28 +1,11 @@
-//
-// Created by Howard Stark on 1/27/18.
-//
-
 #include "lidar.hpp"
 #include <rplidar.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-
-#ifndef _countof
-#define _countof(_Array) (int)((sizeof(_Array)) / (sizeof(_Array[0])))
-#endif
-
-lidarscan getAtLocation(int xCm, int yCm){
-
-}
-lidarscan generateExpected(const Pose& pose){
-    return lidarscan(getAtLocation((int)pose.x,(int)pose.y), (int)(pose.yaw*180/3.14159));
-}
-
-
-
+#include <signal.h>
 
 using namespace rp::standalone::rplidar;
+
 
 bool checkRPLIDARHealth(RPlidarDriver * drv)
 {
@@ -48,7 +31,6 @@ bool checkRPLIDARHealth(RPlidarDriver * drv)
     }
 }
 
-#include <signal.h>
 bool ctrl_c_pressed;
 void ctrlc(int)
 {
@@ -63,7 +45,7 @@ int main(int argc, const char * argv[]) {
     printf("Ultra simple LIDAR data grabber for RPLIDAR.\nVersion: RPLIDAR_SDK_VERSION\n");
 
     // read serial port from the command line...
-    if (argc>1) opt_com_path = argv[1]; // or set to a fixed value: e.g. "com3" 
+    if (argc>1) opt_com_path = argv[1]; // or set to a fixed value: e.g. "com3"
 
     // read baud rate from the command line if specified...
     if (argc>2) opt_com_baudrate = strtoul(argv[2], NULL, 10);
@@ -80,7 +62,7 @@ int main(int argc, const char * argv[]) {
 
     // create the driver instance
     RPlidarDriver * drv = RPlidarDriver::CreateDriver(RPlidarDriver::DRIVER_TYPE_SERIALPORT);
-    
+
     if (!drv) {
         fprintf(stderr, "insufficent memory, exit\n");
         exit(-2);
@@ -90,13 +72,13 @@ int main(int argc, const char * argv[]) {
     // make connection...
     if (IS_FAIL(drv->connect(opt_com_path, opt_com_baudrate))) {
         fprintf(stderr, "Error, cannot bind to the specified serial port %s.\n"
-            , opt_com_path);
+                , opt_com_path);
         goto on_finished;
     }
 
     rplidar_response_device_info_t devinfo;
 
-	// retrieving the device info
+    // retrieving the device info
     ////////////////////////////////////////
     op_result = drv->getDeviceInfo(devinfo);
 
@@ -112,8 +94,8 @@ int main(int argc, const char * argv[]) {
     }
 
     printf("\n"
-            "Firmware Ver: %d.%02d\n"
-            "Hardware Rev: %d\n"
+                   "Firmware Ver: %d.%02d\n"
+                   "Hardware Rev: %d\n"
             , devinfo.firmware_version>>8
             , devinfo.firmware_version & 0xFF
             , (int)devinfo.hardware_version);
@@ -125,9 +107,9 @@ int main(int argc, const char * argv[]) {
         goto on_finished;
     }
 
-	signal(SIGINT, ctrlc);
-    
-	drv->startMotor();
+    signal(SIGINT, ctrlc);
+
+    drv->startMotor();
     // start scan...
     drv->startScan();
 
@@ -141,24 +123,52 @@ int main(int argc, const char * argv[]) {
         if (IS_OK(op_result)) {
             drv->ascendScanData(nodes, count);
             for (int pos = 0; pos < (int)count ; ++pos) {
-                printf("%s theta: %03.2f Dist: %08.2f Q: %d \n", 
-                    (nodes[pos].sync_quality & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ?"S ":"  ", 
-                    (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f,
-                    nodes[pos].distance_q2/4.0f,
-                    nodes[pos].sync_quality >> RPLIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
+                printf("%s theta: %03.2f Dist: %08.2f Q: %d \n",
+                       (nodes[pos].sync_quality & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ?"S ":"  ",
+                       (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f,
+                       nodes[pos].distance_q2/4.0f,
+                       nodes[pos].sync_quality >> RPLIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
             }
         }
 
-        if (ctrl_c_pressed){ 
-			break;
-		}
+        if (ctrl_c_pressed){
+            break;
+        }
     }
 
     drv->stop();
     drv->stopMotor();
     // done!
-on_finished:
+    on_finished:
     RPlidarDriver::DisposeDriver(drv);
     return 0;
 }
 
+LidarScan::LidarScan() = default;
+LidarScan::LidarScan(const LidarScan& other, int newOffset) {
+    memcpy(distances, other.distances, 360*(sizeof(float)));
+    offset = other.offset + newOffset;
+    if (offset >= 360) {
+        offset -= 360;
+    }
+}
+
+float LidarScan::compare(const LidarScan& expected) {
+    float err = 0;
+    for(int i = 0; i < 360; i++) {
+        if(getAtAngle(i) < expected.getAtAngle(i)) {
+            err += (expected.getAtAngle(i) - getAtAngle(i)) * 0.1;
+        } else {
+            err += (getAtAngle(i) - expected.getAtAngle(i));
+        }
+    }
+    return err;
+}
+
+LidarScan LidarScan::getAtLocation(int xCm, int yCm){
+    //TODO: Implement getAtLocation functionality
+    return LidarScan();
+}
+LidarScan LidarScan::generateExpected(const Pose& pose){
+    return LidarScan(getAtLocation((int)pose.x,(int)pose.y), (int)(pose.yaw*180/3.14159));
+}

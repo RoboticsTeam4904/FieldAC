@@ -1,5 +1,5 @@
-#ifndef VISION_H
-#define VISION_H
+#ifndef PROV_VISION_H
+#define PROV_VISION_H
 
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>

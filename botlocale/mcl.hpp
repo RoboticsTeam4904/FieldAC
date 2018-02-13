@@ -1,5 +1,5 @@
-#ifndef MCL_H
-#define MCL_H
+#ifndef PROV_MCL_H
+#define PROV_MCL_H
 
 #include "../objects.hpp"
 #include "lidar.hpp"

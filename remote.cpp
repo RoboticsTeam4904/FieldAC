@@ -1,8 +1,7 @@
 #include "remote.hpp"
 
-DataFeed::DataFeed(std::string port) : port(port) {}
+RemoteSocket::RemoteSocket(const std::string &port) : IRemote(port) {};
 
-void DataFeed::run() {
-    //std::fstream
+void RemoteSocket::run() {
+    return;
 }
-

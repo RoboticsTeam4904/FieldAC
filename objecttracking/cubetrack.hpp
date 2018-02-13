@@ -1,5 +1,5 @@
-#ifndef CUBETRACK_H
-#define CUBETRACK_H
+#ifndef PROV_CUBETRACK_H
+#define PROV_CUBETRACK_H
 
 #include <vector>
 #include "../objects.hpp"

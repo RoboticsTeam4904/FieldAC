@@ -2,49 +2,40 @@
 // Created by Howard Stark on 1/27/18.
 //
 
-#ifndef INC_2018_FIELD_LIDAR_HPP
-#define INC_2018_FIELD_LIDAR_HPP
+#ifndef PROV_LIDAR_HPP
+#define PROV_LIDAR_HPP
 
+//#include <rplidar.h>
+//#include <rptypes.h>
 #include "../objects.hpp"
 
-class lidar {
+#ifndef _countof
+#define _countof(_Array) (int)((sizeof(_Array)) / (sizeof(_Array[0])))
+#endif
 
+//using namespace rp::standalone;
+
+class Lidar {
+public:
+//	Lidar(rplidar::_u32);
 };
 
-class lidarscan{
-public:
+class LidarScan {
+protected:
 	float distances[360];
 	int offset;
-	lidarscan(){}
-	lidarscan(const lidarscan& other,int newOffset) {
-		memcpy(distances, other.distances, 360*(sizeof(float)));
-		offset=other.offset+newOffset;
-		if (offset >= 360){
-			offset-=360;
-		}
-	}
-	~lidarscan(){
-
-	}
+public:
+	LidarScan();
+	LidarScan(const LidarScan& other, int newOffset);
+	float compare(const LidarScan& expected);
+	LidarScan generateExpected(const Pose& pose);
+	LidarScan getAtLocation(int xCm, int yCm);
 private:
-	 inline  float getAtAngle(int angle)const{
-		int o=angle+offset;
-		if(o>=360){
+	inline float getAtAngle(int angle) const {
+		int o = angle + offset;
+		if(o >= 360)
 			o-=360;
-		}
 		return distances[o];
 	}
-public:
-	float compare(const lidarscan& expected){
-		float err=0;
-		for(int i=0; i<360; i++){
-			if(getAtAngle(i) < expected.getAtAngle(i)){
-				err += (expected.getAtAngle(i)-getAtAngle(i)) * 0.1;
-			}else{
-				err += (getAtAngle(i)-expected.getAtAngle(i));
-			}
-		}
-		return err;
-	}
 };
-#endif //INC_2018_FIELD_LIDAR_HPP
+#endif
