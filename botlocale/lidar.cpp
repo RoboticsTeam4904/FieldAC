@@ -11,63 +11,34 @@ Lidar::Lidar(std::string path, _u32 baudrate = 115200) : path(path), baudrate(ba
     }
 }
 
-Lidar::run();
-
-bool checkRPLIDARHealth(RPlidarDriver * drv)
-{
-    u_result     op_result;
-    rplidar_response_device_health_t healthinfo;
-
-
-    op_result = drv->getHealth(healthinfo);
-    if (IS_OK(op_result)) { // the macro IS_OK is the preperred way to judge whether the operation is succeed.
-        printf("RPLidar health status : %d\n", healthinfo.status);
-        if (healthinfo.status == RPLIDAR_STATUS_ERROR) {
-            fprintf(stderr, "Error, rplidar internal error detected. Please reboot the device to retry.\n");
-            // enable the following code if you want rplidar to be reboot by software
-            // drv->reset();
+bool Lidar::checkHealth() {
+    u_result result;
+    rplidar_response_device_health_t healthInfo;
+    result = this->driver->getHealth(healthInfo);
+    if(IS_OK(result)) {
+        std::printf("RPLidar Health Status: %d\n", healthInfo.status);
+        if(healthInfo.status == RPLIDAR_STATUS_ERROR) {
+            std::fprintf(stderr, "Error; rplidar internal error detected. Please reboot the device to retry.\n");
             return false;
-        } else {
-            return true;
         }
-
+        return true;
     } else {
-        fprintf(stderr, "Error, cannot retrieve the lidar health code: %x\n", op_result);
+        std::fprintf(stderr, "Error; cannot retrieve the lidar health code: %x\n", result);
         return false;
     }
-}
+};
+
+void Lidar::run() {
+    auto resp = this->driver->connect(this->path.c_str(), baudrate);
+    if(IS_FAIL(resp)) {
+        std::fprintf(stderr, "Error; cannot get device info.\n");
+        //TODO: Figure out where to handle the errors ohhhh noooo.
+    }
+
+    rplidar_response_device_info_t 
+};
+
 void initLidar(){
-    const char * opt_com_path = NULL;
-    _u32         opt_com_baudrate = 115200;
-    u_result     op_result;
-
-    printf("Ultra simple LIDAR data grabber for RPLIDAR.\nVersion: RPLIDAR_SDK_VERSION\n");
-
-    // read serial port from the command line...
-    if (argc>1) opt_com_path = argv[1]; // or set to a fixed value: e.g. "com3"
-
-    // read baud rate from the command line if specified...
-    if (argc>2) opt_com_baudrate = strtoul(argv[2], NULL, 10);
-
-
-    if (!opt_com_path) {
-#ifdef _WIN32
-        // use default com port
-        opt_com_path = "\\\\.\\com3";
-#else
-        opt_com_path = "/dev/ttyUSB0";
-#endif
-    }
-
-    // create the driver instance
-    RPlidarDriver * drv = RPlidarDriver::CreateDriver(RPlidarDriver::DRIVER_TYPE_SERIALPORT);
-
-    if (!drv) {
-        fprintf(stderr, "insufficent memory, exit\n");
-        exit(-2);
-    }
-
-
     // make connection...
     if (IS_FAIL(drv->connect(opt_com_path, opt_com_baudrate))) {
         fprintf(stderr, "Error, cannot bind to the specified serial port %s.\n"

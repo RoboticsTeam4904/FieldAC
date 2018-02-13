@@ -21,7 +21,6 @@ class Lidar {
 protected:
 	_u32 baudrate;
 	std::string path;
-	u_result result;
 public:
 	rplidar::RPlidarDriver *driver;
 public:
