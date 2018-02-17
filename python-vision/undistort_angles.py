@@ -34,20 +34,21 @@ def calcBoardDists(corners_board_coords, corners_x_and_y_board_coords):
 
 
 corners, row, col = findCorners(img)
+corner_grid = np.reshape(corners, (row,col))
 
 # -----------Calculate board_dists, an array of tuples of x and y distances to the center along the board-----------
 
 distortion_mtx = calculateDistortionMatrix(corners, row, col, imshape)
-corners_x_and_y = [([corner[0], 0], [0, corner[1]]) for corner in corners]
-corners_undistorted = undistortCorners(corners, distortion_mtx, dst)
-corners_x_and_y_undistorted = undistortCorners(corners_x_and_y, distortion_mtx, dst)
+# corners_x_and_y = [([corner[0], 0], [0, corner[1]]) for corner in corners]
+# corners_undistorted = undistortCorners(corners, distortion_mtx, dst)
+# corners_x_and_y_undistorted = undistortCorners(corners_x_and_y, distortion_mtx, dst)
 # center_undistorted
 # subtract from undistorted
 
-corner_lines = undistortCorners(corners, row, col, imshape)
+# corner_lines = undistortCorners(corners, row, col, imshape)
 
-corners_board_coords = calcBoardCoords(corners) = [[[i,j] for j in range(len(corners[i]))] for i in range(len(corners))]
-corners_x_and_y_board_coords = calcBoardCoords(corners_x_and_y)
+corners_board_coords = [[[i,j] for j in range(col)] for i in range(row)]
+# corners_x_and_y_board_coords = calcBoardCoords(corners_x_and_y)
 board_dists = calcBoardDists(corners_board_coords, corners_x_and_y_board_coords)
 
 center_board_coords = [] # to calculate
@@ -55,7 +56,7 @@ center_board_coords = [] # to calculate
 # -----------Calculate true_dists, an array of scalar distances from vertices to camera-----------
 
 # make sure you know which way the coordinates go (indeces order vs top right and such)
-true_dists = np.zeros_like(corners) #array of floats
+true_dists = np.zeros_like(corner_grid) #array of floats
 true_dists[0,0] = dist_to_top_left
 true_dists[0,col-1] = dist_to_top_right
 true_dists[row-1,0] = dist_to_bottom_left
@@ -72,6 +73,7 @@ def calcDist(theta, a, b):
 
 angles_right = np.zeros((row))
 angles_down = np.zeros((col))
+thetas = np.zeros_like(corner_grid)
 
 angles_down[0] = calcAngle(true_dists[0,0], height, true_dists[row-1,0])
 angles_down[col-1] = calcAngle(true_dists[0,col-1], height, true_dists[row-1,col-1])
@@ -98,10 +100,8 @@ for i in range(row):
         y_analog_dist = calcDist(angles_right[i], side_length*center_board_coords[1], true_dists[i,0])
         y_theta = calcAngle(dist, x_analog_dist, abs(i-center_board_coords[0]))
         x_theta = calcAngle(dist, y_analog_dist, abs(j-center_board_coords[1]))
-
-true_dists_x_and_y = np.zeros_like(corn)
-for i in range(row):
-    for 
+        thetas[i,j,0] = x_theta
+        thetas[i,j,1] = y_theta
                                                                                             
 accurate_corners = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)) #not linear?
 pixel_coords = np.reshape(accurate_corners, (row,col))
