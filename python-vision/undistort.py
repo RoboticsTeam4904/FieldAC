@@ -7,7 +7,6 @@ def undistort(cbrow=sys.argv[1], cbcol=sys.argv[2], fileName=sys.argv[3]): # num
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
     cbrow = int(cbrow)
     cbcol = int(cbcol)
-    print(cbrow,cbcol)
 
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
     objp = np.zeros((cbrow*cbcol,3), np.float32)
@@ -23,7 +22,6 @@ def undistort(cbrow=sys.argv[1], cbcol=sys.argv[2], fileName=sys.argv[3]): # num
 
     # Find the chess board corners
     ret, corners = cv2.findChessboardCorners(gray,(cbrow,cbcol),None)
-    print ret
     cv2.imshow("img",img)
     cv2.waitKey(500)
 
@@ -44,16 +42,26 @@ def undistort(cbrow=sys.argv[1], cbcol=sys.argv[2], fileName=sys.argv[3]): # num
 
     dist = normalize(np.array([dist[0][i] if i < 2 else 0.0 for i in range(len(dist[0]))]))
     #dist = np.array([-0.13615181, 0.53005398, 0, 0, 0]) # no translation 
+    h,  w = img.shape[:2]
     newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
 
     mapx,mapy = cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(w,h),5)
+    maps = [] #coordinates calculated by undistorting pixels 
+
+    for corner in corners2:
+        a, b = (int(corner[0][0]), int(corner[0][1]))
+        maps.append((mapx[b][a], mapy[b][a]))
     dst = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
 
+    xy_undistorted = cv2.undistortPoints(corners2, newcameramtx, dist, P=mtx) #coordinates calculated by undistorting points 
+    undist_pts = np.flipud(xy_undistorted)
     # crop the image
     x,y,w,h = roi
     dst = dst[y:y+h, x:x+w]
     cv2.imwrite('calibresult2.png',dst)
     print('done')
+    print(undist_pts)
+    return undist_pts
 
 def normalize(v):
     norm = np.linalg.norm(v)
