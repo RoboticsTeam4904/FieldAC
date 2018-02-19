@@ -37,13 +37,13 @@ namespace Vision {
     void Camera::captureImages() {
         while (true) {
             frameMutex.lock();
+            devCapture.read(frame);
+            notifyListeners(frame);
+            frameMutex.unlock();
             if(frame.empty()) {
                 std::printf("The frame was empty here");
                 return;
             }
-            devCapture.read(frame);
-            notifyListeners(frame);
-            frameMutex.unlock();
         }
     }
 
