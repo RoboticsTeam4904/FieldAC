@@ -30,6 +30,7 @@ namespace ObjectTracking {
         Tracker_optflow* tracker_flow;
 
         void update(std::vector<Target>);
+        void update(cv::Mat);
         void run(std::function<cv::Mat ()>);
     };
 

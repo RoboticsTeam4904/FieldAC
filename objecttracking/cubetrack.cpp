@@ -23,6 +23,10 @@ namespace ObjectTracking {
         this->mutexTargets.unlock();
     }
 
+    void CubeTracker::update(cv::Mat frameUpdate) {
+        
+    }
+
     void CubeTracker::run(std::function<cv::Mat ()> fetchFrame) {
         std::printf("Running CubeTracker in here!");
         cv::Mat frame = fetchFrame();
