@@ -21,8 +21,8 @@ file(GLOB OBJ_TRK_SRC objecttracking/*.cpp)
 file(GLOB CORE_SRC *.cpp)
 
 download_project(PROJ darknet
-        GIT_REPOSITORY https://github.com/AlexeyAB/darknet
-        GIT_TAG 51d99f5)
+        GIT_REPOSITORY https://github.com/HowardStark/darknet
+        GIT_TAG master)
 
 download_project(PROJ rplidar
         URL https://download.slamtec.com/api/download/rplidar-sdk/1.5.7
@@ -56,7 +56,7 @@ add_executable(field ${CORE_SRC}
 
 add_custom_command(TARGET field
         PRE_LINK
-        COMMAND make obj libdarknet.so GPU=${DARKNET_GPU} CUDNN=${DARKNET_CUDNN} OPENCV=1 TRACK_OPTFLOW=1 DEBUG=${DARKNET_DEBUG} OPENMP=${DARKNET_OPEPNMP} LIBSO=1 LIBNAMESO=${DARKNET_LIBSO_NAME}
+        COMMAND make obj libdarknet.so GPU=0 CUDNN=${DARKNET_CUDNN} OPENCV=1 TRACK_OPTFLOW=1 DEBUG=${DARKNET_DEBUG} OPENMP=${DARKNET_OPEPNMP} LIBSO=1 LIBNAMESO=${DARKNET_LIBSO_NAME}
         COMMAND cp ${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/
         COMMENT "Building ${DARKNET_LIBSO_NAME}..."
         BYPRODUCTS ${CMAKE_SOURCE_DIR}/include/${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/${DARKNET_LIBSO_NAME}

@@ -3,6 +3,7 @@
 #include <opencv2/imgproc.hpp>
 #include <set>
 #include <unordered_map>
+#include <iostream>
 #include "network.hpp"
 
 Target::Target(float xCenter, float yCenter, float width, float height, float confidence)
@@ -46,9 +47,35 @@ void Network::show_console_result(bbox_t const result) {
               << ", prob = " << result.prob << std::endl;
 }
 
-void Network::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec) {
+//void Network::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec) {
+//    for (auto &i : result_vec) {
+//        cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), cv::Scalar(50, 200, 50), 3);
+//    }
+//}
+
+void Network::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std::string> obj_names)
+{
+    int current_det_fps = -1;
+    int current_cap_fps = -1;
+    int const colors[6][3] = { { 1,0,1 },{ 0,0,1 },{ 0,1,1 },{ 0,1,0 },{ 1,1,0 },{ 1,0,0 } };
+
     for (auto &i : result_vec) {
-        cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), cv::Scalar(50, 200, 50), 3);
+        cv::Scalar color = obj_id_to_color(i.obj_id);
+        cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 2);
+        if (obj_names.size() > i.obj_id) {
+            std::string obj_name = obj_names[i.obj_id];
+            if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
+            cv::Size const text_size = getTextSize(obj_name, cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, 2, 0);
+            int const max_width = (text_size.width > i.w + 2) ? text_size.width : (i.w + 2);
+            cv::rectangle(mat_img, cv::Point2f(std::max((int)i.x - 1, 0), std::max((int)i.y - 30, 0)),
+                          cv::Point2f(std::min((int)i.x + max_width, mat_img.cols-1), std::min((int)i.y, mat_img.rows-1)),
+                          color, CV_FILLED, 8, 0);
+            putText(mat_img, obj_name, cv::Point2f(i.x, i.y - 10), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(0, 0, 0), 2);
+        }
+    }
+    if (current_det_fps >= 0 && current_cap_fps >= 0) {
+        std::string fps_str = "FPS detection: " + std::to_string(current_det_fps) + "   FPS capture: " + std::to_string(current_cap_fps);
+        putText(mat_img, fps_str, cv::Point2f(10, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(50, 255, 0), 2);
     }
 }
 
@@ -72,7 +99,7 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
             cv::cvtColor(frame, frame, cv::COLOR_BGRA2BGR);
         }
         std::vector<bbox_t> result_vec = network->detect(frame);
-        this->draw_boxes(annotated, result_vec);
+        this->draw_boxes(annotated, result_vec, classNames);
         for(auto &item : result_vec) {
             targetMapInter[classNames[item.obj_id]].emplace_back(Target(item));
             this->show_console_result(item);

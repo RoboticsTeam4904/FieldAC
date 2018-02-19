@@ -1,15 +1,17 @@
+#define OPENCV 1
+#define TRACK_OPTFLOW 1
+#undef GPU
+
 #include <thread>
 #include <opencv/cv.hpp>
 #include <unordered_map>
 #include "vision.hpp"
-#include "objecttracking/cubetrack.hpp"
 #include "network/network.hpp"
 #include "network/target.hpp"
+#include "objecttracking/cubetrack.hpp"
 #include "botlocale/lidar.hpp"
-#include <signal.h>
+#include "socket.hpp"
 #include <unitypes.h>
-#define OPENCV 1
-#define TRACK_OPTFLOW 1
 
 bool ctrl_c_pressed;
 void ctrlc(int)
@@ -44,8 +46,11 @@ int main(int argc, const char **argv) {
         parser.printMessage();
         return 0;
     }
+//
+//    std::printf("Initializing Robot comms...");
+//    Socket* socket = new Socket("127.0.0.1", 5021);
 
-    std::printf("Initializing camera...\n");
+    std::printf("Initializing Camera...\n");
 
     Vision::Camera* defaultDev;
     if (parser.get<cv::String>("src").empty()) {
@@ -58,7 +63,7 @@ int main(int argc, const char **argv) {
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     std::printf("Initializing Object Tracking: Cube Tracker...\n");
-    ObjectTracking::CubeTracker* cubeTracker;
+    ObjectTracking::CubeTracker* cubeTracker = new ObjectTracking::CubeTracker();
 
     std::printf("Initializing Darknet...");
     Network* network;
@@ -75,9 +80,9 @@ int main(int argc, const char **argv) {
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
 
-    std::printf("Initializing Lidar...\n");
-    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
-                             parser.get<uint32_t>("ldr_baud"));
+//    std::printf("Initializing Lidar...\n");
+//    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
+//                             parser.get<uint32_t>("ldr_baud"));
 //    This code is non-threaded but also serves as a
 //    slightly cleaner demonstration of what's really being run.
 //
@@ -91,7 +96,6 @@ int main(int argc, const char **argv) {
 //                 }
 //    );
 
-    signal(SIGINT, ctrlc);
     std::thread networkRun(&Network::run,
                            network,
                            [defaultDev]() {
@@ -109,10 +113,10 @@ int main(int argc, const char **argv) {
                                  return defaultDev->getFrame();
                              }
     );
-
-    std::thread lidarRun(&Lidar::run,
-                         lidar,
-                         &ctrl_c_pressed);
+//
+//    std::thread lidarRun(&Lidar::run,
+//                         lidar,
+//                         &ctrl_c_pressed);
 
     while(true) {
         if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
