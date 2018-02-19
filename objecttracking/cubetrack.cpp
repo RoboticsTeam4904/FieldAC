@@ -26,7 +26,9 @@ namespace ObjectTracking {
 
     void CubeTracker::update(cv::Mat frameUpdate) {
         std::printf("large nut");
+        this->mutexFrame.lock();
         this->lastFrame = frameUpdate;
+        this->mutexFrame.unlock();
         this->track_optflow_queue.push(frameUpdate);
     }
 
@@ -35,16 +37,16 @@ namespace ObjectTracking {
         cv::Mat frame;
         float cur_time_extrapolate = 0, old_time_extrapolate = 0;
         while(true) {
-            frame = this->lastFrame;
-            std::printf("Frame height: %d\n", frame.size().height);
+            this->mutexFrame.lock();
+            frame = this->lastFrame.clone();
+            this->mutexFrame.unlock();
+//            std::printf("Frame height: %d\n", frame.size().height);
             if (frame.empty()) {
-                std::printf("Frame was empty, continuing\n");
                 continue;
             }
             std::vector<bbox_t> opticalFlowBox;
             opticalFlowBox = this->targets;
             if (!opticalFlowBox.size()) {
-                std::printf("Targets were empty, continuing...\n");
                 continue;
             }
             if (track_optflow_queue.size() > 0) {
@@ -58,11 +60,18 @@ namespace ObjectTracking {
                 track_optflow_queue.pop();
 
                 opticalFlowBox = network.tracking_id(opticalFlowBox);
+                for (int i = 0; i < opticalFlowBox.size(); ++i) {
+                    std::printf("%d, %d", opticalFlowBox[i].x, opticalFlowBox[i].y);
+                }
+
                 auto tmp_result_vec = network.tracking_id(this->targetsLast, false);
 
                 extrapolate_coords.new_result(tmp_result_vec, old_time_extrapolate);
                 old_time_extrapolate = cur_time_extrapolate;
                 extrapolate_coords.update_result(opticalFlowBox, cur_time_extrapolate - 1);
+
+                optflowFrame = frame.clone();
+                this->draw_boxes(optflowFrame, opticalFlowBox);
             }
         }
 
@@ -70,4 +79,11 @@ namespace ObjectTracking {
         // TODO: Hopefully I don't prank myself and someone else in the future fixes this
         // TODO: In all honestly it will probably be me though.
     }
+
+    void CubeTracker::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec) {
+        for (auto &i : result_vec) {
+            cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), cv::Scalar(50, 200, 50), 3);
+        }
+    }
+
 }

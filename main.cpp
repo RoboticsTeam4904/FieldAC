@@ -107,7 +107,7 @@ int main(int argc, const char **argv) {
                                return defaultDev->getFrame();
                            }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
                            {
-                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
+                                   {"person", [cubeTracker](std::vector<bbox_t> targets) {
                                        return cubeTracker->update(targets);
                                    }}}
     );
@@ -121,7 +121,7 @@ int main(int argc, const char **argv) {
 //                         &ctrl_c_pressed);
 
     while(true) {
-        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
+        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Darknet")) {
             return -1;
         }
         if (ctrl_c_pressed){
