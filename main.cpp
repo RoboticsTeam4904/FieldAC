@@ -46,24 +46,21 @@ int main(int argc, const char **argv) {
         parser.printMessage();
         return 0;
     }
-//
+
 //    std::printf("Initializing Robot comms...");
 //    Socket* socket = new Socket("127.0.0.1", 5021);
 
     std::printf("Initializing Camera...\n");
-
     Vision::Camera* defaultDev;
     if (parser.get<cv::String>("src").empty()) {
         defaultDev = new Vision::Camera(parser.get<int>("dev"));
     } else {
         defaultDev = new Vision::Camera(parser.get<cv::String>("src"));
     }
+
     std::printf("Beginning camera capture...\n");
     std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-    std::printf("Initializing Object Tracking: Cube Tracker...\n");
-    auto cubeTracker = new ObjectTracking::CubeTracker();
 
     std::printf("Initializing Darknet...");
     Network* network;
@@ -79,6 +76,14 @@ int main(int argc, const char **argv) {
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
                               defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
     }
+
+    std::printf("Initializing Object Tracking: Cube Tracker...\n");
+    auto cubeTracker = new ObjectTracking::CubeTracker(*network);
+
+    std::printf("Registering camera listener: Cube Tracker...");
+    defaultDev->registerListener([cubeTracker](cv::Mat mat) {
+        cubeTracker->update(mat);
+    });
 
 //    std::printf("Initializing Lidar...\n");
 //    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
@@ -103,7 +108,7 @@ int main(int argc, const char **argv) {
                                return defaultDev->getFrame();
                            }, std::unordered_map<std::string, std::function<void(std::vector<Target>)>>
                            {
-                                   {"cube", [cubeTracker](std::vector<Target> targets) {
+                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
                                        return cubeTracker->update(targets);
                                    }}}
     );

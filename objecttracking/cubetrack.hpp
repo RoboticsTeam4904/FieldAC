@@ -22,14 +22,16 @@
 namespace ObjectTracking {
 
     class CubeTracker {
+    private:
+        Network& network;
     public:
-        CubeTracker();
+        CubeTracker(Network& network);
         mutable std::mutex mutexTargets;
-        std::vector<Target> targetsLast;
-        std::vector<Target> targets;
+        std::vector<bbox_t> targetsLast;
+        std::vector<bbox_t> targets;
         Tracker_optflow* tracker_flow;
 
-        void update(std::vector<Target>);
+        void update(std::vector<bbox_t>);
         void update(cv::Mat);
         void run(std::function<cv::Mat ()>);
     };

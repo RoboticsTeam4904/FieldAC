@@ -12,11 +12,11 @@
 #endif
 
 namespace ObjectTracking {
-    CubeTracker::CubeTracker() {
+    CubeTracker::CubeTracker(Network& network) : network(network) {
         this->tracker_flow = new Tracker_optflow();
     }
 
-    void CubeTracker::update(std::vector<Target> targetsUpdate) {
+    void CubeTracker::update(std::vector<bbox_t> targetsUpdate) {
         this->mutexTargets.lock();
         this->targetsLast = this->targets;
         this->targets = targetsUpdate;
@@ -24,7 +24,7 @@ namespace ObjectTracking {
     }
 
     void CubeTracker::update(cv::Mat frameUpdate) {
-        
+
     }
 
     void CubeTracker::run(std::function<cv::Mat ()> fetchFrame) {
