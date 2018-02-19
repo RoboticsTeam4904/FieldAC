@@ -22,7 +22,7 @@ file(GLOB CORE_SRC *.cpp)
 
 download_project(PROJ darknet
         GIT_REPOSITORY https://github.com/HowardStark/darknet
-        GIT_TAG master)
+        GIT_TAG botprov-compat)
 
 download_project(PROJ rplidar
         URL https://download.slamtec.com/api/download/rplidar-sdk/1.5.7
