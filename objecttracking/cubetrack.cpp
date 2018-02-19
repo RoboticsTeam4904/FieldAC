@@ -88,6 +88,9 @@ namespace ObjectTracking {
                 return;
             }
             std::printf("Size of opticalFlowBox is %lu", opticalFlowBox.size());
+            if (!opticalFlowBox.size()) {
+                continue;
+            }
             this->tracker_flow->update_cur_bbox_vec(opticalFlowBox);
             opticalFlowBox = this->tracker_flow->tracking_flow(frame, true);
             optflowFrame = frame.clone();
