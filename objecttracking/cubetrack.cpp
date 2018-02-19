@@ -49,6 +49,10 @@ namespace ObjectTracking {
             if (!opticalFlowBox.size()) {
                 continue;
             }
+
+            auto old_result_vec = network.tracking_id(opticalFlowBox);
+            auto detected_result_vec = this->targetsLast;
+            opticalFlowBox = detected_result_vec;
             if (track_optflow_queue.size() > 0) {
                 cv::Mat first_frame = track_optflow_queue.front();
                 tracker_flow->update_tracking_flow(track_optflow_queue.front(), opticalFlowBox);
@@ -73,6 +77,21 @@ namespace ObjectTracking {
                 optflowFrame = frame.clone();
                 this->draw_boxes(optflowFrame, opticalFlowBox);
             }
+            // add old tracked objects
+            for (auto &i : old_result_vec) {
+                auto it = std::find_if(opticalFlowBox.begin(), opticalFlowBox.end(),
+                                       [&i](bbox_t const& b) { return b.track_id == i.track_id && b.obj_id == i.obj_id; });
+                bool track_id_absent = (it == opticalFlowBox.end());
+                if (track_id_absent) {
+                    if (i.frames_counter-- > 1)
+                        opticalFlowBox.push_back(i);
+                }
+                else {
+                    it->frames_counter = std::min((unsigned)3, i.frames_counter + 1);
+                }
+            }
+            this->tracker_flow->update_cur_bbox_vec(opticalFlowBox);
+            opticalFlowBox = this->tracker_flow->tracking_flow(frame, true);
         }
 
         // TODO: C++ thrashed me and wouldn't let me check if the past targets were equal.
