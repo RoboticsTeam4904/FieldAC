@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include "vision.hpp"
 #include "network/network.hpp"
-#include "network/target.hpp"
 #include "objecttracking/cubetrack.hpp"
 #include "botlocale/lidar.hpp"
 #include "socket.hpp"
@@ -106,7 +105,7 @@ int main(int argc, const char **argv) {
                            network,
                            [defaultDev]() {
                                return defaultDev->getFrame();
-                           }, std::unordered_map<std::string, std::function<void(std::vector<Target>)>>
+                           }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
                            {
                                    {"cube", [cubeTracker](std::vector<bbox_t> targets) {
                                        return cubeTracker->update(targets);
@@ -114,11 +113,7 @@ int main(int argc, const char **argv) {
     );
 
     std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
-                             cubeTracker,
-                             [defaultDev]() {
-                                 return defaultDev->getFrame();
-                             }
-    );
+                             cubeTracker);
     std::printf("\n");
 
 //    std::thread lidarRun(&Lidar::run,

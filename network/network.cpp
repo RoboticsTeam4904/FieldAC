@@ -53,7 +53,7 @@ void Network::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec) {
     }
 }
 
-std::vector<bbox_t> Network::tracking_id(std::vector<bbox_t> cur_bbox_vec, bool const change_history = true, int const frames_story = 10, int const max_dist = 150) {
+std::vector<bbox_t> Network::tracking_id(std::vector<bbox_t> cur_bbox_vec, bool const change_history, int const frames_story, int const max_dist) {
     return network->tracking_id(cur_bbox_vec, change_history, frames_story, max_dist);
 }
 

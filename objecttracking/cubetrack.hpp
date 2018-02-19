@@ -18,7 +18,7 @@
 #include <opencv2/dnn/shape_utils.hpp>
 #include <opencv2/videoio.hpp>
 #include "../network/target.hpp"
-#include "extrapolate.h"
+#include "extrapolate.hpp"
 
 namespace ObjectTracking {
 

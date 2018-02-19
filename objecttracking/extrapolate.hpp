@@ -1,10 +1,5 @@
-//
-// Created by Nachiketa Gargi on 2/19/18.
-//
-
-#ifndef INC_2018_FIELD_EXTRAPOLATE_H
-#define INC_2018_FIELD_EXTRAPOLATE_H
-
+#ifndef PROV_EXTRAPOLATE_H
+#define PROV_EXTRAPOLATE_H
 
 #include <yolo_v2_class.hpp>
 
@@ -23,4 +18,4 @@ public:
 };
 
 
-#endif //INC_2018_FIELD_EXTRAPOLATE_H
+#endif

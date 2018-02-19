@@ -1,6 +1,6 @@
 #include "cubetrack.hpp"
 #include <thread>
-#include "extrapolate.h"
+#include "extrapolate.hpp"
 
 #ifndef OPENCV
 #define OPENCV 1
