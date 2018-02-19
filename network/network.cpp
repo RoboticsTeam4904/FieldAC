@@ -73,7 +73,7 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
             cv::cvtColor(frame, frame, cv::COLOR_BGRA2BGR);
         }
         std::vector<bbox_t> result_vec = network->detect(frame);
-        this->draw_boxes(annotated, result_vec, classNames);
+        this->draw_boxes(annotated, result_vec);
         for(auto &item : result_vec) {
             targetMapInter[classNames[item.obj_id]].emplace_back(Target(item));
             this->show_console_result(item);

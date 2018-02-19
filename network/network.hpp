@@ -28,7 +28,7 @@ public:
     void run(std::function<cv::Mat ()> frameFunc, std::unordered_map<std::string, std::function<void(std::vector<Target>)>>);
     cv::Mat getAnnotatedFrame();
 
-    void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std::string> class_names);
+    void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec);
     void show_console_result(std::vector<bbox_t> const result_vec);
     void show_console_result(bbox_t const result);
 private:
