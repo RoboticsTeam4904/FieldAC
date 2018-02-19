@@ -18,6 +18,7 @@
 #include <opencv2/dnn/shape_utils.hpp>
 #include <opencv2/videoio.hpp>
 #include "../network/target.hpp"
+#include "extrapolate.h"
 
 namespace ObjectTracking {
 
@@ -30,10 +31,12 @@ namespace ObjectTracking {
         std::vector<bbox_t> targetsLast;
         std::vector<bbox_t> targets;
         Tracker_optflow* tracker_flow;
-
+        std::queue<cv::Mat> track_optflow_queue;
+        extrapolate_coords_t extrapolate_coords;
+        cv::Mat lastFrame;
         void update(std::vector<bbox_t>);
         void update(cv::Mat);
-        void run(std::function<cv::Mat ()>);
+        void run();
     };
 
 }

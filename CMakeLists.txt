@@ -52,7 +52,7 @@ add_executable(field ${CORE_SRC}
         ${BOT_LCL_SRC}
         ${BOT_TRK_SRC}
         ${OBJ_TRK_SRC}
-        ${NETWORK_SRC})
+        ${NETWORK_SRC} objecttracking/extrapolate.cpp objecttracking/extrapolate.h)
 
 add_custom_command(TARGET field
         PRE_LINK
