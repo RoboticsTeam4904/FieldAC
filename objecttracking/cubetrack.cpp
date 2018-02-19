@@ -51,8 +51,6 @@ namespace ObjectTracking {
             }
 
             auto old_result_vec = network.tracking_id(opticalFlowBox);
-            auto detected_result_vec = this->targetsLast;
-            opticalFlowBox = detected_result_vec;
             if (track_optflow_queue.size() > 0) {
                 cv::Mat first_frame = track_optflow_queue.front();
                 tracker_flow->update_tracking_flow(track_optflow_queue.front(), opticalFlowBox);
