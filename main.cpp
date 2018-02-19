@@ -8,6 +8,8 @@
 #include "botlocale/lidar.hpp"
 #include <signal.h>
 #include <unitypes.h>
+#define OPENCV 1
+#define TRACK_OPTFLOW 1
 
 bool ctrl_c_pressed;
 void ctrlc(int)
