@@ -73,9 +73,6 @@ namespace ObjectTracking {
                 extrapolate_coords.new_result(tmp_result_vec, old_time_extrapolate);
                 old_time_extrapolate = cur_time_extrapolate;
                 extrapolate_coords.update_result(opticalFlowBox, cur_time_extrapolate - 1);
-
-                optflowFrame = frame.clone();
-                this->draw_boxes(optflowFrame, opticalFlowBox);
             }
             // add old tracked objects
             for (auto &i : old_result_vec) {
@@ -92,7 +89,10 @@ namespace ObjectTracking {
             }
             this->tracker_flow->update_cur_bbox_vec(opticalFlowBox);
             opticalFlowBox = this->tracker_flow->tracking_flow(frame, true);
+            optflowFrame = frame.clone();
+            this->draw_boxes(optflowFrame, opticalFlowBox);
         }
+
 
         // TODO: C++ thrashed me and wouldn't let me check if the past targets were equal.
         // TODO: Hopefully I don't prank myself and someone else in the future fixes this
