@@ -25,6 +25,7 @@ namespace ObjectTracking {
     }
 
     void CubeTracker::update(cv::Mat frameUpdate) {
+        std::printf("large nut");
         this->lastFrame = frameUpdate;
         this->track_optflow_queue.push(frameUpdate);
     }
@@ -34,21 +35,18 @@ namespace ObjectTracking {
         cv::Mat frame;
         float cur_time_extrapolate = 0, old_time_extrapolate = 0;
         while(true) {
-            std::printf("in the loop\n");
             frame = this->lastFrame;
             std::printf("Frame height: %d\n", frame.size().height);
             if (frame.empty()) {
                 std::printf("Frame was empty, continuing\n");
                 continue;
-            } else {
-                std::printf("Frame wasn't empty - %d\n", frame.channels());
             }
-            cv::Mat greyscale;
-            cv::imshow(" result ", frame);
-            std::printf("about to do the fl o w \n");
-            int passed_flow_frames = 0;
             std::vector<bbox_t> opticalFlowBox;
             opticalFlowBox = this->targets;
+            if (!opticalFlowBox.size()) {
+                std::printf("Targets were empty, continuing...\n");
+                continue;
+            }
             if (track_optflow_queue.size() > 0) {
                 cv::Mat first_frame = track_optflow_queue.front();
                 tracker_flow->update_tracking_flow(track_optflow_queue.front(), opticalFlowBox);
@@ -58,7 +56,6 @@ namespace ObjectTracking {
                     opticalFlowBox = tracker_flow->tracking_flow(track_optflow_queue.front(), true);
                 }
                 track_optflow_queue.pop();
-                passed_flow_frames = 0;
 
                 opticalFlowBox = network.tracking_id(opticalFlowBox);
                 auto tmp_result_vec = network.tracking_id(this->targetsLast, false);
