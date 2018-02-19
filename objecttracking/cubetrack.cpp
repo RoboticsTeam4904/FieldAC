@@ -25,7 +25,6 @@ namespace ObjectTracking {
     }
 
     void CubeTracker::update(cv::Mat frameUpdate) {
-        std::printf("large nut");
         this->mutexFrame.lock();
         this->lastFrame = frameUpdate;
         this->mutexFrame.unlock();
@@ -85,6 +84,7 @@ namespace ObjectTracking {
                     it->frames_counter = std::min((unsigned)3, i.frames_counter + 1);
                 }
             }
+            std::printf("Size of opticalFlowBox is %d", opticalFlowBox.size());
             this->tracker_flow->update_cur_bbox_vec(opticalFlowBox);
             opticalFlowBox = this->tracker_flow->tracking_flow(frame, true);
             optflowFrame = frame.clone();
