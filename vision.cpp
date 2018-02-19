@@ -20,15 +20,30 @@ namespace Vision {
         }
     }
 
+    void Camera::registerListener(std::function<void (cv::Mat)> listener) {
+        this->listenersMutex.lock();
+        this->listeners.push_back(listener);
+        this->listenersMutex.unlock();
+    }
+
+    void Camera::notifyListeners(cv::Mat update) {
+        this->listenersMutex.lock();
+        for(const auto &listener : this->listeners) {
+            listener(update);
+        }
+        this->listenersMutex.unlock();
+    }
+
     void Camera::captureImages() {
         while (true) {
             frameMutex.lock();
-            devCapture.read(frame);
-            frameMutex.unlock();
             if(frame.empty()) {
                 std::printf("The frame was empty here");
                 return;
             }
+            devCapture.read(frame);
+            notifyListeners(frame);
+            frameMutex.unlock();
         }
     }
 

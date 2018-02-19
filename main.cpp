@@ -63,7 +63,7 @@ int main(int argc, const char **argv) {
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     std::printf("Initializing Object Tracking: Cube Tracker...\n");
-    ObjectTracking::CubeTracker* cubeTracker = new ObjectTracking::CubeTracker();
+    auto cubeTracker = new ObjectTracking::CubeTracker();
 
     std::printf("Initializing Darknet...");
     Network* network;
@@ -83,6 +83,7 @@ int main(int argc, const char **argv) {
 //    std::printf("Initializing Lidar...\n");
 //    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
 //                             parser.get<uint32_t>("ldr_baud"));
+
 //    This code is non-threaded but also serves as a
 //    slightly cleaner demonstration of what's really being run.
 //
