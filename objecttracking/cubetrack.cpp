@@ -26,6 +26,7 @@ namespace ObjectTracking {
 
     void CubeTracker::update(cv::Mat frameUpdate) {
         this->mutexFrame.lock();
+        this->lastLastFrame = this->lastFrame.clone();
         this->lastFrame = frameUpdate;
         this->mutexFrame.unlock();
         this->track_optflow_queue.push(frameUpdate);
@@ -44,69 +45,48 @@ namespace ObjectTracking {
             if (frame.empty()) {
                 continue;
             }
-            opticalFlowBox = this->targets;
-            if (!opticalFlowBox.size()) {
-                continue;
+            std::vector<cv::Point2f> features_prev, features_next;
+
+            int max_count = 100;
+            std::printf("suck\n");
+            cv::Mat gray(this->lastFrame.size(), CV_8UC1);
+            cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
+            cv::goodFeaturesToTrack(gray, // the image
+                                    features_next,   // the output detected features
+                                    max_count,  // the maximum number of features
+                                    0.001,     // quality level
+                                    10
+            );
+            std::printf("size of thingyyyyyyy: %d\n\n", features_next.size());
+            for (auto &i : features_next) {
+                std::printf(" - feature: (%d, %d)\n", i.x, i.y);
             }
+            while (this->track_optflow_queue.size() > 1) {
+                std::printf("i want to die please and thank you\n");
+                cv::Mat current_frame(this->lastFrame.size(), CV_8UC1); // Initialize greyscale current frame mat
+                cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY, 1); // Convert front of queue to greyscale and put it in current_frame
 
-            auto old_result_vec = network.tracking_id(opticalFlowBox);
-            if (track_optflow_queue.size() > 0) {
-                cv::Mat first_frame = track_optflow_queue.front();
-                tracker_flow->update_tracking_flow(track_optflow_queue.front(), opticalFlowBox);
-                std::printf("Please god: %d\n", opticalFlowBox.size());
+                this->track_optflow_queue.pop();
 
-                while (track_optflow_queue.size() > 1) {
-                    track_optflow_queue.pop();
-                    opticalFlowBox = tracker_flow->tracking_flow(track_optflow_queue.front(), true);
-                    if(!opticalFlowBox.size()) {
-                        std::printf("Not here dumbass\n");
-                    }
+                cv::Mat next_frame(this->lastFrame.size(), CV_8UC1);
+                cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY, 1); // Convert front of queue to greyscale and put it in next_frame
+
+                features_prev = features_next;
+                cv::Mat status;
+                std::vector<cv::Point> err;
+                std::printf("size of 1: %lu\nsize of 2:%lu\n", features_next.size(), features_prev.size());
+                cv::calcOpticalFlowPyrLK(
+                        current_frame, next_frame, // 2 consecutive images
+                        features_prev, // input point positions in first im
+                        features_next, // output point positions in the 2nd
+                        status,    // tracking success
+                        err      // tracking error
+                );
+                std::printf("Did optical flow\n");
+                for (int i = 0; i < features_next.size(); i++) {
+                    std::printf(" --- point (%d, %d) -> (%d, %d)", features_prev[i].x, features_prev[i].y, features_next[i].x, features_next[i].y);
                 }
-                track_optflow_queue.pop();
-
-                std::printf("First print: %d\n", opticalFlowBox.size());
-                opticalFlowBox = network.tracking_id(opticalFlowBox);
-                for (int i = 0; i < opticalFlowBox.size(); ++i) {
-                    std::printf("%d, %d\n", opticalFlowBox[i].x, opticalFlowBox[i].y);
-                }
-                std::printf("Second print: %d\n", opticalFlowBox.size());
-
-                auto tmp_result_vec = network.tracking_id(this->targetsLast, false);
-
-                extrapolate_coords.new_result(tmp_result_vec, old_time_extrapolate);
-                old_time_extrapolate = cur_time_extrapolate;
-                extrapolate_coords.update_result(opticalFlowBox, cur_time_extrapolate - 1);
             }
-            // add old tracked objects
-//            for (auto &i : old_result_vec) {
-//                auto it = std::find_if(opticalFlowBox.begin(), opticalFlowBox.end(),
-//                                       [&i](bbox_t const& b) { return b.track_id == i.track_id && b.obj_id == i.obj_id; });
-//                bool track_id_absent = (it == opticalFlowBox.end());
-//                if (track_id_absent) {
-//                    if (i.frames_counter-- > 1)
-//                        opticalFlowBox.push_back(i);
-//                }
-//                else {
-//                    it->frames_counter = std::min((unsigned)3, i.frames_counter + 1);
-//                }
-//            }
-            if(opticalFlowBox.size() > 100000) {
-                return;
-            }
-            if(optflowFrame.empty()) {
-                std::printf("Am I stupid?\n");
-//                return;
-            }
-            std::printf("Size of opticalFlowBox is %lu\n", opticalFlowBox.size());
-            if (!opticalFlowBox.size()) {
-                continue;
-            }
-            this->tracker_flow->update_cur_bbox_vec(opticalFlowBox);
-            opticalFlowBox = this->tracker_flow->tracking_flow(frame, true);
-
-            track_optflow_queue.push(frame.clone());
-            opticalFlowBox = this->tracker_flow->tracking_flow(frame); // track optical flow
-            extrapolate_coords.update_result(opticalFlowBox, cur_time_extrapolate);
 
             optflowFrame = frame.clone();
             this->draw_boxes(optflowFrame, opticalFlowBox);
