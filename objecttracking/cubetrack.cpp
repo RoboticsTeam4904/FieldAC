@@ -35,6 +35,7 @@ namespace ObjectTracking {
         std::printf("Running CubeTracker in here!\n");
         cv::Mat frame;
         float cur_time_extrapolate = 0, old_time_extrapolate = 0;
+        std::vector<bbox_t> opticalFlowBox;
         while(true) {
             this->mutexFrame.lock();
             frame = this->lastFrame.clone();
@@ -43,7 +44,6 @@ namespace ObjectTracking {
             if (frame.empty()) {
                 continue;
             }
-            std::vector<bbox_t> opticalFlowBox;
             opticalFlowBox = this->targets;
             if (!opticalFlowBox.size()) {
                 continue;
@@ -53,17 +53,23 @@ namespace ObjectTracking {
             if (track_optflow_queue.size() > 0) {
                 cv::Mat first_frame = track_optflow_queue.front();
                 tracker_flow->update_tracking_flow(track_optflow_queue.front(), opticalFlowBox);
+                std::printf("Please god: %d\n", opticalFlowBox.size());
 
                 while (track_optflow_queue.size() > 1) {
                     track_optflow_queue.pop();
                     opticalFlowBox = tracker_flow->tracking_flow(track_optflow_queue.front(), true);
+                    if(!opticalFlowBox.size()) {
+                        std::printf("Not here dumbass\n");
+                    }
                 }
                 track_optflow_queue.pop();
 
+                std::printf("First print: %d\n", opticalFlowBox.size());
                 opticalFlowBox = network.tracking_id(opticalFlowBox);
                 for (int i = 0; i < opticalFlowBox.size(); ++i) {
-                    std::printf("%d, %d", opticalFlowBox[i].x, opticalFlowBox[i].y);
+                    std::printf("%d, %d\n", opticalFlowBox[i].x, opticalFlowBox[i].y);
                 }
+                std::printf("Second print: %d\n", opticalFlowBox.size());
 
                 auto tmp_result_vec = network.tracking_id(this->targetsLast, false);
 
@@ -72,27 +78,36 @@ namespace ObjectTracking {
                 extrapolate_coords.update_result(opticalFlowBox, cur_time_extrapolate - 1);
             }
             // add old tracked objects
-            for (auto &i : old_result_vec) {
-                auto it = std::find_if(opticalFlowBox.begin(), opticalFlowBox.end(),
-                                       [&i](bbox_t const& b) { return b.track_id == i.track_id && b.obj_id == i.obj_id; });
-                bool track_id_absent = (it == opticalFlowBox.end());
-                if (track_id_absent) {
-                    if (i.frames_counter-- > 1)
-                        opticalFlowBox.push_back(i);
-                }
-                else {
-                    it->frames_counter = std::min((unsigned)3, i.frames_counter + 1);
-                }
-            }
-            if(optflowFrame.empty()) {
+//            for (auto &i : old_result_vec) {
+//                auto it = std::find_if(opticalFlowBox.begin(), opticalFlowBox.end(),
+//                                       [&i](bbox_t const& b) { return b.track_id == i.track_id && b.obj_id == i.obj_id; });
+//                bool track_id_absent = (it == opticalFlowBox.end());
+//                if (track_id_absent) {
+//                    if (i.frames_counter-- > 1)
+//                        opticalFlowBox.push_back(i);
+//                }
+//                else {
+//                    it->frames_counter = std::min((unsigned)3, i.frames_counter + 1);
+//                }
+//            }
+            if(opticalFlowBox.size() > 100000) {
                 return;
             }
-            std::printf("Size of opticalFlowBox is %lu", opticalFlowBox.size());
+            if(optflowFrame.empty()) {
+                std::printf("Am I stupid?\n");
+//                return;
+            }
+            std::printf("Size of opticalFlowBox is %lu\n", opticalFlowBox.size());
             if (!opticalFlowBox.size()) {
                 continue;
             }
             this->tracker_flow->update_cur_bbox_vec(opticalFlowBox);
             opticalFlowBox = this->tracker_flow->tracking_flow(frame, true);
+
+            track_optflow_queue.push(frame.clone());
+            opticalFlowBox = this->tracker_flow->tracking_flow(frame); // track optical flow
+            extrapolate_coords.update_result(opticalFlowBox, cur_time_extrapolate);
+
             optflowFrame = frame.clone();
             this->draw_boxes(optflowFrame, opticalFlowBox);
         }
