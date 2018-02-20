@@ -45,7 +45,7 @@ namespace ObjectTracking {
             if (frame.empty()) {
                 continue;
             }
-            std::vector<cv::Point2f> features_prev, features_next;
+            std::vector<cv::Point> features_prev, features_next;
 
             int max_count = 100;
             std::printf("suck\n");
@@ -54,7 +54,7 @@ namespace ObjectTracking {
             cv::goodFeaturesToTrack(gray, // the image
                                     features_next,   // the output detected features
                                     max_count,  // the maximum number of features
-                                    0.001,     // quality level
+                                    0.01,     // quality level
                                     10
             );
             std::printf("size of thingyyyyyyy: %d\n\n", features_next.size());
