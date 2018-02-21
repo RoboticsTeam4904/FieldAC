@@ -37,18 +37,21 @@ namespace ObjectTracking {
         cv::Mat frame;
         std::vector<bbox_t> opticalFlowBox;
         while(true) {
-            this->mutexFrame.lock();
-            frame = this->lastFrame.clone();
-            this->mutexFrame.unlock();
-//            std::printf("Frame height: %d\n", frame.size().height);
-            if (frame.empty()) {
+            if (this->track_optflow_queue.empty()) {
                 continue;
             }
+//            this->mutexFrame.lock();
+//            frame = this->lastFrame.clone();
+//            this->mutexFrame.unlock();
+//            std::printf("Frame height: %d\n", frame.size().height);
+//            if (frame.empty()) {
+//                continue;
+//            }
             std::vector<cv::Point2f> features_prev, features_next;
 
             int max_count = 1000;
             std::printf("suck\n");
-            cv::Mat gray(this->lastFrame.size(), CV_8UC1);
+            cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
             cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
             cv::goodFeaturesToTrack(gray, // the image
                                     features_next,   // the output detected features
@@ -65,16 +68,10 @@ namespace ObjectTracking {
                 cv::Mat current_frame(this->lastFrame.size(), CV_8UC1); // Initialize greyscale current frame mat
                 cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY, 1); // Convert front of queue to greyscale and put it in current_frame
                 this->track_optflow_queue.pop();
-                if (this->track_optflow_queue.size() == 0) {
-                    continue;
-                }
 
                 cv::Mat next_frame(this->lastFrame.size(), CV_8UC1);
                 cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY, 1); // Convert front of queue to greyscale and put it in next_frame
                 this->track_optflow_queue.pop();
-                if (this->track_optflow_queue.size() == 0) {
-                    continue;
-                }
 
                 features_prev = features_next;
                 std::vector<unsigned char> status;
@@ -103,7 +100,6 @@ namespace ObjectTracking {
                 if (a) {
                     std::printf("THEYRE ALL NOT EQUAL REEE");
                 }
-
 
                 this->draw_boxes(optflowFrame, opticalFlowBox);
             }
