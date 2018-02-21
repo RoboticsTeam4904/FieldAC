@@ -28,13 +28,13 @@ download_project(PROJ rplidar
         URL https://download.slamtec.com/api/download/rplidar-sdk/1.5.7
         URL_MD5 e2a894e706f9ec6118967101c11d1dee
         DOWNLOAD_NAME rplidar-sdk.zip
-        DOWNLOAD_NO_PROGRESS 1)
+        DOWNLOAD_NO_PROGRESS 0)
 
 download_project(PROJ nlohmann-json
         URL https://github.com/nlohmann/json/releases/download/v3.1.0/include.zip
         URL_MD5 a88e64482a9a6f2222d7cc79df5790e1
         DOWNLOAD_NAME nlohmann-json.zip
-        DOWNLOAD_NO_PROGRESS 1)
+        DOWNLOAD_NO_PROGRESS 0)
 
 set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
 execute_process(COMMAND uname -s

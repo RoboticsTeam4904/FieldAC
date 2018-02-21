@@ -32,11 +32,18 @@ namespace ObjectTracking {
         this->track_optflow_queue.push(frameUpdate);
     }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
     void CubeTracker::run() {
         std::printf("Running CubeTracker in here!\n");
         cv::Mat frame;
+        bool findNewFeatures = true;
         std::vector<bbox_t> opticalFlowBox;
+        std::vector<cv::Point2f> features_prev, features_next;
+
+        int daysSinceAccident = 0;
         while(true) {
+
             if (this->track_optflow_queue.empty()) {
                 continue;
             }
@@ -47,24 +54,29 @@ namespace ObjectTracking {
 //            if (frame.empty()) {
 //                continue;
 //            }
-            std::vector<cv::Point2f> features_prev, features_next;
 
-            int max_count = 1000;
-            std::printf("suck\n");
+
+            int max_count = 10000;
             cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
+            cv::Mat originalImage = this->track_optflow_queue.front();
             cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
-            cv::goodFeaturesToTrack(gray, // the image
-                                    features_next,   // the output detected features
-                                    max_count,  // the maximum number of features
-                                    0.01,     // quality level
-                                    10
-            );
-            std::printf("FOUND N E W  POINTS         - - - - - \n");
-            for (auto &i : features_next) {
-                std::printf(" - feature: (%lf, %lf)\n", i.x, i.y);
+            if (true) {
+                features_prev.clear();
+                features_next.clear();
+                findNewFeatures = false;
+                cv::goodFeaturesToTrack(gray, // the image
+                                        features_next,   // the output detected features
+                                        max_count,  // the maximum number of features
+                                        0.01,     // quality level
+                                        10
+                );
+                features_prev = features_next;
+                std::printf("FOUND N E W  POINTS         - - - - - \n");
             }
+
             while (this->track_optflow_queue.size() > 1) {
-                std::printf("i want to die please and thank you, size is %d\n", this->track_optflow_queue.size());
+                std::printf("The queue is shit: %lu\n", this->track_optflow_queue.size());
+
                 cv::Mat current_frame(this->lastFrame.size(), CV_8UC1); // Initialize greyscale current frame mat
                 cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY, 1); // Convert front of queue to greyscale and put it in current_frame
                 this->track_optflow_queue.pop();
@@ -76,8 +88,6 @@ namespace ObjectTracking {
                 features_prev = features_next;
                 std::vector<unsigned char> status;
                 std::vector<float> err;
-                std::printf("size of 1: %lu\nsize of 2: %lu\n", features_next.size(), features_prev.size());
-
                 std::printf("are they equal? %d\n", cv::countNonZero(current_frame != next_frame) == 0);
                 cv::calcOpticalFlowPyrLK(
                         current_frame, next_frame, // 2 consecutive images
@@ -86,21 +96,22 @@ namespace ObjectTracking {
                         status,    // tracking success
                         err     // tracking error
                 );
-
-                std::printf("\n\nDid optical flow ------------------\n");
-                bool a = false;
-                optflowFrame = current_frame.clone();
+                optflowFrame = originalImage.clone();
+                bool anychanged = false;
                 for (int i = 0; i < features_next.size(); i++) {
                     if (features_next[i] != features_prev[i]) {
                         cv::line(optflowFrame, features_prev[i], features_next[i], cv::Scalar( 0, 255, 0 ), 1);
                         std::printf(" --- point (%lf, %lf) -> (%lf, %lf)\n", features_prev[i].x, features_prev[i].y, features_next[i].x, features_next[i].y);
-                        a = true;
+                        anychanged = true;
                     }
                 }
-                if (a) {
-                    std::printf("THEYRE ALL NOT EQUAL REEE");
+                if(!anychanged) {
+                    daysSinceAccident++;
                 }
-
+                if(daysSinceAccident == 100) {
+                    findNewFeatures = true;
+                    daysSinceAccident = 0;
+                }
                 this->draw_boxes(optflowFrame, opticalFlowBox);
             }
 
@@ -111,6 +122,7 @@ namespace ObjectTracking {
         // TODO: Hopefully I don't prank myself and someone else in the future fixes this
         // TODO: In all honestly it will probably be me though.
     }
+#pragma clang diagnostic pop
 
     void CubeTracker::draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec) {
         for (auto &i : result_vec) {
