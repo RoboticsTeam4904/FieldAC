@@ -123,9 +123,12 @@ int main(int argc, const char **argv) {
         if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
             return -1;
         }
-        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
+        if(defaultDev->displayImage(cubeTracker->optflowFrameKanked, "Optflow Kanked as Fuck")) {
             return -1;
         }
+        if(!cubeTracker->optflowFrame.empty() && !cubeTracker->optflowFrameKanked.empty())
+             std::printf("are they SUCKKKKKKKKKK? %d\n", std::equal(cubeTracker->optflowFrame.begin<uchar>(), cubeTracker->optflowFrame.end<uchar>(), cubeTracker->optflowFrameKanked.begin<uchar>()));
+        cv::waitKey(0);
         if (ctrl_c_pressed){
             break;
         }
