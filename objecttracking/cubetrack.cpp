@@ -65,10 +65,16 @@ namespace ObjectTracking {
                 cv::Mat current_frame(this->lastFrame.size(), CV_8UC1); // Initialize greyscale current frame mat
                 cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY, 1); // Convert front of queue to greyscale and put it in current_frame
                 this->track_optflow_queue.pop();
+                if (this->track_optflow_queue.size() == 0) {
+                    continue;
+                }
 
                 cv::Mat next_frame(this->lastFrame.size(), CV_8UC1);
                 cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY, 1); // Convert front of queue to greyscale and put it in next_frame
                 this->track_optflow_queue.pop();
+                if (this->track_optflow_queue.size() == 0) {
+                    continue;
+                }
 
                 features_prev = features_next;
                 std::vector<unsigned char> status;
