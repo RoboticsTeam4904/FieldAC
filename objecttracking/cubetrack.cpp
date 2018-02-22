@@ -34,6 +34,8 @@ namespace ObjectTracking {
         cv::Mat frame;
         std::vector<bbox_t> opticalFlowBox;
         std::vector<cv::Point2f> features_prev, features_next;
+        std::vector<cv::Point2f> good_features_prev, good_features_next;
+
 
         const int max_count = 1000;
         bool first = true;
@@ -42,7 +44,7 @@ namespace ObjectTracking {
             if (this->track_optflow_queue.empty()) {
                 continue;
             }
-//            if(first) {
+            if(first) {
                 cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
                 cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
                 cv::goodFeaturesToTrack(gray, // the image
@@ -51,8 +53,8 @@ namespace ObjectTracking {
                                         0.02,     // quality level
                                         10
                 );
-//                first = false;
-//            }
+                first = false;
+            }
 
             while (this->track_optflow_queue.size() > 1) {
 //                std::printf("i want to die please and thank you, size is %d\n", this->track_optflow_queue.size());
@@ -82,13 +84,23 @@ namespace ObjectTracking {
                 bool a = false;
                 optflowFrame = current_frame.clone();
                 this->optflowFrameLast = next_frame.clone();
-                for (int i = 0; i < features_next.size(); i++) {
+
+                size_t i, j;
+                for (i = j = 0; i < features_next.size(); i++) {
+                    if(!status[i]) {
+                        continue;
+                    }
+                    features_next[j++] = features_next[i];
+                    cv::circle(optflowFrame, features_next[i], 3, cv::Scalar(0,255,0), -1, 8);
                     if (features_next[i] != features_prev[i]) {
                         cv::line(optflowFrame, features_prev[i], features_next[i], cv::Scalar( 0, 255, 0 ), 1);
 //                        std::printf(" --- point (%lf, %lf) -> (%lf, %lf)\n", features_prev[i].x, features_prev[i].y, features_next[i].x, features_next[i].y);
                         a = true;
                     }
                 }
+
+                features_next.resize(j);
+
                 if (a) {
                     std::printf("THEYRE ALL NOT EQUAL REEE\n");
                 }
