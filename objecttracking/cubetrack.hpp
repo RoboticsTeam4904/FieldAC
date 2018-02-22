@@ -19,12 +19,14 @@
 #include <opencv2/videoio.hpp>
 #include "../network/target.hpp"
 #include "extrapolate.hpp"
+#include "sharedqueue.hpp"
 
 namespace ObjectTracking {
 
     class CubeTracker {
     public:
         cv::Mat optflowFrame;
+        cv::Mat optflowFrameLast;
     private:
         Network& network;
         std::vector<bbox_t> targetsLast;

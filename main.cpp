@@ -124,9 +124,9 @@ int main(int argc, const char **argv) {
         if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
             return -1;
         }
-        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
-            return -1;
-        }
+//        if(defaultDev->displayImage(cubeTracker->optflowFrameLast, "Darknet")) {
+//            return -1;
+//        }
         if (ctrl_c_pressed){
             break;
         }
