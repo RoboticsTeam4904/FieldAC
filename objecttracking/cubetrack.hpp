@@ -27,6 +27,8 @@ namespace ObjectTracking {
     public:
         cv::Mat optflowFrame;
         cv::Mat optflowFrameLast;
+
+        bool recalc = false;
     private:
         Network& network;
         std::vector<bbox_t> targetsLast;

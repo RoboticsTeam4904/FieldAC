@@ -53,7 +53,7 @@ namespace Vision {
             return false;
         }
         cv::imshow(window, frame);
-        return (cv::waitKey(10) == 27 );
+        return (cv::waitKey(10) == 27);
     }
 
     cv::Mat Camera::getFrame() {

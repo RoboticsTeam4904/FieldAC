@@ -44,7 +44,7 @@ namespace ObjectTracking {
             if (this->track_optflow_queue.empty()) {
                 continue;
             }
-            if(first) {
+            if(first || this->recalc) {
                 cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
                 cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
                 cv::goodFeaturesToTrack(gray, // the image
@@ -54,6 +54,7 @@ namespace ObjectTracking {
                                         10
                 );
                 first = false;
+                recalc = false;
             }
 
             while (this->track_optflow_queue.size() > 1) {
@@ -77,7 +78,11 @@ namespace ObjectTracking {
                         features_prev, // input point positions in first im
                         features_next, // output point positions in the 2nd
                         status,    // tracking success
-                        err     // tracking error
+                        err,     // tracking error
+                        cv::Size(21, 21),
+                        3,
+                        cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
+                        cv::OPTFLOW_USE_INITIAL_FLOW
                 );
 
 //                std::printf("\n\nDid optical flow ------------------\n");
