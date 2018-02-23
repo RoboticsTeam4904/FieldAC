@@ -36,7 +36,6 @@ namespace ObjectTracking {
         std::vector<cv::Point2f> features_prev, features_next;
         std::vector<cv::Point2f> good_features_prev, good_features_next;
 
-
         const int max_count = 1000;
         bool first = true;
 
@@ -58,7 +57,6 @@ namespace ObjectTracking {
             }
 
             while (this->track_optflow_queue.size() > 1) {
-//                std::printf("i want to die please and thank you, size is %d\n", this->track_optflow_queue.size());
                 cv::Mat current_frame(this->track_optflow_queue.front().size(), CV_8UC1); // Initialize greyscale current frame mat
                 cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY, 1); // Convert front of queue to greyscale and put it in current_frame
                 this->track_optflow_queue.pop();
@@ -70,9 +68,7 @@ namespace ObjectTracking {
                 features_prev = features_next;
                 std::vector<unsigned char> status;
                 std::vector<float> err;
-//                std::printf("size of 1: %lu\nsize of 2: %lu\n", features_next.size(), features_prev.size());
 
-//                std::printf("are they equal? %d\n", cv::countNonZero(current_frame != next_frame) == 0);
                 cv::calcOpticalFlowPyrLK(
                         current_frame, next_frame, // 2 consecutive images
                         features_prev, // input point positions in first im
@@ -85,8 +81,6 @@ namespace ObjectTracking {
                         cv::OPTFLOW_USE_INITIAL_FLOW
                 );
 
-//                std::printf("\n\nDid optical flow ------------------\n");
-                bool a = false;
                 optflowFrame = current_frame.clone();
                 this->optflowFrameLast = next_frame.clone();
 
@@ -99,17 +93,10 @@ namespace ObjectTracking {
                     cv::circle(optflowFrame, features_next[i], 3, cv::Scalar(0,255,0), -1, 8);
                     if (features_next[i] != features_prev[i]) {
                         cv::line(optflowFrame, features_prev[i], features_next[i], cv::Scalar( 0, 255, 0 ), 1);
-//                        std::printf(" --- point (%lf, %lf) -> (%lf, %lf)\n", features_prev[i].x, features_prev[i].y, features_next[i].x, features_next[i].y);
-                        a = true;
                     }
                 }
 
                 features_next.resize(j);
-
-                if (a) {
-                    std::printf("THEYRE ALL NOT EQUAL REEE\n");
-                }
-
                 this->draw_boxes(optflowFrame, opticalFlowBox);
             }
 
