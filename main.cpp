@@ -127,9 +127,9 @@ int main(int argc, const char **argv) {
         if(cv::waitKey(10) == 32) {
             cubeTracker->recalc = true;
         }
-//        if(defaultDev->displayImage(cubeTracker->optflowFrameLast, "Darknet")) {
-//            return -1;
-//        }
+        if(defaultDev->displayImage(cubeTracker->optflowFrameLast, "Darknet")) {
+            return -1;
+        }
         if (ctrl_c_pressed){
             break;
         }
