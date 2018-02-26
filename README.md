@@ -1,5 +1,5 @@
-# FRC Field Model
-Building a realtime model of the field and all its components.
+# Field AC
+Building a realtime model of the field and all its components to eventually reduce entropy.
 
 # Table of Contents
 
