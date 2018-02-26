@@ -37,19 +37,27 @@ When the TX1 must send an update, we send it over USB serial connected directly 
 
 We use [AlexeyAB's implementation of the Darknet clang neural network framework](https://github.com/AlexeyAB/darknet) detect and track the dynamic game pieces using [pjreddie's YOLO object detection and classification model](https://pjreddie.com/darknet/yolo/) which we retrain.
 
+A link to our labeled training data will be available [here](#) at the end of build season.
+
 The YOLO model outputs a bounding box and class, which we use in conjunction with optical flow to detect and track cubes. This method allows us to run a heavier, more robust model while still maintaining real-time accuracy. The main downside to this approach is objects are less likely to be properly detected and tracked while the robot is in motion, due to the decreased operating frame-rate of the model.
 
-A link to our labeled training data will be available [here](#) at the end of build season.
+### Optical Flow
+
+We use the OpenCV implementation of the Lucas-Kanade optical flow method in between frames, then do large recalculations on each "keyframe" (darknet frame) 
 
 ## Robot Localization
 
-Using pre-constructed 2D maps of the field, we are able to localize ourselves within the map using Monte Carlo Localization (MCL) based upon LIDAR measurements weighted by our encoders.
+We use a 2D slice of the field built from [AutoDesk's models](https://www.autodesk.com/education/competitions-and-events/first/recommended-software#Kit-of-parts), and localize ourselves within this model using Monte Carlo Localization (MCL) based upon LIDAR measurements.
 
-***-- WIP --***
+To increase accuracy and confidence in our pose estimation, we weight the points based on encoder measurements for distance and velocity, and IMU measurements for acceleration. 
+
+***WIP***: The code hereof will be abstracted out into a *point-cloud provider* which will be implemented based on specific LIDAR SDK limitations, and *point-cloud consumer* which implements the ray-tracing and the MCL therefrom, etc. 
 
 ## Robot Tracking
 
-Due to various technical limitations of our robot configuration, most notably the brutal tradeoff between Camera FPS and resolution we must weigh, this project is on hiatus until the mid-season.
+***NOTE***: This project has not been started and will likely not be worked on until the offseason of 2018. 
+
+By using OCR on the team numbers located printed on the bumpers (See *Section 8.5: Bumper Rules* of the 2018 Game Manual), we can determine pose of the robot and assume padding upon the maximum robot size to ensure that our estimations err on the side of caution.
 
 # Getting Started
 
