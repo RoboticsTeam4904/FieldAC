@@ -19,7 +19,7 @@ void ctrlc(int)
 }
 
 static const char* about =
-        "FRC Field Model by Bot Provoking ( https://github.com/roboticsteam4904/2018-field)\n"
+        "FRC Field Model by Bot Provoking (https://github.com/roboticsteam4904/FieldAC)\n"
         "Constructs a real time model of the field and all its dynamic constituent pieces\n"
         "such as other robots; small yearly game pieces like cubes, gears, or balls;\n"
         "and provides functionality for localization within the model.\n\n";
@@ -127,9 +127,9 @@ int main(int argc, const char **argv) {
         if(cv::waitKey(10) == 32) {
             cubeTracker->recalc = true;
         }
-        if(defaultDev->displayImage(cubeTracker->optflowFrameLast, "Darknet")) {
-            return -1;
-        }
+//        if(defaultDev->displayImage(cubeTracker->optflowFrameLast, "Darknet")) {
+//            return -1;
+//        }
         if (ctrl_c_pressed){
             break;
         }
