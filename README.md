@@ -14,8 +14,11 @@ Building a realtime model of the field and all its components [to eventually red
 * [Getting Started](#getting-started)
   * [Project Structure](#project-structure)
   * [Dependencies](#dependencies)
-  * [Installation (macOS)](#installation-macos)
-  * [Installation (Ubuntu 16.04/Jetson TX1)](#installation-ubuntu-1604-jetson-tx1)
+    * [Hardware](#hardware)
+    * [Software](#software)
+  * [Installation](#installation)
+    * [macOS](#macOS)
+    * [Ubuntu 16.04 (Jetson TX1/TX2)](#ubuntu-1604-jetson-tx1-tx2)
   * [Usage](#usage)
 
 # About
@@ -30,9 +33,9 @@ Our goal this year was to build a comprehensive, real-time model of the field an
 
 The field model is an in-memory representation of the absolute poses of each entity discovered so far on the field. Each entity implements its own confidence degradation formula to account for real-time dynamic conditions on the field.
 
-This degradation formula is formatted in a way that can be run simultaneously on the RoboRIO and the TX1. In doing so, we minimize the number of updates the TX1 must send to the RoboRIO to cases where an entity's confidence drops below a cutoff threshold, or goes up.
+This degradation formula is formatted in a way that can be run simultaneously on the RoboRIO and the TX\*. In doing so, we minimize the number of updates the TX\* must send to the RoboRIO to cases where an entity's confidence drops below a cutoff threshold, or goes up.
 
-When the TX1 must send an update, we send it over USB serial connected directly to the RoboRIO, formatted as JSON (?). This allows us to easily manipulate and track data, as well as performing full field reconstructions post-match.
+When the TX\* must send an update, we send it over the robot LAN, formatted as JSON (?). This allows us to easily manipulate and track data, as well as performing full field reconstructions/simulations post-match.
 
 ## Object Tracking
 
@@ -44,7 +47,7 @@ The YOLO model outputs a bounding box and class, which we use in conjunction wit
 
 ### Optical Flow
 
-We use the OpenCV implementation of the Lucas-Kanade optical flow method in between frames, then do large recalculations on each "keyframe" (darknet frame) 
+We use the OpenCV implementation of the Lucas-Kanade optical flow method in between frames, then do large recalculations on each "keyframe" (darknet frame). The center of each detected object in the keyframe becomes a single feature to simplify the tracking. 
 
 ## Robot Localization
 
@@ -84,6 +87,16 @@ The Network directory allows for elegant sharing of a single Darknet Detector in
 For more insight into the project structure, `CMakeLists.txt` and its companion files may help.
 
 ## Dependencies
+
+### Hardware
+- RPLIDAR A2M8
+  - If you have another LIDAR, you must implement a point-cloud supplier yourself.
+- Jetson TX1/TX2
+  - These are the only boards officially tested and supported. Use others at your own peril.
+- Camera (Optional)
+  - You can also use pre-captured footage. See the [usage](#usage) section for details.
+
+### Software
 Minimum Dependencies:
 - C++11
 - OpenCV 3.x
@@ -92,11 +105,9 @@ Minimum Dependencies:
 Advanced Dependencies:
 - CUDA 7.5 or higher
 - cuDNN 5 **and** cuDNN 6
-- RPLIDAR A2M8 (Hardware)
-- Jetson TX1 (Hardware)
-- Camera (Hardware)
 
-## Installation (macOS)
+## Installation
+### macOS
 
 ```bash
 brew install 
@@ -108,7 +119,9 @@ cmake ../
 make
 ```
 
-## Installation (Ubuntu 16.04/Jetson TX1)
+### Ubuntu 16.04 (Jetson TX1/TX2)
+**Note:** 
+>We have experienced troubles with CMake not properly following 302 redirects when downloading the static files on the TX1. You may have to set these up manually. The links and hashes are in [CMakeLists.txt](/CMakeLists.txt)
 
 ```bash
 # Install all the dependencies here
@@ -126,6 +139,10 @@ Usage: field [params]
 		Capture Device
 	--help (value:true)
 		help
+	--ldr_baud (value:115200)
+		[LIDAR] Baudrate for serial communications
+	--ldr_dev
+		[LIDAR] Path to the *nix device (eg. /dev/ttyUSB0)
 	--net_cfd (value:0.5)
 		[Network] Minimum identification confidence threshold
 	--net_cfg
@@ -138,4 +155,5 @@ Usage: field [params]
 		[Network] Detection output file. Shows what the network detects
 	--src
 		Source Video file. Overrides any specified capture device
+
 ```
