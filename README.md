@@ -18,7 +18,7 @@ Building a realtime model of the field and all its components [to eventually red
     * [Software](#software)
   * [Installation](#installation)
     * [macOS](#macOS)
-    * [Ubuntu 16.04 (Jetson TX1/TX2)](#ubuntu-1604-jetson-tx1-tx2)
+    * [Ubuntu 16.04 (Jetson TX1/TX2)](#ubuntu-1604-jetson-tx1tx2)
   * [Usage](#usage)
 
 # About
@@ -28,6 +28,7 @@ Our goal this year was to build a comprehensive, real-time model of the field an
 - Robot Localization
 - Object Tracking
 - Robot Tracking
+- Pathing
 
 ## Field Model
 
@@ -62,6 +63,13 @@ To increase accuracy and confidence in our pose estimation, we weight the points
 ***NOTE***: This project has not been started and will likely not be worked on until the offseason of 2018. 
 
 By using OCR on the team numbers located printed on the bumpers (See *Section 8.5: Bumper Rules* of the 2018 Game Manual), we can determine pose of the robot and assume padding upon the maximum robot size to ensure that our estimations err on the side of caution.
+
+## Pathing
+
+Our pathing library is maintained separately and written in Java. We have plans to rewrite the library in C++ with JNI bindings, however we will only be tackling this later. For now, they will remain independent.
+
+Check out our Motion Control/Pathing library:  
+https://github.com/RoboticsTeam4904/MotionControl
 
 # Getting Started
 
