@@ -11,6 +11,7 @@ Building a realtime model of the field and all its components [to eventually red
     * [Optical Flow](#optical-flow)
   * [Robot Localization](#robot-localization)
   * [Robot Tracking](#robot-tracking)
+  * [Pathing](#pathing)
 * [Getting Started](#getting-started)
   * [Project Structure](#project-structure)
   * [Dependencies](#dependencies)
@@ -60,7 +61,7 @@ To increase accuracy and confidence in our pose estimation, we weight the points
 
 ## Robot Tracking
 
-***NOTE***: This project has not been started and will likely not be worked on until the offseason of 2018. 
+***NOTE***: We have only conducted preliminary research into the implementation of this project, and we will likely not work on it until the offseason of 2018. 
 
 By using OCR on the team numbers located printed on the bumpers (See *Section 8.5: Bumper Rules* of the 2018 Game Manual), we can determine pose of the robot and assume padding upon the maximum robot size to ensure that our estimations err on the side of caution.
 
@@ -68,7 +69,7 @@ By using OCR on the team numbers located printed on the bumpers (See *Section 8.
 
 Our pathing library is maintained separately and written in Java. We have plans to rewrite the library in C++ with JNI bindings, however we will only be tackling this later. For now, they will remain independent.
 
-Check out our Motion Control/Pathing library:  
+Check out our Motion Control/Pathing library for details:   
 https://github.com/RoboticsTeam4904/MotionControl
 
 # Getting Started
