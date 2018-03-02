@@ -34,30 +34,45 @@ namespace ObjectTracking {
         std::printf("Running CubeTracker in here!\n");
         cv::Mat frame;
         std::vector<bbox_t> opticalFlowBox;
+
         std::vector<cv::Point2f> features_prev, features_next;
 
         const int max_count = 1000;
         const int min_count = 500;
         bool first = true;
 
+        std::vector<bbox_t> descaledDetections;
+
         while (true) {
-            if (this->track_optflow_queue.empty()) {
+            if (this->track_optflow_queue.empty() || this->targets.empty()) {
                 continue;
             }
             if (first || this->recalc) {
+                descaledDetections = this->targets;
+
+                for(auto &i : descaledDetections) {
+                    float centerX = (i.x + i.w) / 2.0F;
+                    float centerY = (i.y + i.h) / 2.0F;
+
+                }
+
                 cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
                 cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
                 cv::goodFeaturesToTrack(gray, // the image
                                         features_next,   // the output detected features
                                         max_count,  // the maximum number of features
                                         0.02,     // quality level
-                                        10
+                                        1
                 );
                 first = false;
                 recalc = false;
             }
 
-            if (max_count - features_next.size() >= min_count) {
+            /**
+             * Realistically, this won't be needed once we implement Cube Flow.
+             * This is here to make it more use-able for testing using an arbitrary object.
+             */
+            if (features_next.size() <= min_count) {
                 std::printf("Could not track features... Recalculating: %d\n", static_cast<int>(max_count - features_next.size()));
                 cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
                 cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
@@ -66,7 +81,7 @@ namespace ObjectTracking {
                                         recalculation,
                                         static_cast<int>(max_count - features_next.size()),
                                         0.02,
-                                        5);
+                                        1);
                 features_next.insert(features_next.begin(), recalculation.begin(), recalculation.end());
             }
 
@@ -103,11 +118,17 @@ namespace ObjectTracking {
                 optflowFrame = current_frame.clone();
                 this->optflowFrameLast = next_frame.clone();
 
+                for(size_t i = 0; i < this->targets.size(); i++) {
+                    cv::Point2f point_next = features_next.at(i);
+                }
+
                 size_t i, j;
                 for (i = j = 0; i < features_next.size(); i++) {
+                    // Check if the feature was successfully tracked, if not then skip.
                     if (!status[i]) {
                         continue;
                     }
+                    // Carry over features which /were/ tracked.
                     features_next[j++] = features_next[i];
                     cv::circle(optflowFrame, features_next[i], 3, cv::Scalar(0, 255, 0), -1, 8);
                     if (features_next[i] != features_prev[i]) {
