@@ -57,18 +57,28 @@ std::vector<bbox_t> Network::tracking_id(std::vector<bbox_t> cur_bbox_vec, bool 
     return network->tracking_id(cur_bbox_vec, change_history, frames_story, max_dist);
 }
 
+void Network::update(cv::Mat frameUpdate) {
+    frameMutex.lock();
+    this->frame = frameUpdate;
+    frameMutex.unlock();
+}
+
 void Network::run(std::function<cv::Mat ()> frameFunc,
                   std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>> targetMap) {
     std::shared_ptr<image_t> det_image;
     std::unordered_map<std::string, std::vector<bbox_t>> targetMapInter;
     while(true) {
         targetMapInter = {};
-        cv::Mat frame = frameFunc();
+        frameMutex.lock();
+        frameMutex.unlock();
         cv::Mat annotated = frame.clone();
         if(frame.empty()) {
-            std::printf("Image was empty. Goodbye.\n");
-            saveWriter.release();
-            break;
+            if(this->saveWriter.isOpened()) {
+                std::printf("Image was empty. Goodbye.\n");
+                saveWriter.release();
+                break;
+            }
+            continue;
         }
         if(frame.cols == 0) {
             continue;
@@ -97,4 +107,8 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
 
 cv::Mat Network::getAnnotatedFrame() {
     return annotatedFrame;
+}
+
+cv::Mat Network::getFrame() {
+    return frame;
 }

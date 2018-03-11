@@ -26,7 +26,9 @@ public:
     Network(cv::String classNames, cv::String config, cv::String model, cv::String save, double capWidth, double capHeight);
 
     void run(std::function<cv::Mat ()> frameFunc, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>);
+    void update(cv::Mat frameUpdate);
     cv::Mat getAnnotatedFrame();
+    cv::Mat getFrame();
 
     void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec);
     void show_console_result(std::vector<bbox_t> const result_vec);
@@ -39,6 +41,7 @@ private:
     cv::VideoWriter saveWriter;
 
     cv::Mat annotatedFrame;
+    cv::Mat frame;
     mutable std::mutex frameMutex;
 };
 

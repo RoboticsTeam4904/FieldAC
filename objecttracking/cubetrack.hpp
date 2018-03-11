@@ -42,6 +42,8 @@ namespace ObjectTracking {
         mutable std::mutex mutexFrame;
         cv::Mat lastFrame;
         cv::Mat lastLastFrame;
+
+        bool newTargets;
     public:
         CubeTracker(Network& network);
 

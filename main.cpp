@@ -79,9 +79,13 @@ int main(int argc, const char **argv) {
     std::printf("Initializing Object Tracking: Cube Tracker...\n");
     auto cubeTracker = new ObjectTracking::CubeTracker(*network);
 
-    std::printf("Registering camera listener: Cube Tracker...");
+    std::printf("Registering camera listener: Cube Tracker...\n");
     defaultDev->registerListener([cubeTracker](cv::Mat mat) {
         cubeTracker->update(mat);
+    });
+    std::printf("Registering camera listener: Network...\n");
+    defaultDev->registerListener([network](cv::Mat mat) {
+        network->update(mat);
     });
 
 //    std::printf("Initializing Lidar...\n");
@@ -107,7 +111,7 @@ int main(int argc, const char **argv) {
                                return defaultDev->getFrame();
                            }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
                            {
-                                   {"person", [cubeTracker](std::vector<bbox_t> targets) {
+                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
                                        return cubeTracker->update(targets);
                                    }}}
     );
@@ -127,9 +131,9 @@ int main(int argc, const char **argv) {
         if(cv::waitKey(10) == 32) {
             cubeTracker->recalc = true;
         }
-//        if(defaultDev->displayImage(cubeTracker->optflowFrameLast, "Darknet")) {
-//            return -1;
-//        }
+        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
+            return -1;
+        }
         if (ctrl_c_pressed){
             break;
         }

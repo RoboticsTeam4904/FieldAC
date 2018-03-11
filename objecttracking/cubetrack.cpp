@@ -20,6 +20,7 @@ namespace ObjectTracking {
         this->mutexTargets.lock();
         this->targetsLast = this->targets;
         this->targets = targetsUpdate;
+        newTargets = true;
         this->mutexTargets.unlock();
     }
 
@@ -44,46 +45,52 @@ namespace ObjectTracking {
         std::vector<bbox_t> descaledDetections;
 
         while (true) {
-            if (this->track_optflow_queue.empty() || this->targets.empty()) {
-                continue;
-            }
-            if (first || this->recalc) {
-                descaledDetections = this->targets;
+                if (this->track_optflow_queue.empty() || this->targets.empty()) {
+                    continue;
+                }
+                if (first || this->recalc) {
+                    descaledDetections = this->targets;
+                    features_next.clear();
+                    for(auto &i : descaledDetections) {
+                        float centerX = (i.x + i.w) / 2.0F;
+                        float centerY = (i.y + i.h) / 2.0F;
+                        cv::Point2f centerPoint;
+                        centerPoint.x = centerX;
+                        centerPoint.y = centerY;
+                        features_next.push_back(centerPoint);
+                    }
 
-                for(auto &i : descaledDetections) {
-                    float centerX = (i.x + i.w) / 2.0F;
-                    float centerY = (i.y + i.h) / 2.0F;
+
+//                    cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
+//                    cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
+//                    cv::goodFeaturesToTrack(gray, // the image
+//                                            features_next,   // the output detected features
+//                                            max_count,  // the maximum number of features
+//                                            0.02,     // quality level
+//                                            1
+//                    );
+                    first = false;
+                    recalc = false;
 
                 }
-
-                cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
-                cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
-                cv::goodFeaturesToTrack(gray, // the image
-                                        features_next,   // the output detected features
-                                        max_count,  // the maximum number of features
-                                        0.02,     // quality level
-                                        1
-                );
-                first = false;
-                recalc = false;
-            }
 
             /**
              * Realistically, this won't be needed once we implement Cube Flow.
              * This is here to make it more use-able for testing using an arbitrary object.
              */
-            if (features_next.size() <= min_count) {
-                std::printf("Could not track features... Recalculating: %d\n", static_cast<int>(max_count - features_next.size()));
-                cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
-                cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
-                std::vector<cv::Point2f> recalculation;
-                cv::goodFeaturesToTrack(gray,
-                                        recalculation,
-                                        static_cast<int>(max_count - features_next.size()),
-                                        0.02,
-                                        1);
-                features_next.insert(features_next.begin(), recalculation.begin(), recalculation.end());
-            }
+
+//            if (features_next.size() <= min_count) {
+//                std::printf("Could not track features... Recalculating: %d\n", static_cast<int>(max_count - features_next.size()));
+//                cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
+//                cv::cvtColor(this->track_optflow_queue.front(), gray, CV_BGR2GRAY, 1);
+//                std::vector<cv::Point2f> recalculation;
+//                cv::goodFeaturesToTrack(gray,
+//                                        recalculation,
+//                                        static_cast<int>(max_count - features_next.size()),
+//                                        0.02,
+//                                        1);
+//                features_next.insert(features_next.begin(), recalculation.begin(), recalculation.end());
+//            }
 
             while (this->track_optflow_queue.size() > 1) {
                 cv::Mat current_frame(this->track_optflow_queue.front().size(),
@@ -101,7 +108,7 @@ namespace ObjectTracking {
                 std::vector<unsigned char> status;
                 std::vector<float> err;
 
-                std::printf("Feature Size: %lu\n", features_next.size());
+//                std::printf("Feature Size: %lu\n", features_next.size());
 
                 cv::calcOpticalFlowPyrLK(
                         current_frame, next_frame, // 2 consecutive images
@@ -118,8 +125,22 @@ namespace ObjectTracking {
                 optflowFrame = current_frame.clone();
                 this->optflowFrameLast = next_frame.clone();
 
+                if (opticalFlowBox.empty() || newTargets) {
+                    opticalFlowBox = targets;
+                    recalc = true;
+                    newTargets = false;
+                }
+
+                if (features_next.empty()) {
+                    continue; // we lost it so wait for a darknet update
+                }
+
                 for(size_t i = 0; i < this->targets.size(); i++) {
+
                     cv::Point2f point_next = features_next.at(i);
+                    opticalFlowBox.at(i).x = static_cast<unsigned int>(point_next.x - (this->targets.at(i).x / 2.0F));
+                    opticalFlowBox.at(i).y = static_cast<unsigned int>(point_next.y - (this->targets.at(i).y / 2.0F));
+//                    std::printf("%d %d %f", targets.at(i).x, opticalFlowBox.at(i).x, point_next.x);
                 }
 
                 size_t i, j;
