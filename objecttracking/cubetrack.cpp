@@ -25,7 +25,13 @@ namespace ObjectTracking {
     }
 
     void CubeTracker::update(cv::Mat frameUpdate) {
-        this->track_optflow_queue.push(frameUpdate.clone());
+        if (this->targets.empty()) {
+            return;
+        }
+        frameCounter++;
+        if (frameCounter % 3) {
+            this->track_optflow_queue.push(frameUpdate.clone());
+        }
     }
 
 #pragma clang diagnostic push
@@ -45,20 +51,25 @@ namespace ObjectTracking {
         std::vector<bbox_t> descaledDetections;
 
         while (true) {
-                if (this->track_optflow_queue.empty() || this->targets.empty()) {
-                    continue;
-                }
-                if (first || this->recalc) {
-                    descaledDetections = this->targets;
+            if (this->track_optflow_queue.empty() || this->targets.empty()) {
+                continue;
+            }
+            if (first || this->recalc) {
+                mutexTargets.lock();
+                descaledDetections = this->targets;
+                if (!descaledDetections.empty()) {
                     features_next.clear();
-                    for(auto &i : descaledDetections) {
-                        float centerX = (i.x + i.w) / 2.0F;
-                        float centerY = (i.y + i.h) / 2.0F;
-                        cv::Point2f centerPoint;
-                        centerPoint.x = centerX;
-                        centerPoint.y = centerY;
-                        features_next.push_back(centerPoint);
-                    }
+                }
+                for (auto &i : descaledDetections) {
+                    float centerX = i.x + (i.w / 2.0F);
+                    float centerY = i.y + (i.h / 2.0F);
+                    cv::Point2f centerPoint;
+                    centerPoint.x = centerX;
+                    centerPoint.y = centerY;
+                    features_next.push_back(centerPoint);
+                }
+                mutexTargets.unlock();
+
 
 
 //                    cv::Mat gray(this->track_optflow_queue.front().size(), CV_8UC1);
@@ -69,10 +80,10 @@ namespace ObjectTracking {
 //                                            0.02,     // quality level
 //                                            1
 //                    );
-                    first = false;
-                    recalc = false;
+                first = false;
+                recalc = false;
 
-                }
+            }
 
             /**
              * Realistically, this won't be needed once we implement Cube Flow.
@@ -91,75 +102,76 @@ namespace ObjectTracking {
 //                                        1);
 //                features_next.insert(features_next.begin(), recalculation.begin(), recalculation.end());
 //            }
+                while (this->track_optflow_queue.size() > 1) {
+                    cv::Mat current_frame(this->track_optflow_queue.front().size(),
+                                          CV_8UC1); // Initialize greyscale current frame mat
+                    cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY,
+                                 1); // Convert front of queue to greyscale and put it in current_frame
+                    this->track_optflow_queue.pop();
 
-            while (this->track_optflow_queue.size() > 1) {
-                cv::Mat current_frame(this->track_optflow_queue.front().size(),
-                                      CV_8UC1); // Initialize greyscale current frame mat
-                cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY,
-                             1); // Convert front of queue to greyscale and put it in current_frame
-                this->track_optflow_queue.pop();
+                    cv::Mat next_frame(this->track_optflow_queue.front().size(), CV_8UC1);
+                    cv::cvtColor(this->track_optflow_queue.front(), next_frame, CV_BGR2GRAY,
+                                 1); // Convert front of queue to greyscale and put it in next_frame
+                    this->track_optflow_queue.pop();
 
-                cv::Mat next_frame(this->track_optflow_queue.front().size(), CV_8UC1);
-                cv::cvtColor(this->track_optflow_queue.front(), next_frame, CV_BGR2GRAY,
-                             1); // Convert front of queue to greyscale and put it in next_frame
-                this->track_optflow_queue.pop();
+                    features_prev = features_next;
+                    std::vector<unsigned char> status;
+                    std::vector<float> err;
 
-                features_prev = features_next;
-                std::vector<unsigned char> status;
-                std::vector<float> err;
-
-//                std::printf("Feature Size: %lu\n", features_next.size());
-
-                cv::calcOpticalFlowPyrLK(
-                        current_frame, next_frame, // 2 consecutive images
-                        features_prev, // input point positions in first im
-                        features_next, // output point positions in the 2nd
-                        status,    // tracking success
-                        err,     // tracking error
-                        cv::Size(21, 21),
-                        3,
-                        cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01),
-                        cv::OPTFLOW_USE_INITIAL_FLOW
-                );
-
-                optflowFrame = current_frame.clone();
-                this->optflowFrameLast = next_frame.clone();
-
-                if (opticalFlowBox.empty() || newTargets) {
-                    opticalFlowBox = targets;
-                    recalc = true;
-                    newTargets = false;
-                }
-
-                if (features_next.empty()) {
-                    continue; // we lost it so wait for a darknet update
-                }
-
-                for(size_t i = 0; i < this->targets.size(); i++) {
-
-                    cv::Point2f point_next = features_next.at(i);
-                    opticalFlowBox.at(i).x = static_cast<unsigned int>(point_next.x - (this->targets.at(i).x / 2.0F));
-                    opticalFlowBox.at(i).y = static_cast<unsigned int>(point_next.y - (this->targets.at(i).y / 2.0F));
-//                    std::printf("%d %d %f", targets.at(i).x, opticalFlowBox.at(i).x, point_next.x);
-                }
-
-                size_t i, j;
-                for (i = j = 0; i < features_next.size(); i++) {
-                    // Check if the feature was successfully tracked, if not then skip.
-                    if (!status[i]) {
+                    if (features_next.empty()) {
+                        this->recalc = true;
+                        while (!newTargets) {
+                            continue;
+                        } // we lost it so wait for a darknet update
                         continue;
                     }
-                    // Carry over features which /were/ tracked.
-                    features_next[j++] = features_next[i];
-                    cv::circle(optflowFrame, features_next[i], 3, cv::Scalar(0, 255, 0), -1, 8);
-                    if (features_next[i] != features_prev[i]) {
-                        cv::line(optflowFrame, features_prev[i], features_next[i], cv::Scalar(0, 255, 0), 1);
-                    }
-                }
-                features_next.resize(j);
 
-                this->draw_boxes(optflowFrame, opticalFlowBox);
-            }
+                    cv::calcOpticalFlowPyrLK(
+                            current_frame, next_frame, // 2 consecutive images
+                            features_prev, // input point positions in first im
+                            features_next, // output point positions in the 2nd
+                            status,    // tracking success
+                            err,     // tracking error
+                            cv::Size(21, 21),
+                            3,
+                            cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01),
+                            cv::OPTFLOW_USE_INITIAL_FLOW
+                    );
+
+                    optflowFrame = current_frame.clone();
+                    this->optflowFrameLast = next_frame.clone();
+
+                    if (opticalFlowBox.empty() || newTargets) {
+                        opticalFlowBox.clear();
+                        opticalFlowBox = targets;
+                        recalc = true;
+                        newTargets = false;
+                    }
+
+                    for (size_t i = 0; i < this->targets.size(); i++) {
+                        cv::Point2f point_next = features_next.at(i);
+                        opticalFlowBox.at(i).x = static_cast<unsigned int>(point_next.x - targets.at(i).w / 2);
+                        opticalFlowBox.at(i).y = static_cast<unsigned int>(point_next.y - targets.at(i).h / 2);
+                        //                    std::printf("%d %d %f\n", targets.at(i).x, opticalFlowBox.at(i).x, point_next.x);
+                    }
+
+                    size_t i, j;
+                    for (i = j = 0; i < features_next.size(); i++) {
+                        // Check if the feature was successfully tracked, if not then skip.
+                        if (!status[i]) {
+                            continue;
+                        }
+                        // Carry over features which /were/ tracked.
+                        features_next[j++] = features_next[i];
+                        cv::circle(optflowFrame, features_next[i], 3, cv::Scalar(0, 255, 0), -1, 8);
+                        if (features_next[i] != features_prev[i]) {
+                            cv::line(optflowFrame, features_prev[i], features_next[i], cv::Scalar(0, 255, 0), 1);
+                        }
+                    }
+                    features_next.resize(j);
+
+                    this->draw_boxes(optflowFrame, opticalFlowBox);
+                }
 
         }
 

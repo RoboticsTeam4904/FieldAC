@@ -44,6 +44,7 @@ namespace ObjectTracking {
         cv::Mat lastLastFrame;
 
         bool newTargets;
+        int frameCounter;
     public:
         CubeTracker(Network& network);
 

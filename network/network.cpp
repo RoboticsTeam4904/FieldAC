@@ -59,7 +59,7 @@ std::vector<bbox_t> Network::tracking_id(std::vector<bbox_t> cur_bbox_vec, bool 
 
 void Network::update(cv::Mat frameUpdate) {
     frameMutex.lock();
-    this->frame = frameUpdate;
+    this->frame = frameUpdate.clone();
     frameMutex.unlock();
 }
 
