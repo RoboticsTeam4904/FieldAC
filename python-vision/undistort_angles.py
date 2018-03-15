@@ -40,6 +40,7 @@ def findCenterTile():
 
     return tile_pixel_coords, boardCoords
 
+#takes in a coord number
 
 def findCenterBoordCoords():
     pxCoords, bdCoords = findCenterTile()
