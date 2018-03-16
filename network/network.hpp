@@ -31,10 +31,10 @@ public:
     cv::Mat getFrame();
 
     void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec);
-    void show_console_result(std::vector<bbox_t> const result_vec);
-    void show_console_result(bbox_t const result);
+    void show_console_result(const std::vector<bbox_t> result_vec);
+    void show_console_result(const bbox_t result);
 
-    std::vector<bbox_t> tracking_id(std::vector<bbox_t> cur_bbox_vec, bool const change_history = true, int const frames_story = 10, int const max_dist = 150);
+    std::vector<bbox_t> tracking_id(std::vector<bbox_t> cur_bbox_vec, const bool change_history = true, const int frames_story = 10, const int max_dist = 150);
 private:
     Detector* network;
     std::vector<std::string> classNames;
