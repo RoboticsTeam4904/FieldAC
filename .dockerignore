@@ -3,11 +3,6 @@ bin/
 build/*
 build-debug/
 
-# Darknet files
-*.weights
-*.cfg
-tmp/
-
 # Build intermediaries
 *.o
 *.d
@@ -24,4 +19,3 @@ cmake_install.cmake
 # CLion
 cmake-build-debug
 .idea/
-.git.nosync

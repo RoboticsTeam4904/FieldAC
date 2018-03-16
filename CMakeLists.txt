@@ -21,7 +21,7 @@ file(GLOB OBJ_TRK_SRC objecttracking/*.cpp)
 file(GLOB CORE_SRC *.cpp)
 
 download_project(PROJ darknet
-        GIT_REPOSITORY https://github.com/HowardStark/darknet
+        GIT_REPOSITORY https://github.com/RoboticsTeam4904/darknet
         GIT_TAG botprov-compat)
 
 download_project(PROJ rplidar

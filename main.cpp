@@ -111,7 +111,7 @@ int main(int argc, const char **argv) {
                                return defaultDev->getFrame();
                            }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
                            {
-                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
+                                   {"person", [cubeTracker](std::vector<bbox_t> targets) {
                                        return cubeTracker->update(targets);
                                    }}}
     );
