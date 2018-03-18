@@ -20,6 +20,7 @@
 #include "../network/target.hpp"
 #include "extrapolate.hpp"
 #include "sharedqueue.hpp"
+#include <mutex>
 
 namespace ObjectTracking {
 
