@@ -3,8 +3,8 @@
 #include <sys/time.h>
 
 Segment::Segment(int xi, int yi, int xf, int yf) {
-    this->start = {xi, yi};
-    this->end = {xf, yf};
+    this->start = std::tuple<int, int>(xi, yi);
+    this->end = std::tuple<int, int>(xf, yf);
 }
 
 Segment::Segment(std::tuple<int, int> start, std::tuple<int, int> end) {

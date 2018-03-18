@@ -6,7 +6,7 @@
 #include "objects.hpp"
 #include <tuple>
 
-class Segment {
+struct Segment {
     Segment(int xi, int yi, int xf, int yf);
     Segment(std::tuple<int, int> start, std::tuple<int, int> end);
     std::tuple<int, int> start;
