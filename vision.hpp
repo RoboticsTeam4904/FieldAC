@@ -3,13 +3,14 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
+#include <queue>
 
 namespace Vision {
     class Camera {
     private:
         mutable std::mutex frameMutex;
         mutable std::mutex listenersMutex;
-        std::vector<std::function<void (cv::Mat)>> listeners;
+        std::vector<std::function<void (cv::Mat, int)>> listeners;
     public:
         explicit Camera(int devCapture);
         explicit Camera(cv::String srcCapture);
@@ -20,7 +21,9 @@ namespace Vision {
         void captureImages();
         bool displayImage(cv::Mat frame, const std::string window);
 
-        void registerListener(std::function<void (cv::Mat)> listener);
+        void registerListener(std::function<void (cv::Mat, int)> listener);
+
+//        std::vector<std::tuple<int, cv::Mat>> frameList;
 
         // These are outdated, consider deprecating/removing.
         double getCapProp(int propId);
@@ -47,6 +50,7 @@ namespace Vision {
             return *this;
         }
     private:
+        int frameCount;
         void notifyListeners(cv::Mat update);
     };
 }

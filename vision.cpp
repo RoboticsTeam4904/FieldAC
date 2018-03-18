@@ -13,6 +13,7 @@ namespace Vision {
     }
     Camera::Camera(int devCapture) {
         this->devCapture = cv::VideoCapture();
+        frameCount = 0;
         this->devCapture.open(devCapture);
         if(!this->devCapture.isOpened()) {
             std::printf("--(!) Error opening video capture\n");
@@ -20,7 +21,7 @@ namespace Vision {
         }
     }
 
-    void Camera::registerListener(std::function<void (cv::Mat)> listener) {
+    void Camera::registerListener(std::function<void (cv::Mat, int)> listener) {
         this->listenersMutex.lock();
         this->listeners.push_back(listener);
         this->listenersMutex.unlock();
@@ -29,7 +30,7 @@ namespace Vision {
     void Camera::notifyListeners(cv::Mat update) {
         this->listenersMutex.lock();
         for(const auto &listener : this->listeners) {
-            listener(update);
+            listener(update, frameCount);
         }
         this->listenersMutex.unlock();
     }
@@ -38,6 +39,7 @@ namespace Vision {
         while (true) {
             frameMutex.lock();
             devCapture.read(frame);
+            frameCount++;
             notifyListeners(frame);
             frameMutex.unlock();
             if(frame.empty()) {

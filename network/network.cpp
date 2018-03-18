@@ -11,7 +11,7 @@ Target::Target(float xCenter, float yCenter, float width, float height, float co
 
 Network::Network(cv::String classNames, cv::String config, cv::String model) {
     network = new Detector(config, model);
-
+    this->analyzedFrame = 0;
     std::ifstream classNamesFile(classNames.c_str());
     if(classNamesFile.is_open()) {
         std::string className;
@@ -57,9 +57,13 @@ std::vector<bbox_t> Network::tracking_id(std::vector<bbox_t> cur_bbox_vec, bool 
     return network->tracking_id(cur_bbox_vec, change_history, frames_story, max_dist);
 }
 
-void Network::update(cv::Mat frameUpdate) {
+void Network::update(cv::Mat frameUpdate, int frameCounter) {
     frameMutex.lock();
     this->frame = frameUpdate.clone();
+    if (currentlyAnalyzing) {
+        skippedFrames.push(frameUpdate.clone());
+    }
+    this->frameCounter = frameCounter;
     frameMutex.unlock();
 }
 
@@ -70,6 +74,7 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
     while(true) {
         targetMapInter = {};
         frameMutex.lock();
+        int frameID = frameCounter;
         frameMutex.unlock();
         cv::Mat annotated = frame.clone();
         if(frame.empty()) {
@@ -86,18 +91,26 @@ void Network::run(std::function<cv::Mat ()> frameFunc,
         if (frame.channels() == 4) {
             cv::cvtColor(frame, frame, cv::COLOR_BGRA2BGR);
         }
+        currentlyAnalyzing = true;
         std::vector<bbox_t> result_vec = network->detect(frame);
+        std::printf("result size: %d\n", result_vec.size());
+        currentlyAnalyzing = false;
         this->draw_boxes(annotated, result_vec);
         for(auto &item : result_vec) {
             targetMapInter[classNames[item.obj_id]].emplace_back(item);
             this->show_console_result(item);
         }
         for(auto pair : targetMap) {
-            if(!targetMapInter[pair.first].empty())
+//            if(!targetMapInter[pair.first].empty())
                 pair.second(targetMapInter[pair.first]);
         }
         this->frameMutex.lock();
         this->annotatedFrame = annotated;
+        std::printf("just analyzed frame %d\n", analyzedFrame);
+        for (int i = 0; i < skippedFrames.size(); ++i) {
+            skippedFrames.pop();
+        }
+        this->analyzedFrame = frameID;
         this->frameMutex.unlock();
         if(this->saveWriter.isOpened()) {
             this->saveWriter.write(annotatedFrame);

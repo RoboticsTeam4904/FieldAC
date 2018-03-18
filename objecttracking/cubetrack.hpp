@@ -49,11 +49,12 @@ namespace ObjectTracking {
         CubeTracker(Network& network);
 
         void update(std::vector<bbox_t>);
-        void update(cv::Mat);
+        void update(cv::Mat, int);
 
         void run();
+        std::vector<bbox_t> extrapolate_bbox_through_queue(std::vector<bbox_t>, std::queue<cv::Mat>);
 
-        void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec);
+            void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec);
     };
 
 }

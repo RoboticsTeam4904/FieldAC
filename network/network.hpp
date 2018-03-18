@@ -18,7 +18,7 @@
 #include <set>
 #include <unordered_map>
 #include "target.hpp"
-#include <cstdlib>
+#include <queue>
 
 class Network {
 public:
@@ -26,7 +26,7 @@ public:
     Network(cv::String classNames, cv::String config, cv::String model, cv::String save, double capWidth, double capHeight);
 
     void run(std::function<cv::Mat ()> frameFunc, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>);
-    void update(cv::Mat frameUpdate);
+    void update(cv::Mat frameUpdate, int frameCounter);
     cv::Mat getAnnotatedFrame();
     cv::Mat getFrame();
 
@@ -34,7 +34,11 @@ public:
     void show_console_result(const std::vector<bbox_t> result_vec);
     void show_console_result(const bbox_t result);
 
+    std::queue<cv::Mat> skippedFrames;
+
     std::vector<bbox_t> tracking_id(std::vector<bbox_t> cur_bbox_vec, const bool change_history = true, const int frames_story = 10, const int max_dist = 150);
+    int analyzedFrame;
+    mutable std::mutex frameMutex;
 private:
     Detector* network;
     std::vector<std::string> classNames;
@@ -42,7 +46,9 @@ private:
 
     cv::Mat annotatedFrame;
     cv::Mat frame;
-    mutable std::mutex frameMutex;
+    int frameCounter;
+
+    bool currentlyAnalyzing;
 };
 
 #endif
