@@ -9,6 +9,7 @@
 #include "network/network.hpp"
 #include "objecttracking/cubetrack.hpp"
 #include "botlocale/lidar.hpp"
+#include "field.hpp"
 
 bool ctrl_c_pressed;
 void ctrlc(int)
