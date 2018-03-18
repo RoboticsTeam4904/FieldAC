@@ -11,6 +11,7 @@ namespace Vision {
         mutable std::mutex frameMutex;
         mutable std::mutex listenersMutex;
         std::vector<std::function<void (cv::Mat, int)>> listeners;
+        bool src;
     public:
         explicit Camera(int devCapture);
         explicit Camera(cv::String srcCapture);

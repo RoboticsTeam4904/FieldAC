@@ -1,10 +1,14 @@
 #include "vision.hpp"
-
+#include <chrono>
+#include <thread>
 #include <opencv2/highgui.hpp>
+#include "opencv2/imgproc/imgproc.hpp"
+
 
 namespace Vision {
     Camera::Camera(cv::String srcCapture) {
         this->devCapture = cv::VideoCapture();
+        this->src = true;
         this->devCapture.open(srcCapture);
         if(!this->devCapture.isOpened()) {
             std::printf("--(!) Error opening source file\n");
@@ -13,6 +17,7 @@ namespace Vision {
     }
     Camera::Camera(int devCapture) {
         this->devCapture = cv::VideoCapture();
+        this->src = false;
         frameCount = 0;
         this->devCapture.open(devCapture);
         if(!this->devCapture.isOpened()) {
@@ -40,11 +45,15 @@ namespace Vision {
             frameMutex.lock();
             devCapture.read(frame);
             frameCount++;
-            notifyListeners(frame);
+            notifyListeners(getFrame());
             frameMutex.unlock();
             if(frame.empty()) {
                 std::printf("The frame was empty here");
                 return;
+            }
+            if(src) {
+                // emulate camera delay
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
         }
     }
@@ -59,7 +68,9 @@ namespace Vision {
     }
 
     cv::Mat Camera::getFrame() {
-        return frame;
+        cv::Mat resized;
+        cv::resize(frame, resized, cv::Size(), 0.5, 0.5, CV_INTER_LINEAR);
+        return resized;
     }
 
     double Camera::getCapProp(int propId) {

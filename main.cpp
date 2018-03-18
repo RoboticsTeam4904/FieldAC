@@ -57,12 +57,11 @@ int main(int argc, const char **argv) {
         defaultDev = new Vision::Camera(parser.get<cv::String>("src"));
     }
 
-    std::printf("Beginning camera capture...\n");
-    std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
     std::printf("Initializing Darknet...");
     Network* network;
+
+    std::printf("Beginning camera capture...\n");
+    std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
     if(parser.get<cv::String>("net_save").empty()) {
         network = new Network(parser.get<cv::String>("net_cls"),
                               parser.get<cv::String>("net_cfg"),
