@@ -162,15 +162,21 @@ namespace ObjectTracking {
                     // opticalFlowBox = this->targets;
                     recalc = true;
                     newTargets = false;
+                    std::printf("weird thing happened, breaking.\n");
                     break;
                 }
 
                 for (size_t i = 0; opticalFlowBox.size() > i; i++) {
                     cv::Point2f point_next = features_next.at(i);
-                    mutexTargets.lock();
-                    opticalFlowBox.at(i).x = static_cast<unsigned int>((point_next.x - (this->targets.at(i).w / 2)));
-                    opticalFlowBox.at(i).y = static_cast<unsigned int>((point_next.y - (this->targets.at(i).h / 2)));
-                    mutexTargets.unlock();
+                    cv::Point2f point_prev = features_prev.at(i);
+                    auto dx = (point_next.x - point_prev.x) * drift_compensate;
+                    auto dy = (point_next.y - point_prev.y) * drift_compensate;
+                    features_next[i].x = static_cast<float>(point_prev.x + dx);
+                    features_next[i].y = static_cast<float>(point_prev.y + dy);
+                    opticalFlowBox.at(i).x = static_cast<unsigned int>((point_prev.x + dx -
+                                                                        (this->targets.at(i).w / 2)));
+                    opticalFlowBox.at(i).y = static_cast<unsigned int>((point_prev.y + dy -
+                                                                        (this->targets.at(i).h / 2)));
                 }
 
                 size_t i, j;
@@ -209,11 +215,12 @@ namespace ObjectTracking {
                                          cv::Scalar(lo, lo, lo),
                                          cv::Scalar(hi, hi, hi),
                                          4); // https://docs.opencv.org/3.3.0/d5/d26/ffilldemo_8cpp-example.html
-//                        cv::circle(optflowFrame, features_next[i], 3, cv::Scalar(0, 255, 0), -1, 8);
-                    opticalFlowBox[i].x = static_cast<unsigned int>(ccomp.x);
-                    opticalFlowBox[i].y = static_cast<unsigned int>(ccomp.y);
-                    opticalFlowBox[i].w = static_cast<unsigned int>(ccomp.width);
-                    opticalFlowBox[i].h = static_cast<unsigned int>(ccomp.height);
+                    cv::circle(optflowFrame, features_next[i], 3, cv::Scalar(80, 50, 40), -1, 8);
+                    // uncomment the following lines if you want flood fill boxes
+//                    opticalFlowBox[i].x = static_cast<unsigned int>(ccomp.x);
+//                    opticalFlowBox[i].y = static_cast<unsigned int>(ccomp.y);
+//                    opticalFlowBox[i].w = static_cast<unsigned int>(ccomp.width);
+//                    opticalFlowBox[i].h = static_cast<unsigned int>(ccomp.height);
 
                     if (features_next[i] != features_prev[i]) {
 //                            cv::line(optflowFrame, features_prev[i], features_next[i], cv::Scalar(0, 255, 0), 1);
@@ -288,10 +295,16 @@ namespace ObjectTracking {
             // update bboxs in opticalFlowBox
             for (size_t i = 0; i < original_bbox.size(); i++) {
                 cv::Point2f point_next = features_next.at(i);
-                opticalFlowBox.at(i).x = static_cast<unsigned int>(point_next.x - original_bbox.at(i).w / 2);
-                opticalFlowBox.at(i).y = static_cast<unsigned int>(point_next.y - original_bbox.at(i).h / 2);
+                cv::Point2f point_prev = features_prev.at(i);
+                auto dx = (point_next.x - point_prev.x) * drift_compensate;
+                auto dy = (point_next.y - point_prev.y) * drift_compensate;
+                features_next[i].x = static_cast<float>(point_prev.x + dx);
+                features_next[i].y = static_cast<float>(point_prev.y + dy);
+                opticalFlowBox.at(i).x = static_cast<unsigned int>((point_prev.x + dx -
+                                                                    (this->targets.at(i).w / 2)));
+                opticalFlowBox.at(i).y = static_cast<unsigned int>((point_prev.y + dy -
+                                                                    (this->targets.at(i).h / 2)));
             }
-
 
             if (features_next.empty()) {
                 return opticalFlowBox;

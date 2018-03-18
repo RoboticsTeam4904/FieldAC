@@ -30,12 +30,12 @@ namespace ObjectTracking {
 
         bool recalc = false;
     private:
-        Network& network;
+        Network &network;
         std::vector<bbox_t> targetsLast;
         std::vector<bbox_t> targets;
         mutable std::mutex mutexTargets;
 
-        Tracker_optflow* tracker_flow;
+        Tracker_optflow *tracker_flow;
         std::queue<cv::Mat> track_optflow_queue;
         extrapolate_coords_t extrapolate_coords;
 
@@ -46,15 +46,18 @@ namespace ObjectTracking {
         bool newTargets;
         int frameCounter;
     public:
-        CubeTracker(Network& network);
+        CubeTracker(Network &network);
 
         void update(std::vector<bbox_t>);
+
         void update(cv::Mat, int);
 
         void run();
+
         std::vector<bbox_t> extrapolate_bbox_through_queue(std::vector<bbox_t>, std::queue<cv::Mat>);
 
-            void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, const cv::Scalar);
+        void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, const cv::Scalar);
+        const double drift_compensate = 2;
     };
 
 }
