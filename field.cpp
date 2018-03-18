@@ -7,7 +7,10 @@ Segment::Segment(int xi, int yi, int xf, int yf) {
     this->end = {xf, yf};
 }
 
-Segment::Segment(std::tuple<int, int> start, std::tuple<int, int> end) : start(start), end(end) {}
+Segment::Segment(std::tuple<int, int> start, std::tuple<int, int> end) {
+    this->start = start;
+    this->end = end;
+}
 
 Field::Field() = default;
 Field* Field::Field::instance = nullptr;
