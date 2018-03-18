@@ -133,7 +133,7 @@ std::vector<float> LidarScan::raytrace(float x, float y) {
         auto rads = std::get<0>(measurement) * M_PI/180;
         std::tuple<double, double> magnitude = {std::cos(rads), std::sin(rads)};
         for(auto seg : Field::getInstance()->construct) {
-            auto v1 = {std::get<0>(seg.start) - std::get<0>(measurement), std::get<1>(seg.start)};
+//            auto v1 = {std::get<0>(seg.start) - std::get<0>(measurement), std::get<1>(seg.start)};
         }
     }
 }
