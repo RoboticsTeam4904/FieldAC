@@ -53,7 +53,7 @@ namespace Vision {
             }
             if(src) {
                 // emulate camera delay
-                std::this_thread::sleep_for(std::chrono::milliseconds(80));
+                std::this_thread::sleep_for(std::chrono::milliseconds(110));
             }
         }
     }
