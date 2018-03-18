@@ -20,7 +20,7 @@
 #include "target.hpp"
 #include <queue>
 #include <mutex>
-#include <condition_variable>g
+#include <condition_variable>
 
 class Network {
 public:
