@@ -97,6 +97,9 @@ void Network::run(std::function<cv::Mat()> frameFunc,
             cv::cvtColor(frame, frame, cv::COLOR_BGRA2BGR);
         }
         currentlyAnalyzing = true;
+        while (skippedFrames.size() > 1)
+            skippedFrames.pop();
+
         std::vector<bbox_t> result_vec = network->detect(frame);
         std::printf("result size: %d\n", result_vec.size());
         this->draw_boxes(annotated, result_vec);
@@ -112,8 +115,6 @@ void Network::run(std::function<cv::Mat()> frameFunc,
             pair.second(targetMapInter[pair.first]);
         }
         currentlyAnalyzing = false;
-        while (skippedFrames.size() > 1)
-            skippedFrames.pop();
 
         this->analyzedFrame = frameID;
         this->frameMutex.unlock();

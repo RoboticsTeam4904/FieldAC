@@ -1,4 +1,6 @@
+#include <cmath>
 #include "lidar.hpp"
+#include "../field.hpp"
 
 Lidar::Lidar(std::string path, _u32 baudrate) : path(path), baudrate(baudrate) {
     this->driver = rplidar::RPlidarDriver::CreateDriver(rplidar::RPlidarDriver::DRIVER_TYPE_SERIALPORT);
@@ -69,7 +71,7 @@ void Lidar::run(const bool* stop) {
 
             for(int pos = 0; pos < (int) count; pos++) {
                 float angle = (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
-                tmp.distances[((int)(angle+0.5f)) % 360] = nodes[pos].distance_q2 / 4.0f;
+                tmp.measurements[((int)(angle+0.5f)) % 360] = std::make_tuple(angle, nodes[pos].distance_q2 / 4.0f);
                 std::printf("%s theta: %03.2f Dist: %08.2f Q: %d\n",
                             (nodes[pos].sync_quality & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ?"S ":"  ",
                             (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f,
@@ -93,7 +95,7 @@ void Lidar::stop() {
 
 LidarScan::LidarScan() = default;
 LidarScan::LidarScan(const LidarScan& other, int newOffset) {
-    memcpy(distances, other.distances, 360*(sizeof(float)));
+    memcpy(measurements, other.measurements, 360*(sizeof(float)));
     offset = other.offset + newOffset;
     if (offset >= 360) {
         offset -= 360;
@@ -119,3 +121,41 @@ LidarScan LidarScan::getAtLocation(int xCm, int yCm){
 LidarScan LidarScan::generateExpected(const Pose& pose){
     return LidarScan(getAtLocation((int)pose.x,(int)pose.y), (int)(pose.yaw*180/3.14159));
 }
+
+std::vector<float> LidarScan::raytrace(float x, float y) {
+    std::array<float, 2> pos = {x, y};
+    for(int i = 0; i < 360; i++ ) {
+        for(auto seg : Field::getInstance()->construct) {
+                    
+        }
+    }
+}
+
+float LidarScan::calc(float amount, float x, float y, float t1) {
+    auto seg = Field::getInstance()->construct[0];
+    auto angle = std::get<0>(this->measurements[0]);
+//    std::tan(angle * (180 / 3.14159)) * (t1 - x);
+    return 0.0f;
+}
+
+//float[] raytrace(float x, float y){
+//    float dists[360];
+//    outer:
+//    for(int i=0; i<360; i++){
+//        for(int seg=0; seg<field.length; seg++){
+//            float[][] s=field[seg];
+//            float* intersect=intersectRayWithLineSegment(x,y,i,s[0][0],s[0][1],s[1][0],s[1][1]);
+//            if(intersect){
+//                dists[i]=sqrt((x-intersect[0])**2 + (y-intersect[1])**2)
+//                free(intersect) idk lol
+//                continue outer
+//            }
+//        }
+//        dists[i]=-1
+//    }
+//}
+//
+//float* intersectRayWithLineSegment(float centerX, float centerY, int rayAngleDegrees, float lineSegmentStartX, float lineSegmentStartY, float lineSegmentEndX, float lineSegmentEndY){
+//    returns 0 if no intersection, otherwise returns pointer to intersection x,y
+//    get this from stackoverflow
+//}
