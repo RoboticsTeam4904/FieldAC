@@ -96,7 +96,6 @@ void Lidar::stop() {
 LidarScan::LidarScan() = default;
 LidarScan::LidarScan(const LidarScan& other, int newOffset) {
     std::copy(&other.measurements[0], &other.measurements[360], measurements);
-    memcpy(measurements, other.measurements, 360*(sizeof(float)));
     offset = other.offset + newOffset;
     if (offset >= 360) {
         offset -= 360;
