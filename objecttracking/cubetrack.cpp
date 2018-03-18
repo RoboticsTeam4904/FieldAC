@@ -1,7 +1,6 @@
 #include "cubetrack.hpp"
 #include <thread>
 #include <sys/time.h>
-#include <mutex>
 
 #ifndef OPENCV
 #define OPENCV 1
