@@ -126,7 +126,7 @@ std::vector<float> LidarScan::raytrace(float x, float y) {
     std::array<float, 2> pos = {x, y};
     for(int i = 0; i < 360; i++ ) {
         for(auto seg : Field::getInstance()->construct) {
-                    
+
         }
     }
 }
@@ -138,6 +138,8 @@ float LidarScan::calc(float amount, float x, float y, float t1) {
     return 0.0f;
 }
 
+
+//
 //float[] raytrace(float x, float y){
 //    float dists[360];
 //    outer:

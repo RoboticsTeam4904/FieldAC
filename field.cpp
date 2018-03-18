@@ -6,7 +6,7 @@ Segment::Segment(int xi, int yi, int xf, int yf) : start({xi, yi}), end({xf, yf}
 Segment::Segment(std::array<int, 2> start, std::array<int, 2> end) : start(start), end(end) {}
 
 Field::Field() = default;
-Field::Field::instance = nullptr;
+Field* Field::Field::instance = nullptr;
 
 Field* Field::getInstance() {
     if(instance == nullptr) {

@@ -15,7 +15,7 @@ struct Segment {
 class Field {
 private:
     Field();
-    static Field* instance = nullptr;
+    static Field* instance;
 public:
     static Field* getInstance();
     void load();
