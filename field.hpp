@@ -4,12 +4,13 @@
 #include <vector>
 #include <array>
 #include "objects.hpp"
+#include <tuple>
 
 struct Segment {
     Segment(int xi, int yi, int xf, int yf);
-    Segment(std::array<int, 2> start, std::array<int, 2> end);
-    std::array<int, 2> start;
-    std::array<int, 2> end;
+    Segment(std::tuple<int, int> start, std::tuple<int, int> end);
+    std::tuple<int, int> start;
+    std::tuple<int, int> end;
 };
 
 class Field {

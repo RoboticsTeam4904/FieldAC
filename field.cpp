@@ -3,7 +3,7 @@
 #include <sys/time.h>
 
 Segment::Segment(int xi, int yi, int xf, int yf) : start({xi, yi}), end({xf, yf}) {}
-Segment::Segment(std::array<int, 2> start, std::array<int, 2> end) : start(start), end(end) {}
+Segment::Segment(std::tuple<int, int> start, std::tuple<int, int> end) : start(start), end(end) {}
 
 Field::Field() = default;
 Field* Field::Field::instance = nullptr;

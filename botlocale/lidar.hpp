@@ -8,6 +8,7 @@
 #include <csignal>
 #include "../objects.hpp"
 #include <vector>
+#include <tuple>
 
 #ifndef _countof
 #define _countof(_Array) (int)((sizeof(_Array)) / (sizeof(_Array[0])))
