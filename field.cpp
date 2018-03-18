@@ -2,7 +2,11 @@
 
 #include <sys/time.h>
 
-Segment::Segment(int xi, int yi, int xf, int yf) : start({xi, yi}), end({xf, yf}) {}
+Segment::Segment(int xi, int yi, int xf, int yf) {
+    this->start = {xi, yi};
+    this->end = {xf, yf};
+}
+
 Segment::Segment(std::tuple<int, int> start, std::tuple<int, int> end) : start(start), end(end) {}
 
 Field::Field() = default;
