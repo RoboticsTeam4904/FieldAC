@@ -20,7 +20,7 @@
 #include "../network/target.hpp"
 #include "extrapolate.hpp"
 #include "sharedqueue.hpp"
-g
+
 namespace ObjectTracking {
 
     class CubeTracker {
