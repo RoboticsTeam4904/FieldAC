@@ -130,6 +130,7 @@ namespace ObjectTracking {
                 cv::cvtColor(this->track_optflow_queue.front(), next_frame, CV_BGR2GRAY,
                              1); // Convert front of queue to greyscale and put it in next_frame
                 this->track_optflow_queue.pop();
+                optflowFrame = original_current_frame;
 
                 features_prev = features_next;
                 std::vector<unsigned char> status;
@@ -154,7 +155,7 @@ namespace ObjectTracking {
                         cv::OPTFLOW_USE_INITIAL_FLOW
                 );
 
-                optflowFrame = original_current_frame;
+
                 this->optflowFrameLast = next_frame.clone();
 
                 if (opticalFlowBox.empty() || newTargets || opticalFlowBox.size() != features_next.size()) {
@@ -191,11 +192,11 @@ namespace ObjectTracking {
                     if (features_next[i].y < 0) {
                         features_next[i].y = 0;
                     }
-                    if (features_next[i].x > optflowFrame.cols) {
-                        features_next[i].x = optflowFrame.cols;
+                    if (features_next[i].x >= optflowFrame.cols) {
+                        features_next[i].x = optflowFrame.cols-1;
                     }
-                    if (features_next[i].y > optflowFrame.rows) {
-                        features_next[i].y = optflowFrame.rows;
+                    if (features_next[i].y >= optflowFrame.rows) {
+                        features_next[i].y = optflowFrame.rows-1;
                     }
 
                     // Carry over features which /were/ tracked.
