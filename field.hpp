@@ -14,10 +14,12 @@ struct Segment {
 
 class Field {
 private:
-    std::vector<Segment> construct;
-public:
     Field();
-    static Field* load();
+    static Field* instance = nullptr;
+public:
+    static Field* getInstance();
+    void load();
+    std::vector<Segment> construct;
     std::vector<Pose> objects;
     std::vector<Pose> robots;
 };

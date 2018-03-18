@@ -29,7 +29,7 @@ public:
 
 class LidarScan {
 public:
-	float distances[360];
+	std::tuple<float, float> measurements[360];
 	int offset;
 public:
 	LidarScan();
@@ -37,12 +37,15 @@ public:
 	float compare(const LidarScan& expected);
 	LidarScan generateExpected(const Pose& pose);
 	LidarScan getAtLocation(int xCm, int yCm);
+	std::vector<float> raytrace(float x, float y);
 private:
 	inline float getAtAngle(int angle) const {
 		int o = angle + offset;
 		if(o >= 360)
 			o-=360;
-		return distances[o];
+		return std::get<0>(measurements[o]);
 	}
+
+	float calc(float amount, float x, float y, float t1);
 };
 #endif

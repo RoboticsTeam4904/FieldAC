@@ -1,16 +1,9 @@
-//
-// Created by Howard Stark on 3/18/18.
-//
+#ifndef PROV_DISPLAY_H
+#define PROV_DISPLAY_H
 
-#ifndef INC_2018_FIELD_DISPLAY_HPP
-#define INC_2018_FIELD_DISPLAY_HPP
-
-
-
-class display {
+class Display {
 
 };
 
 
-
-#endif //INC_2018_FIELD_DISPLAY_HPP
+#endif
