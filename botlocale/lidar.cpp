@@ -119,14 +119,21 @@ LidarScan LidarScan::getAtLocation(int xCm, int yCm){
     return LidarScan();
 }
 LidarScan LidarScan::generateExpected(const Pose& pose){
-    return LidarScan(getAtLocation((int)pose.x,(int)pose.y), (int)(pose.yaw*180/3.14159));
+    return LidarScan(getAtLocation((int)pose.x,(int)pose.y), (int)(pose.yaw*180/M_PI));
 }
 
 std::vector<float> LidarScan::raytrace(float x, float y) {
-    std::array<float, 2> pos = {x, y};
-    for(int i = 0; i < 360; i++ ) {
-        for(auto seg : Field::getInstance()->construct) {
+    std::tuple<float, float> pos = {x, y};
+    // v1 = o - a
+    // v2 = b - a
+    // v3 = -dy, -dx
 
+    for(int i = 0; i < 360; i++ ) {
+        auto measurement = measurements[i];
+        auto rads = std::get<0>(measurement) * M_PI/180;
+        std::tuple<double, double> magnitude = {std::cos(rads), std::sin(rads)};
+        for(auto seg : Field::getInstance()->construct) {
+            auto v1 = {std::get<0>(seg.start) - std::get<0>(measurement), std::get<1>(seg.start)};
         }
     }
 }
