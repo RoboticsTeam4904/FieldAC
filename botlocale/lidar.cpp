@@ -95,6 +95,7 @@ void Lidar::stop() {
 
 LidarScan::LidarScan() = default;
 LidarScan::LidarScan(const LidarScan& other, int newOffset) {
+    std::copy(&other.measurements[0], &other.measurements[360], measurements);
     memcpy(measurements, other.measurements, 360*(sizeof(float)));
     offset = other.offset + newOffset;
     if (offset >= 360) {
@@ -123,7 +124,7 @@ LidarScan LidarScan::generateExpected(const Pose& pose){
 }
 
 std::vector<float> LidarScan::raytrace(float x, float y) {
-    std::tuple<float, float> pos = {x, y};
+    std::tuple<float, float> pos = std::tuple<float, float>(x, y);
     // v1 = o - a
     // v2 = b - a
     // v3 = -dy, -dx
