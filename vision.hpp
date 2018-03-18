@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <queue>
+#include <mutex>
 
 namespace Vision {
     class Camera {
