@@ -121,6 +121,8 @@ int main(int argc, const char **argv) {
 //                         lidar,
 //                         &ctrl_c_pressed);
 
+    Field* field = Field::getInstance();
+    field->load();
     while(true) {
         if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
             return -1;
@@ -134,5 +136,8 @@ int main(int argc, const char **argv) {
         if (ctrl_c_pressed){
             break;
         }
+        field->update(cubeTracker->optflow_targets);
+        field->tick();
+        defaultDev->displayImage(field->renderedImage, "Field");
     }
 }

@@ -230,6 +230,7 @@ namespace ObjectTracking {
                 features_next.resize(j);
                 this->draw_boxes(optflowFrame, opticalFlowBox, cv::Scalar(50, 200, 50));
                 this->draw_boxes(optflowFrame, this->targets, cv::Scalar(50, 50, 200));
+                optflow_targets = opticalFlowBox;
             }
 
         }
@@ -259,7 +260,7 @@ namespace ObjectTracking {
         features_prev = features_next;
         std::printf("Interpolating through %lu frames\n", track_queue.size());
         while (track_queue.size() > 1) {
-            optflowFrame = track_queue.front().clone();
+            optFrame = track_queue.front().clone();
             cv::Mat current_frame(track_queue.front().size(),
                                   CV_8UC1); // Initialize greyscale current frame mat
             cv::cvtColor(track_queue.front(), current_frame, CV_BGR2GRAY,
@@ -306,7 +307,7 @@ namespace ObjectTracking {
                 opticalFlowBox.at(i).y = static_cast<unsigned int>((point_prev.y + dy -
                                                                     (this->targets.at(i).h / 2)));
             }
-            this->draw_boxes(optflowFrame, opticalFlowBox, cv::Scalar(194, 43, 137));
+//            this->draw_boxes(optflowFrame, opticalFlowBox, cv::Scalar(194, 43, 137));
             if (features_next.empty()) {
                 return opticalFlowBox;
             }

@@ -12,6 +12,7 @@ struct Pose {
     float dy;
     float yaw;
     float rateYaw;
+    float probability;
     float plausibility(const std::string sensorData);
     void seed();
 };

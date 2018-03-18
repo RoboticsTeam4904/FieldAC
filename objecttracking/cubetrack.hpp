@@ -59,6 +59,7 @@ namespace ObjectTracking {
 
         void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, const cv::Scalar);
         const double drift_compensate = 2;
+        std::vector<bbox_t> optflow_targets;
     };
 
 }
