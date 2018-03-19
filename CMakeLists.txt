@@ -8,11 +8,12 @@ find_package( OpenCV REQUIRED )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(DARKNET_GPU 0)
-set(DARKNET_CUDNN 0)
+set(DARKNET_CUDNN 1)
 set(DARKNET_DEBUG 0)
 set(DARKNET_OPENMP 0)
 set(DARKNET_LIBSO_NAME libdarknet.so)
-
+set(NVCC /usr/local/cuda/bin/nvcc)
+set(ARCH -gencode arch=compute_62,code=[sm_62,compute_62])
 include(DownloadProject.cmake)
 
 file(GLOB NETWORK_SRC network/*.cpp)
@@ -57,7 +58,7 @@ add_executable(field ${CORE_SRC}
 
 add_custom_command(TARGET field
         PRE_LINK
-        COMMAND make obj libdarknet.so GPU=0 CUDNN=${DARKNET_CUDNN} OPENCV=1 TRACK_OPTFLOW=1 DEBUG=${DARKNET_DEBUG} OPENMP=${DARKNET_OPEPNMP} LIBSO=1 LIBNAMESO=${DARKNET_LIBSO_NAME}
+        COMMAND make obj libdarknet.so GPU=1 CUDNN=${DARKNET_CUDNN} OPENCV=1 TRACK_OPTFLOW=1 DEBUG=${DARKNET_DEBUG} OPENMP=${DARKNET_OPEPNMP} LIBSO=1 LIBNAMESO=${DARKNET_LIBSO_NAME}
         COMMAND cp ${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/
         COMMENT "Building ${DARKNET_LIBSO_NAME}..."
         BYPRODUCTS ${CMAKE_SOURCE_DIR}/include/${DARKNET_LIBSO_NAME} ${CMAKE_BINARY_DIR}/${DARKNET_LIBSO_NAME}
