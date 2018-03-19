@@ -89,7 +89,7 @@
 #========================================================================================
 
 
-set(_DownloadProjectDir "${CMAKE_CURRENT_LIST_DIR}")
+set(_DownloadProjectDir ".")
 
 include(CMakeParseArguments)
 

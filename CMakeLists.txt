@@ -16,11 +16,11 @@ set(NVCC /usr/local/cuda/bin/nvcc)
 set(ARCH -gencode arch=compute_62,code=[sm_62,compute_62])
 include(DownloadProject.cmake)
 
-file(GLOB NETWORK_SRC network/*.cpp)
-file(GLOB BOT_LCL_SRC botlocale/*.cpp)
-file(GLOB BOT_TRK_SRC bottracking/*.cpp)
-file(GLOB OBJ_TRK_SRC objecttracking/*.cpp)
-file(GLOB CORE_SRC *.cpp)
+file(GLOB NETWORK_SRC src/network/*.cpp)
+file(GLOB BOT_LCL_SRC src/botlocale/*.cpp)
+file(GLOB BOT_TRK_SRC src/bottracking/*.cpp)
+file(GLOB OBJ_TRK_SRC src/objecttracking/*.cpp)
+file(GLOB CORE_SRC src/*.cpp)
 
 download_project(PROJ darknet
         GIT_REPOSITORY https://github.com/RoboticsTeam4904/darknet
