@@ -32,7 +32,7 @@ public:
 		int o = angle + offset;
 		if(o >= 360)
 			o-=360;
-		return std::get<0>(measurements[o]);
+		return std::get<1>(measurements[o]);
 	}
 private:
 
