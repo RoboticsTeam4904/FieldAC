@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <iostream>
 #include "network.hpp"
+#include <ctime>
+#include <functional>
 
 Target::Target(float xCenter, float yCenter, float width, float height, float confidence)
         : xCenter(xCenter), yCenter(yCenter), width(width), height(height), confidence(confidence) {};
@@ -99,8 +101,11 @@ void Network::run(std::function<cv::Mat()> frameFunc,
         currentlyAnalyzing = true;
         while (skippedFrames.size() > 1)
             skippedFrames.pop();
-
+        std::clock_t start = std::clock();
         std::vector<bbox_t> result_vec = network->detect(frame);
+        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
+        int fps = 1000/ms;
+        std::cout << "Finished in " << ms << "ms (" << fps << " fps)" << std::endl;
         std::printf("result size: %d\n", result_vec.size());
         this->draw_boxes(annotated, result_vec);
         for (auto &item : result_vec) {
@@ -122,6 +127,7 @@ void Network::run(std::function<cv::Mat()> frameFunc,
             this->saveWriter.write(annotatedFrame);
         }
     }
+
 }
 
 cv::Mat Network::getAnnotatedFrame() {
