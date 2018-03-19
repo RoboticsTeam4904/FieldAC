@@ -4,6 +4,8 @@
 #include <thread>
 #include <sys/time.h>
 #include <math.h>
+#include <tuple>
+#include "./botlocale/lidar.hpp"
 
 #define PI 3.14159265
 
@@ -49,6 +51,17 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     }
 }
 
+void Field::update(LidarScan scan) {
+    this->objects.clear(); // TODO degradation stuff
+    for (int i = 0; i < 360; ++i) {
+        auto dist = scan.getAtAngle(i);
+        Pose cubePose;
+        cubePose.x = static_cast<float>(cos(PI * i / 180) * dist*5);
+        cubePose.y = static_cast<float>(sin(PI * i / 180) * dist*5);
+        cubePose.probability = 0.4;
+        this->objects.push_back(cubePose);
+    }
+}
 void Field::tick() {
     render();
 }

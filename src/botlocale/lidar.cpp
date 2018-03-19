@@ -78,6 +78,7 @@ void Lidar::run(const bool* stop) {
                             nodes[pos].distance_q2/4.0f,
                             nodes[pos].sync_quality >> RPLIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
             }
+            this->current_scan = tmp;
         }
 
         if (*stop) {

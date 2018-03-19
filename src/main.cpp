@@ -103,19 +103,19 @@ int main(int argc, const char **argv) {
 //                 }
 //    );
 
-    std::thread networkRun(&Network::run,
-                           network,
-                           [defaultDev]() {
-                               return defaultDev->getFrame();
-                           }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
-                           {
-                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
-                                       return cubeTracker->update(targets);
-                                   }}}
-    );
+//    std::thread networkRun(&Network::run,
+//                           network,
+//                           [defaultDev]() {
+//                               return defaultDev->getFrame();
+//                           }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
+//                           {
+//                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
+//                                       return cubeTracker->update(targets);
+//                                   }}}
+//    );
 
-    std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
-                             cubeTracker);
+//    std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
+//                             cubeTracker);
     std::printf("\n");
 
     std::thread lidarRun(&Lidar::run,
@@ -137,7 +137,8 @@ int main(int argc, const char **argv) {
         if (ctrl_c_pressed){
             break;
         }
-        field->update(cubeTracker->optflow_targets);
+//        field->update(cubeTracker->optflow_targets);
+        field->update(lidar->current_scan);
         field->tick();
         defaultDev->displayImage(field->renderedImage, "Field");
     }
