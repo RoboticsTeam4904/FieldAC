@@ -56,8 +56,8 @@ void Field::update(LidarScan scan) {
     for (int i = 0; i < 360; ++i) {
         auto dist = scan.getAtAngle(i);
         Pose cubePose;
-        cubePose.x = 250 + static_cast<float>(cos(PI * i / 180) * dist/20);
-        cubePose.y = 250 + static_cast<float>(sin(PI * i / 180) * dist/20);
+        cubePose.x = 250 + static_cast<float>(cos(PI * -i / 180) * dist/20);
+        cubePose.y = 250 + static_cast<float>(sin(PI * -i / 180) * dist/20);
         cubePose.probability = 0.4;
         this->objects.push_back(cubePose);
     }
