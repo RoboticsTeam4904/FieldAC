@@ -21,7 +21,7 @@ Network::Network(cv::String classNames, cv::String config, cv::String model) {
         while (std::getline(classNamesFile, className))
             this->classNames.emplace_back(className);
     }
-    network->nms = 0.02;
+    network->nms = 0.4;
     frameMutex.unlock();
 }
 
@@ -37,7 +37,7 @@ Network::Network(cv::String classNames, cv::String config, cv::String model, cv:
     if (!save.empty()) {
         saveWriter.open(save, CV_FOURCC('X', '2', '6', '4'), 3, cv::Size((int) capWidth, (int) capHeight), 1);
     }
-    network->nms = 0.02;
+    network->nms = 0.4;
 }
 
 void Network::show_console_result(std::vector<bbox_t> const result_vec) {
