@@ -56,12 +56,13 @@ void Field::update(LidarScan scan) {
     for (int i = 0; i < 360; ++i) {
         auto dist = scan.getAtAngle(i);
         Pose cubePose;
-        cubePose.x = 250 + static_cast<float>(cos(PI * i / 180) * dist/20);
-        cubePose.y = 250 + static_cast<float>(sin(PI * i / 180) * dist/20);
+        cubePose.x = 250 + static_cast<float>(cos((PI * i / 180) - (PI / 2)) * dist / 20);
+        cubePose.y = 250 + static_cast<float>(sin((PI * i / 180) - (PI / 2)) * dist / 20);
         cubePose.probability = 0.4;
         this->objects.push_back(cubePose);
     }
 }
+
 void Field::tick() {
     render();
 }
@@ -74,13 +75,15 @@ void Field::render() {
     cv::rectangle(img, cv::Rect(cv::Point2f(me.x - robotRadius / 2, me.y - robotRadius / 2),
                                 cv::Size(robotRadius, robotRadius)), cv::Scalar(0, 0, 0), 20);
     cv::line(img, cv::Point(middle_x, middle_y),
-             cv::Point2f(middle_x + (cos(me.yaw-(PI/2)) * robotRadius*2), middle_y + (sin(me.yaw-(PI/2)) * robotRadius*2)),
+             cv::Point2f(middle_x + (cos(me.yaw - (PI / 2)) * robotRadius * 2),
+                         middle_y + (sin(me.yaw - (PI / 2)) * robotRadius * 2)),
              cv::Scalar(0, 0, 0),
              3
     );
     for (auto &i : this->objects) {
 //        cv::ellipse(img, cv::Point(middle_x, middle_y), cv::Size(img.cols, img.rows), 0, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))-5, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))+5, cv::Scalar(50, 255, 255), -1);
-        cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20), cv::Scalar(20, 190, 190), -1);
+        cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20),
+                   cv::Scalar(20, 190, 190), -1);
     }
 
     renderedImage = img;
