@@ -3,6 +3,7 @@ project(2018_field)
 
 set(CMAKE_CXX_STANDARD 11)
 
+find_package( Threads )
 find_package( OpenCV REQUIRED )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -69,6 +70,7 @@ add_custom_command(TARGET field
         COMMENT "Building ${rplidar_SDK_DIR}"
         BYPRODUCTS ${rplidar_OUTPUT_DIR}/librplidar_sdk.a)
 
+target_link_libraries(field ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(field rplidar_sdk)
 target_link_libraries(field darknet)
 target_link_libraries(field ${OpenCV_LIBS})
