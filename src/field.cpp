@@ -61,7 +61,8 @@ void Field::render() {
     cv::rectangle(img, cv::Rect(cv::Point2f(me.x - robotRadius / 2, me.y - robotRadius / 2),
                                 cv::Size(robotRadius, robotRadius)), cv::Scalar(0, 0, 0), 20);
     cv::line(img, cv::Point(middle_x, middle_y),
-             cv::Point2f(middle_x + (cos(me.yaw-(PI/2)) * robotRadius*2), middle_y + (sin(me.yaw-(PI/2)) * robotRadius*2)),
+             cv::Point2f(static_cast<float>(middle_x + (cos(me.yaw - (PI / 2)) * robotRadius * 2)),
+                         static_cast<float>(middle_y + (sin(me.yaw - (PI / 2)) * robotRadius * 2))),
              cv::Scalar(0, 0, 0),
              3
     );
