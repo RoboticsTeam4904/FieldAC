@@ -11,12 +11,11 @@ matrix:
         - ubuntu-toolchain-r-test
         packages:
         - g++-7
+        - binutils-2.26
     env:
     - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 before_install:
-- sudo apt-get -qq update
-- sudo apt-get install -y binutils-2.26
 - eval "${MATRIX_EVAL}"
 - ./scripts/install_cmake-3.9.sh
 
