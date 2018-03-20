@@ -4,6 +4,8 @@
 #include <thread>
 #include <sys/time.h>
 #include <math.h>
+#include <tuple>
+#include "./botlocale/lidar.hpp"
 
 #define PI 3.14159265
 
@@ -49,6 +51,18 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     }
 }
 
+void Field::update(LidarScan scan) {
+    this->objects.clear(); // TODO degradation stuff
+    for (int i = 0; i < 360; ++i) {
+        auto dist = scan.getAtAngle(i);
+        Pose cubePose;
+        cubePose.x = 250 + static_cast<float>(cos((PI * i / 180) - (PI / 2)) * dist / 20);
+        cubePose.y = 250 + static_cast<float>(sin((PI * i / 180) - (PI / 2)) * dist / 20);
+        cubePose.probability = 0.4;
+        this->objects.push_back(cubePose);
+    }
+}
+
 void Field::tick() {
     render();
 }
@@ -68,7 +82,8 @@ void Field::render() {
     );
     for (auto &i : this->objects) {
 //        cv::ellipse(img, cv::Point(middle_x, middle_y), cv::Size(img.cols, img.rows), 0, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))-5, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))+5, cv::Scalar(50, 255, 255), -1);
-        cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20), cv::Scalar(20, 190, 190), -1);
+        cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20),
+                   cv::Scalar(20, 190, 190), -1);
     }
 
     renderedImage = img;

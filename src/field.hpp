@@ -6,6 +6,7 @@
 #include "objects.hpp"
 #include <tuple>
 #include "network/network.hpp"
+#include "./botlocale/lidar.hpp"
 
 struct Segment {
     Segment(int xi, int yi, int xf, int yf);
@@ -22,6 +23,7 @@ public:
     static Field* getInstance();
     void load();
     void update(std::vector<bbox_t>);
+    void update(LidarScan);
     void tick();
     void render();
     std::vector<Segment> construct;
