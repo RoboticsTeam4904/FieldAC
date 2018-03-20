@@ -14,7 +14,7 @@ matrix:
 
 before_install:
 - eval "${MATRIX_EVAL}"
-- ./scripts/install-cmake-3.9.sh
+- ./scripts/install_cmake-3.9.sh
 
 install:
 - ./scripts/install_opencv-3.4.1.sh
