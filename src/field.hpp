@@ -7,6 +7,8 @@
 #include <tuple>
 #include "network/network.hpp"
 #include "./botlocale/lidar.hpp"
+#include <ntcore.h>
+#include <networktables/NetworkTable.h>
 
 struct Segment {
     Segment(int xi, int yi, int xf, int yf);
@@ -31,6 +33,7 @@ public:
     std::vector<Pose> robots;
     Pose me;
     cv::Mat renderedImage;
+    std::shared_ptr<NetworkTable> nt;
 };
 
 #endif

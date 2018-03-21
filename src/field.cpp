@@ -6,8 +6,14 @@
 #include <math.h>
 #include <tuple>
 #include "./botlocale/lidar.hpp"
+#include <ntcore.h>
+#include <networktables/NetworkTable.h>
+
+
 
 #define PI 3.14159265
+#define NETWORKTABLES_PORT 12345 // i don't know what it actually is
+#define TEAM_NUMBER 4904
 
 Segment::Segment(int xi, int yi, int xf, int yf) {
     this->start = std::tuple<int, int>(xi, yi);
@@ -49,6 +55,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         cubePose.probability = i.prob;
         this->objects.push_back(cubePose);
     }
+    nt::StartClientTeam(nt::GetDefaultInstance(), TEAM_NUMBER, NETWORKTABLES_PORT);
 }
 
 void Field::update(LidarScan scan) {
@@ -65,6 +72,14 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
+    double x_vals[this->objects.size()];
+    double y_vals[this->objects.size()];
+    for (int i = 0; i < objects.size(); i++) {
+        x_vals[i] = objects[i].x;
+        y_vals[i] = objects[i].y;
+    }
+    nt->PutNumberArray("vision/x", *x_vals);
+    nt->PutNumberArray("vision/y", *y_vals);
 }
 
 void Field::render() {
