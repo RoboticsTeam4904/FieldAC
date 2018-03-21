@@ -118,9 +118,9 @@ int main(int argc, const char **argv) {
                              cubeTracker);
     std::printf("\n");
 
-    std::thread lidarRun(&Lidar::run,
-                         lidar,
-                         &ctrl_c_pressed);
+//    std::thread lidarRun(&Lidar::run,
+//                         lidar,
+//                         &ctrl_c_pressed);
 
     Field* field = Field::getInstance();
     field->load();
