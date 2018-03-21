@@ -32,22 +32,29 @@ download_project(PROJ rplidar
         DOWNLOAD_NAME rplidar-sdk.zip
         DOWNLOAD_NO_PROGRESS 1)
 
-#download_project(PROJ ntcore-dylib
-#        URL https://crate.botprovoking.org/fieldac/libntcore.macos-10.13.1.dylib
-#        DOWNLOAD_NAME libntcore.dylib
-#        DOWNLOAD_NO_EXTRACT 1
-#        URL_MD5 de762fbcf34495bb5a06d1acec5f9767
-#        DOWNLOAD_NO_PROGRESS 1)
-
 download_project(PROJ ntcore
         GIT_REPOSITORY https://github.com/wpilibsuite/ntcore
         GIT_TAG 3025a18
         GIT_SHALLOW 1)
 
+download_project(PROJ ntcore-dylib
+        URL https://crate.botprovoking.org/fieldac/libntcore.dylib
+        URL_MD5 7fcbd6a85e1034ea2eb53baecc5d49e0
+        DOWNLOAD_NAME libntcore.dylib
+        DOWNLOAD_NO_EXTRACT 1
+        DOWNLOAD_NO_PROGRESS 1)
+
 download_project(PROJ wpiutil
         GIT_REPOSITORY https://github.com/wpilibsuite/wpiutil
         GIT_TAG 71d06a1
         GIT_SHALLOW 1)
+
+download_project(PROJ wpiutil-dylib
+        URL https://crate.botprovoking.org/fieldac/libwpiutil.dylib
+        URL_MD5 d22a2f7f0c7787cfa35caa7a704b0afe
+        DOWNLOAD_NAME libwpiutil.dylib
+        DOWNLOAD_NO_EXTRACT 1
+        DOWNLOAD_NO_PROGRESS 1)
 
 set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
 execute_process(COMMAND uname -s
@@ -67,12 +74,30 @@ include_directories(${ntcore_SOURCE_DIR}/src/main/native/cpp/)
 
 link_directories(${rplidar_OUTPUT_DIR})
 link_directories(${CMAKE_BINARY_DIR})
+link_directories(ntcore-dylib-download/ntcore-dylib-download-prefix/src/)
+link_directories(wpiutil-dylib-download/wpiutil-dylib-download-prefix/src/)
+
+MESSAGE(STATUS
+        "CURR: "
+        ${CMAKE_BINARY_DIR})
 
 add_executable(field ${CORE_SRC}
         ${BOT_LCL_SRC}
         ${BOT_TRK_SRC}
         ${OBJ_TRK_SRC}
         ${NETWORK_SRC})
+
+add_custom_command(TARGET field
+        PRE_LINK
+        COMMAND cp ntcore-dylib-download/ntcore-dylib-download-prefix/src/libntcore.dylib ${CMAKE_BINARY_DIR}/
+        COMMENT "Copying ntcore..."
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_custom_command(TARGET field
+        PRE_LINK
+        COMMAND cp wpiutil-dylib-download/wpiutil-dylib-download-prefix/src/libwpiutil.dylib ${CMAKE_BINARY_DIR}/
+        COMMENT "Copying wpiutil..."
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_custom_command(TARGET field
         PRE_LINK
@@ -88,20 +113,6 @@ add_custom_command(TARGET field
         WORKING_DIRECTORY ${rplidar_SDK_DIR}
         COMMENT "Building ${rplidar_SDK_DIR}"
         BYPRODUCTS ${rplidar_OUTPUT_DIR}/librplidar_sdk.a)
-
-add_custom_command(TARGET field
-        PRE_BUILD
-        COMMAND ./gradlew build -PskipAthena -PreleaseBuild -PskipAllTests
-        COMMAND cp ${ntcore_GRADLE_DIR}/libs/ntcore/shared/libntcore.dylib ${CMAKE_BINARY_DIR}/
-        COMMENT "Building ntcore..."
-        WORKING_DIRECTORY ${ntcore_SOURCE_DIR})
-
-add_custom_command(TARGET field
-        PRE_BUILD
-        COMMAND ./gradlew build -PskipAthena -PreleaseBuild -PskipAllTests
-        COMMAND cp ${wpiutil_GRADLE_DIR}/libs/wpiutil/shared/libwpiutil.dylib ${CMAKE_BINARY_DIR}/
-        COMMENT "Building wpiutil..."
-        WORKING_DIRECTORY ${wpiutil_SOURCE_DIR})
 
 target_link_libraries(field ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(field rplidar_sdk)
