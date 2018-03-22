@@ -10,7 +10,7 @@
 #define PI 3.14159265
 #define NETWORKTABLES_PORT 12345 // i don't know what it actually is
 #define TEAM_NUMBER 4904
-#define NACHI_SUQQQQ 1
+#define NACHI_SUQQQQ 1000
 
 Segment::Segment(int xi, int yi, int xf, int yf) {
     this->start = std::tuple<int, int>(xi, yi);
