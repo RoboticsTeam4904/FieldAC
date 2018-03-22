@@ -10,7 +10,7 @@
 #define PI 3.14159265
 #define NETWORKTABLES_PORT 12345 // i don't know what it actually is
 #define TEAM_NUMBER 4904
-#define NACHI_SUQQQQ
+#define NACHI_SUQQQQ 1
 
 Segment::Segment(int xi, int yi, int xf, int yf) {
     this->start = std::tuple<int, int>(xi, yi);
@@ -48,7 +48,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     for (auto &i : cubeTargets) {
         Pose cubePose;
         cubePose.x = 100 + i.x;
-        cubePose.y = (13 * NACHI_SUQQQQ) / i.x
+        cubePose.y = (13 * NACHI_SUQQQQ) / (0.5 * (i.w + i.h))
         cubePose.probability = i.prob;
         this->objects.push_back(cubePose);
     }
