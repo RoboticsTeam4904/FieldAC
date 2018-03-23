@@ -38,6 +38,12 @@ void Field::load() {
      *  TODO: Create a field from a vector graphic file-format
      *  TODO: using an std::vector of Segments
      */
+    // For now, just generate a square field as a test
+    construct.emplace_back(Segment(0, 0, 0, 10));
+    construct.emplace_back(Segment(0, 10, 10, 10));
+    construct.emplace_back(Segment(10, 10, 10, 0));
+    construct.emplace_back(Segment(10, 0, 0, 0));
+    std::printf("%lu\n", construct.size());
     me.x = 250;
     me.y = 250;
     me.yaw = 0; // forward/up
@@ -45,6 +51,7 @@ void Field::load() {
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
     this->objects.clear(); // TODO degradation stuff
+    // Predict new targets, decrease probability of all, but increase probability of those that are similar to cubeTargets
     for (auto &i : cubeTargets) {
         Pose cubePose;
         cubePose.x = 100 + i.x;
@@ -68,6 +75,14 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
+    double x_vals[this->objects.size()];
+    double y_vals[this->objects.size()];
+    for (int i = 0; i < objects.size(); i++) {
+        x_vals[i] = objects[i].x;
+        y_vals[i] = objects[i].y;
+    }
+//    nt->PutNumberArray("vision/x", *x_vals);
+//    nt->PutNumberArray("vision/y", *y_vals);
 }
 
 void Field::render() {

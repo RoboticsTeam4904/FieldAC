@@ -101,9 +101,12 @@ LidarScan::LidarScan(const LidarScan& other, int newOffset) {
     if (offset >= 360) {
         offset -= 360;
     }
+    offset %= 10*3*2*6;
+    while (offset >= 360) {
+        offset -= 360;
+    }
 }
-
-float LidarScan::compare(const LidarScan& expected) {
+float LidarScan::operator^(const LidarScan& expected){
     float err = 0;
     for(int i = 0; i < 360; i++) {
         if(getAtAngle(i) < expected.getAtAngle(i)) {
@@ -115,8 +118,10 @@ float LidarScan::compare(const LidarScan& expected) {
     return err;
 }
 
+
 LidarScan LidarScan::getAtLocation(int xCm, int yCm){
     //TODO: Implement getAtLocation functionality
+    //call raytrace and convert result to lidarscan
     return LidarScan();
 }
 LidarScan LidarScan::generateExpected(const Pose& pose){

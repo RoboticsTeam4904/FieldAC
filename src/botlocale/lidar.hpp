@@ -23,7 +23,7 @@ public:
 public:
 	LidarScan();
 	LidarScan(const LidarScan& other, int newOffset);
-	float compare(const LidarScan& expected);
+	float operator^(const LidarScan& expected);
 	LidarScan generateExpected(const Pose& pose);
 	LidarScan getAtLocation(int xCm, int yCm);
 	std::vector<float> raytrace(float x, float y);
