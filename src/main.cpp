@@ -117,7 +117,7 @@ int main(int argc, const char **argv) {
     std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
                              cubeTracker);
     std::printf("\n");
-//
+
 //    std::thread lidarRun(&Lidar::run,
 //                         lidar,
 //                         &ctrl_c_pressed);

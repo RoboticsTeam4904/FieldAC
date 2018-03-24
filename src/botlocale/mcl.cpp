@@ -23,7 +23,7 @@ Segment Segment::rotate(int anchor_x, int anchor_y, float angle) {
     auto x1_p = static_cast<int>(((x1 - anchor_x) * cos(angle) + (y1 - anchor_y) * sin(angle)) + anchor_x);
     auto x2_p = static_cast<int>(((x2 - anchor_x) * cos(angle) + (y2 - anchor_y) * sin(angle)) + anchor_x);
     auto y1_p = static_cast<int>((-(x1 - anchor_x) * sin(angle) + (y1 - anchor_y) * cos(angle)) + anchor_y);
-    auto y2_p = static_cast<int>((-(x1 - anchor_x) * sin(angle) + (y1 - anchor_y) * cos(angle)) + anchor_y);
+    auto y2_p = static_cast<int>((-(x2 - anchor_x) * sin(angle) + (y2 - anchor_y) * cos(angle)) + anchor_y);
     return Segment(x1_p, y1_p, x2_p, y2_p);
 }
 

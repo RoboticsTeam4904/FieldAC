@@ -13,6 +13,8 @@
 #define PI 3.14159265
 #define NETWORKTABLES_PORT 12345 // i don't know what it actually is
 #define TEAM_NUMBER 4904
+#define NACHI_SUQQQQ 1000
+
 
 Field::Field() = default;
 
@@ -30,6 +32,12 @@ void Field::load() {
      *  TODO: Create a field from a vector graphic file-format
      *  TODO: using an std::vector of Segments
      */
+    // For now, just generate a square field as a test
+    construct.emplace_back(Segment(0, 0, 0, 100));
+    construct.emplace_back(Segment(0, 100, 100, 100));
+    construct.emplace_back(Segment(100, 100, 100, 0));
+    construct.emplace_back(Segment(100, 0, 0, 0));
+    std::printf("%lu\n", construct.size());
     me.x = 250;
     me.y = 250;
     me.yaw = 0; // forward/up
@@ -37,10 +45,11 @@ void Field::load() {
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
     this->objects.clear(); // TODO degradation stuff
+    // Predict new targets, decrease probability of all, but increase probability of those that are similar to cubeTargets
     for (auto &i : cubeTargets) {
         Pose cubePose;
         cubePose.x = 100 + i.x;
-        cubePose.y = 50;
+        cubePose.y = 250 - ((13 * NACHI_SUQQQQ) / (0.5 * (i.w + i.h)));
         cubePose.probability = i.prob;
         this->objects.push_back(cubePose);
     }
@@ -61,6 +70,7 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
+    me.yaw += 0.01; // just for testing
     double x_vals[this->objects.size()];
     double y_vals[this->objects.size()];
     for (int i = 0; i < objects.size(); i++) {
