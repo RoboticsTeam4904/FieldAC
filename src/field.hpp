@@ -27,7 +27,7 @@ public:
     std::vector<Pose> robots;
     Pose me;
     cv::Mat renderedImage;
-    std::shared_ptr<NetworkTable> nt;
+    NT_Inst nt_inst;
 };
 
 #endif

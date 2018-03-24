@@ -11,7 +11,7 @@
 #include "./botlocale/mcl.hpp"
 
 #define PI 3.14159265
-#define NETWORKTABLES_PORT 12345 // i don't know what it actually is
+#define NETWORKTABLES_PORT 1735
 #define TEAM_NUMBER 4904
 #define NACHI_SUQQQQ 1000
 
@@ -41,6 +41,8 @@ void Field::load() {
     me.x = 250;
     me.y = 250;
     me.yaw = 0; // forward/up
+    nt_inst = nt::GetDefaultInstance();
+    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
@@ -53,7 +55,6 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         cubePose.probability = i.prob;
         this->objects.push_back(cubePose);
     }
-    nt::StartClientTeam(nt::GetDefaultInstance(), TEAM_NUMBER, NETWORKTABLES_PORT);
 }
 
 void Field::update(LidarScan scan) {
@@ -71,14 +72,16 @@ void Field::update(LidarScan scan) {
 void Field::tick() {
     render();
     me.yaw += 0.01; // just for testing
-    double x_vals[this->objects.size()];
-    double y_vals[this->objects.size()];
+    std::vector<double> x_vals;
+    std::vector<double> y_vals;
     for (int i = 0; i < objects.size(); i++) {
-        x_vals[i] = objects[i].x;
-        y_vals[i] = objects[i].y;
+        x_vals.push_back(objects[i].x);
+        y_vals.push_back(objects[i].y);
     }
-//    nt->PutNumberArray("vision/x", *x_vals);
-//    nt->PutNumberArray("vision/y", *y_vals);
+    auto x = nt::GetEntry(nt_inst, "/vision/x");
+    nt::SetEntryValue(x, nt::Value::MakeDoubleArray(x_vals));
+    auto y = nt::GetEntry(nt_inst, "/vision/y");
+    nt::SetEntryValue(y, nt::Value::MakeDoubleArray(y_vals));
 }
 
 
