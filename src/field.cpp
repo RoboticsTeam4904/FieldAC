@@ -8,22 +8,11 @@
 #include "./botlocale/lidar.hpp"
 #include <ntcore.h>
 #include <networktables/NetworkTable.h>
-
-
+#include "./botlocale/mcl.hpp"
 
 #define PI 3.14159265
 #define NETWORKTABLES_PORT 12345 // i don't know what it actually is
 #define TEAM_NUMBER 4904
-
-Segment::Segment(int xi, int yi, int xf, int yf) {
-    this->start = std::tuple<int, int>(xi, yi);
-    this->end = std::tuple<int, int>(xf, yf);
-}
-
-Segment::Segment(std::tuple<int, int> start, std::tuple<int, int> end) {
-    this->start = start;
-    this->end = end;
-}
 
 Field::Field() = default;
 
@@ -78,8 +67,13 @@ void Field::tick() {
         x_vals[i] = objects[i].x;
         y_vals[i] = objects[i].y;
     }
-    nt->PutNumberArray("vision/x", *x_vals);
-    nt->PutNumberArray("vision/y", *y_vals);
+//    nt->PutNumberArray("vision/x", *x_vals);
+//    nt->PutNumberArray("vision/y", *y_vals);
+}
+
+
+cv::Point tuple_to_point(std::tuple<int, int> t) {
+    return cv::Point(std::get<0>(t), std::get<1>(t));
 }
 
 void Field::render() {
@@ -95,6 +89,12 @@ void Field::render() {
              cv::Scalar(0, 0, 0),
              3
     );
+    for (auto &line : this->construct) {
+        // draw lines to represent field
+        // transform segment around robot
+        auto transformed = line.rotate(me.x, me.y, me.yaw);
+        cv::line(img, tuple_to_point(transformed.start), tuple_to_point(transformed.end), cv::Scalar(0, 0, 0), 3);
+    }
     for (auto &i : this->objects) {
 //        cv::ellipse(img, cv::Point(middle_x, middle_y), cv::Size(img.cols, img.rows), 0, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))-5, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))+5, cv::Scalar(50, 255, 255), -1);
         cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20),

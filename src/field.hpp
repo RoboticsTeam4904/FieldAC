@@ -7,15 +7,9 @@
 #include <tuple>
 #include "network/network.hpp"
 #include "./botlocale/lidar.hpp"
+#include "./botlocale/mcl.hpp"
 #include <ntcore.h>
 #include <networktables/NetworkTable.h>
-
-struct Segment {
-    Segment(int xi, int yi, int xf, int yf);
-    Segment(std::tuple<int, int> start, std::tuple<int, int> end);
-    std::tuple<int, int> start;
-    std::tuple<int, int> end;
-};
 
 class Field {
 private:

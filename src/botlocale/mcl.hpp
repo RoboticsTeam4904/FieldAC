@@ -13,4 +13,12 @@ namespace BotLocale {
     void tick();
 }
 
+struct Segment {
+    Segment(int xi, int yi, int xf, int yf);
+    Segment(std::tuple<int, int> start, std::tuple<int, int> end);
+    Segment rotate(int, int, float);
+    std::tuple<int, int> start;
+    std::tuple<int, int> end;
+};
+
 #endif

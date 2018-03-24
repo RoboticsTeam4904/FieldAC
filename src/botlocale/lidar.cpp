@@ -103,6 +103,7 @@ LidarScan::LidarScan(const LidarScan& other, int newOffset) {
     }
 }
 
+
 float LidarScan::compare(const LidarScan& expected) {
     float err = 0;
     for(int i = 0; i < 360; i++) {
@@ -119,6 +120,7 @@ LidarScan LidarScan::getAtLocation(int xCm, int yCm){
     //TODO: Implement getAtLocation functionality
     return LidarScan();
 }
+
 LidarScan LidarScan::generateExpected(const Pose& pose){
     return LidarScan(getAtLocation((int)pose.x,(int)pose.y), (int)(pose.yaw*180/M_PI));
 }
