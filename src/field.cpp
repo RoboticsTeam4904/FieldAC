@@ -9,6 +9,7 @@
 #include <ntcore.h>
 #include <networktables/NetworkTable.h>
 #include "./botlocale/mcl.hpp"
+#include "vision.hpp"
 
 #define PI 3.14159265
 #define NETWORKTABLES_PORT 1735
@@ -77,9 +78,11 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     }
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        cubePose.x = 100 + i.x; // fix. this should be cos(pixel-to-angle + robot yaw) * distance (which comes from width) + robot_x
-        cubePose.y = 250 - ((13 * NACHI_SUQQQQ) / (0.5f * (i.w +
-                                                           i.h))); // this should be size of cube * sin(pixel-to-angle + robot yaw) * distance + robot_y
+        auto angles = Vision::pixel_to_angle(i.x, i.y);
+        auto distance = i.h; // TODO: some function of the height/width
+        distance = 10; // for now just hard code it to a random value lol
+        cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
+        cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
         cubePose.probability = 0.5f + (i.prob / 2);
         // see if this cube was predicted
         for (auto &j : this->objects) {
