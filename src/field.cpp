@@ -71,7 +71,10 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
-    me.yaw += 0.01; // just for testing
+    this->put_vision_data();
+    this->get_sensor_data();
+}
+void Field::put_vision_data() {
     std::vector<double> x_vals;
     std::vector<double> y_vals;
     for (int i = 0; i < objects.size(); i++) {
@@ -82,6 +85,18 @@ void Field::tick() {
     nt::SetEntryValue(x, nt::Value::MakeDoubleArray(x_vals));
     auto y = nt::GetEntry(nt_inst, "/vision/y");
     nt::SetEntryValue(y, nt::Value::MakeDoubleArray(y_vals));
+}
+void Field::get_sensor_data() {
+    auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
+    this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
+    auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
+    this->latest_data.rightEncoder = nt::GetEntryValue(rightEncoder_table)->GetDouble();
+    auto accelX_table = nt::GetEntry(nt_inst, "/sensorData/accelX");
+    this->latest_data.accelX = nt::GetEntryValue(accelX_table)->GetDouble();
+    auto accelY_table = nt::GetEntry(nt_inst, "/sensorData/accelY");
+    this->latest_data.accelY = nt::GetEntryValue(accelY_table)->GetDouble();
+    auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
+    this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
 }
 
 void Field::render() {

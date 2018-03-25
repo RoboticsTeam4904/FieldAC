@@ -163,12 +163,12 @@ struct SegmentComparator {
     std::tuple<double, double> pos;
 };
 
-double LidarScan::raytrace(double robot_x, double robot_y) {
+double LidarScan::raytrace(double robot_x, double robot_y, float yaw_degrees) {
     std::tuple<double, double> pos = std::tuple<double, double>(robot_x, robot_y);
     double err = 0;
 
     for (auto measurement : measurements) {
-        auto rads = std::get<0>(measurement) * M_PI / 180;
+        auto rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180;
         auto direction = cv::Vec2f(std::cos(rads), std::sin(rads));
 
         std::vector<Segment> sorted_segments = Field::getInstance()->construct;

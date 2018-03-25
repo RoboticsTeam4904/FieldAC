@@ -27,7 +27,7 @@ public:
 	LidarScan(const LidarScan& other, int newOffset);
 	LidarScan generateExpected(const Pose& pose);
 	LidarScan getAtLocation(int xCm, int yCm);
-	double raytrace(double x, double y);
+	double raytrace(double x, double y, float yaw_degrees);
     cv::Point2f* intersect_ray_with_segment(cv::Point2f origin, cv::Vec2f direction, Segment seg);
 
     inline float getAtAngle(int angle) const {
