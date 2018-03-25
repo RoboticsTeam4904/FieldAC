@@ -127,12 +127,12 @@ void Field::dumpPosesToNT(std::vector<Pose> poses, std::string mainKey) {
         probs.push_back(pose.probability);
     }
     mainKey = "/vision/" + mainKey;
-    auto x = nt::GetEntry(nt_inst, mainKey + "/Xs");
+    auto x = nt::GetEntry(nt_inst, mainKey + "/xs");
     nt::SetEntryValue(x, nt::Value::MakeDoubleArray(xs));
-    auto y = nt::GetEntry(nt_inst, mainKey + "/Ys");
+    auto y = nt::GetEntry(nt_inst, mainKey + "/ys");
     nt::SetEntryValue(y, nt::Value::MakeDoubleArray(xs));
-    auto yaw = nt::GetEntry(nt_inst, mainKey + "/Yaws");
+    auto yaw = nt::GetEntry(nt_inst, mainKey + "/yaws");
     nt::SetEntryValue(yaw, nt::Value::MakeDoubleArray(Yaws));
-    auto prob = nt::GetEntry(nt_inst, mainKey + "/Probs");
+    auto prob = nt::GetEntry(nt_inst, mainKey + "/probs");
     nt::SetEntryValue(prob, nt::Value::MakeDoubleArray(probs));
 }
