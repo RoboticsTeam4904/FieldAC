@@ -37,10 +37,12 @@ public:
     std::vector<Segment> construct;
     std::vector<Pose> objects;
     std::vector<Pose> robots;
+    Pose pose_distribution[SAMPLES];
     Pose me;
     cv::Mat renderedImage;
     NT_Inst nt_inst;
     SensorData latest_data;
+    SensorData old_data;
 };
 
 #endif

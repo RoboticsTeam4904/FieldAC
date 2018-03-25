@@ -27,6 +27,12 @@ Segment Segment::rotate(double anchor_x, double anchor_y, float angle) {
     return Segment(x1_p, y1_p, x2_p, y2_p);
 }
 
+Pose* BotLocale::init() {
+    Pose poses[SAMPLES];
+    for (auto &pose : poses) {
+        pose.seed();
+    }
+}
 void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
                      const float measuredAccelYaw, std::string sensorData) {
     Pose n[SAMPLES];

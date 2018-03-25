@@ -43,6 +43,11 @@ void Field::load() {
     me.yaw = 0; // forward/up
     nt_inst = nt::GetDefaultInstance();
     nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
+
+    auto randomized = BotLocale::init();
+    for (int i = 0; i < SAMPLES; ++i) {
+        pose_distribution[i] = randomized[i];
+    }
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
@@ -72,7 +77,10 @@ void Field::update(LidarScan scan) {
 void Field::tick() {
     render();
     this->put_vision_data();
+    this->old_data = latest_data;
     this->get_sensor_data();
+    // TODO not sure which accel is forward or lateral
+    BotLocale::step(pose_distribution, latest_data.accelX, latest_data.accelY, latest_data.yaw-old_data.yaw, "is this even used?");
 }
 void Field::put_vision_data() {
     std::vector<double> x_vals;
