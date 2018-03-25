@@ -13,6 +13,7 @@
 #define PI 3.14159265
 #define TEAM_NUMBER 4904
 #define FOCAL_LENGTH 1000
+#define NETWORKTABLES_PORT 1735
 
 Segment::Segment(int xi, int yi, int xf, int yf) {
     this->start = std::tuple<int, int>(xi, yi);
