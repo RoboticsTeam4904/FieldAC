@@ -8,6 +8,7 @@ def s():
 	global n
 	image = WebCam.getImage()
 	Printing.save(image, name="TEST" + str(n))
+	print n
 	n += 1
 
 def o():
