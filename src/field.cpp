@@ -81,6 +81,7 @@ void Field::tick() {
     this->get_sensor_data();
     // TODO not sure which accel is forward or lateral
     BotLocale::step(pose_distribution, latest_data.accelX, latest_data.accelY, latest_data.yaw-old_data.yaw, "is this even used?");
+    me = BotLocale::get_best_pose(pose_distribution);
 }
 void Field::put_vision_data() {
     std::vector<double> x_vals;

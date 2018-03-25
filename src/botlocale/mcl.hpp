@@ -11,6 +11,7 @@ namespace BotLocale {
     void step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,const float measuredAccelYaw, std::string sensorData);
     void tick();
     Pose* init();
+    Pose get_best_pose(Pose[SAMPLES]);
 }
 
 struct Segment {

@@ -27,12 +27,14 @@ Segment Segment::rotate(double anchor_x, double anchor_y, float angle) {
     return Segment(x1_p, y1_p, x2_p, y2_p);
 }
 
-Pose* BotLocale::init() {
-    Pose poses[SAMPLES];
+Pose *BotLocale::init() {
+    static Pose poses[SAMPLES];
     for (auto &pose : poses) {
         pose.seed();
     }
+    return poses;
 }
+
 void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
                      const float measuredAccelYaw, std::string sensorData) {
     Pose n[SAMPLES];
@@ -53,4 +55,24 @@ void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, cons
             }
         }
     }
+}
+
+Pose BotLocale::get_best_pose(Pose input[SAMPLES]) {
+    Pose total_pose;
+    for (int i = 0; i < SAMPLES; ++i) {
+        total_pose.x += input[i].x;
+        total_pose.y += input[i].y;
+        total_pose.yaw += input[i].yaw;
+        total_pose.dx += input[i].dx;
+        total_pose.dy += input[i].dy;
+        total_pose.rateYaw += input[i].rateYaw;
+    }
+    Pose average_pose;
+    average_pose.x = total_pose.x / SAMPLES;
+    average_pose.y = total_pose.y / SAMPLES;
+    average_pose.yaw = total_pose.yaw / SAMPLES;
+    average_pose.dx = total_pose.dx / SAMPLES;
+    average_pose.dy = total_pose.dy / SAMPLES;
+    average_pose.rateYaw = total_pose.rateYaw / SAMPLES;
+    return average_pose;
 }
