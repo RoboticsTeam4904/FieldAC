@@ -56,8 +56,8 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         Pose cubePose;
         cubePose.x = 100 + i.x;
         cubePose.y = 250 - ((13 * FOCAL_LENGTH) / (0.5 * (i.w + i.h)));
+        cubePose.yaw = i.x; // TODO pl0x emperical pixels to degrees nikhil
         cubePose.probability = i.prob;
-        
         this->objects.push_back(cubePose);
     }
 }
@@ -69,6 +69,7 @@ void Field::update(LidarScan scan) {
         Pose cubePose;
         cubePose.x = 250 + static_cast<float>(cos((PI * i / 180) - (PI / 2)) * dist / 20);
         cubePose.y = 250 + static_cast<float>(sin((PI * i / 180) - (PI / 2)) * dist / 20);
+        cubePose.yaw = i
         cubePose.probability = 0.4;
         this->objects.push_back(cubePose);
     }
@@ -112,13 +113,16 @@ void Field::render() {
 void Field::dumpPosesToNT(std::vector<Pose> poses, std::string mainKey) {
     ArrayRef<double> xs;
     ArrayRef<double> ys;
+    ArrayRef<double> yaws;
     ArrayRef<double> probs;
     for (const Pose& pose : poses) {
-        xs.push_back(pose.x);
-        ys.push_back(pose.y);
+        xs.push_back((250 - pose.x) / 2); //I think this is the conversion from field to feet
+        ys.push_back((250 - pose.y) / 2);
+        yaws.push_back(pose.yaw);
         probs.push_back(pose.probability);
     }
     NetworkTable.PutNumberArray(StringRef(mainKey + "Xs"), xs);
     NetworkTable.PutNumberArray(StringRef(mainKey + "Ys"), ys);
+    NetworkTable.PutNumberArray(StringRef(mainKey + "Yaws"), yaws);
     NetworkTable.PutNumberArray(StringRef(mainKey + "Probs"), probs);
 }
