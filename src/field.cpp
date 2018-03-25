@@ -77,9 +77,9 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     }
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        cubePose.x = 100 + i.x; // fix. this should be cos(pixel-to-angle) * distance (which comes from width) + robot_x
+        cubePose.x = 100 + i.x; // fix. this should be cos(pixel-to-angle + robot yaw) * distance (which comes from width) + robot_x
         cubePose.y = 250 - ((13 * NACHI_SUQQQQ) / (0.5f * (i.w +
-                                                           i.h))); // this should be size of cube * sin(pixel-to-angle) * distance + robot_y
+                                                           i.h))); // this should be size of cube * sin(pixel-to-angle + robot yaw) * distance + robot_y
         cubePose.probability = 0.5f + (i.prob / 2);
         // see if this cube was predicted
         for (auto &j : this->objects) {
