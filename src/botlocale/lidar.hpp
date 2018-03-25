@@ -9,6 +9,8 @@
 #include "../objects.hpp"
 #include <vector>
 #include <tuple>
+#include <opencv/cv.h>
+#include "./mcl.hpp"
 
 #ifndef _countof
 #define _countof(_Array) (int)((sizeof(_Array)) / (sizeof(_Array[0])))
@@ -23,12 +25,12 @@ public:
 public:
 	LidarScan();
 	LidarScan(const LidarScan& other, int newOffset);
-	float compare(const LidarScan& expected);
 	LidarScan generateExpected(const Pose& pose);
 	LidarScan getAtLocation(int xCm, int yCm);
-	std::vector<float> raytrace(float x, float y);
+	double raytrace(double x, double y);
+    cv::Point2f* intersect_ray_with_segment(cv::Point2f origin, cv::Vec2f direction, Segment seg);
 
-	inline float getAtAngle(int angle) const {
+    inline float getAtAngle(int angle) const {
 		int o = angle + offset;
 		if(o >= 360)
 			o-=360;
@@ -53,5 +55,7 @@ public:
 	bool checkHealth();
 	LidarScan current_scan;
 };
+
+cv::Point2f tuple_to_point(std::tuple<double, double>);
 
 #endif

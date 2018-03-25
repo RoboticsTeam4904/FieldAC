@@ -5,17 +5,17 @@
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
-Segment::Segment(int xi, int yi, int xf, int yf) {
-    this->start = std::tuple<int, int>(xi, yi);
-    this->end = std::tuple<int, int>(xf, yf);
+Segment::Segment(double xi, double yi, double xf, double yf) {
+    this->start = std::tuple<double, double>(xi, yi);
+    this->end = std::tuple<double, double>(xf, yf);
 }
 
-Segment::Segment(std::tuple<int, int> start, std::tuple<int, int> end) {
+Segment::Segment(std::tuple<double, double> start, std::tuple<double, double> end) {
     this->start = start;
     this->end = end;
 }
 
-Segment Segment::rotate(int anchor_x, int anchor_y, float angle) {
+Segment Segment::rotate(double anchor_x, double anchor_y, float angle) {
     int x1 = std::get<0>(this->start);
     int x2 = std::get<0>(this->end);
     int y1 = std::get<1>(this->start);

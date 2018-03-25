@@ -2,7 +2,6 @@
 #define PROV_MCL_H
 
 #include "../objects.hpp"
-#include "lidar.hpp"
 
 #ifndef SAMPLES
 #define SAMPLES 1000
@@ -14,11 +13,11 @@ namespace BotLocale {
 }
 
 struct Segment {
-    Segment(int xi, int yi, int xf, int yf);
-    Segment(std::tuple<int, int> start, std::tuple<int, int> end);
-    Segment rotate(int, int, float);
-    std::tuple<int, int> start;
-    std::tuple<int, int> end;
+    Segment(double xi, double yi, double xf, double yf);
+    Segment(std::tuple<double, double> start, std::tuple<double, double> end);
+    Segment rotate(double, double, float);
+    std::tuple<double, double> start;
+    std::tuple<double, double> end;
 };
 
 #endif

@@ -50,8 +50,8 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     // Predict new targets, decrease probability of all, but increase probability of those that are similar to cubeTargets
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        cubePose.x = 100 + i.x;
-        cubePose.y = 250 - ((13 * NACHI_SUQQQQ) / (0.5 * (i.w + i.h)));
+        cubePose.x = 100 + i.x; // fix. this should be cos(pixel-to-angle) * width
+        cubePose.y = 250 - ((13 * NACHI_SUQQQQ) / (0.5 * (i.w + i.h))); // this should be size of cube * sin(pixel-to-angle)
         cubePose.probability = i.prob;
         this->objects.push_back(cubePose);
     }
@@ -82,11 +82,6 @@ void Field::tick() {
     nt::SetEntryValue(x, nt::Value::MakeDoubleArray(x_vals));
     auto y = nt::GetEntry(nt_inst, "/vision/y");
     nt::SetEntryValue(y, nt::Value::MakeDoubleArray(y_vals));
-}
-
-
-cv::Point tuple_to_point(std::tuple<int, int> t) {
-    return cv::Point(std::get<0>(t), std::get<1>(t));
 }
 
 void Field::render() {
