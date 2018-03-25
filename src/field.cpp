@@ -153,17 +153,18 @@ void Field::render() {
     int middle_y = img.rows / 2;
     cv::rectangle(img, cv::Rect(cv::Point2f(me.x - robotRadius / 2, me.y - robotRadius / 2),
                                 cv::Size(robotRadius, robotRadius)), cv::Scalar(0, 0, 0), 20);
-    cv::line(img, cv::Point(middle_x, middle_y),
-             cv::Point2f(static_cast<float>(middle_x + (cos(me.yaw - (PI / 2)) * robotRadius * 2)),
-                         static_cast<float>(middle_y + (sin(me.yaw - (PI / 2)) * robotRadius * 2))),
+    cv::line(img, cv::Point(me.x, me.y),
+             cv::Point2f(static_cast<float>(me.x + (cos(me.yaw - (PI / 2)) * robotRadius * 2)),
+                         static_cast<float>(me.y + (sin(me.yaw - (PI / 2)) * robotRadius * 2))),
              cv::Scalar(0, 0, 0),
              3
     );
     for (auto &line : this->construct) {
-        // draw lines to represent field
-        // transform segment around robot
-        auto transformed = line.rotate(me.x, me.y, me.yaw);
-        cv::line(img, tuple_to_point(transformed.start), tuple_to_point(transformed.end), cv::Scalar(0, 0, 0), 3);
+//        // draw lines to represent field
+//        // transform segment around robot
+//        auto transformed = line.rotate(me.x, me.y, me.yaw);
+//        cv::line(img, tuple_to_point(transformed.start), tuple_to_point(transformed.end), cv::Scalar(0, 0, 0), 3);
+        cv::line(img, tuple_to_point(line.start), tuple_to_point(line.end), cv::Scalar(0, 0, 0), 3);
     }
     for (auto &i : this->objects) {
 //        cv::ellipse(img, cv::Point(middle_x, middle_y), cv::Size(img.cols, img.rows), 0, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))-5, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))+5, cv::Scalar(50, 255, 255), -1);
