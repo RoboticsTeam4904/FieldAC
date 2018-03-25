@@ -86,9 +86,7 @@ int main(int argc, const char **argv) {
     defaultDev->registerListener([network](cv::Mat mat, int frameCount) {
         network->update(mat, frameCount);
     });
-    std::printf("Initializing network tables: https://www.youtube.com/watch?v=dQw4w9WgXcQ...\n");
-    NetworkTable::Initialize();
-
+}
 //    std::printf("Initializing Lidar...\n");
 //    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
 //                             parser.get<uint32_t>("ldr_baud"));

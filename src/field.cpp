@@ -6,7 +6,9 @@
 #include <math.h>
 #include <tuple>
 #include "./botlocale/lidar.hpp"
-#include "NetworkTable.cpp"
+#include <ntcore.h>
+#include <networktables/NetworkTable.h>
+
 
 #define PI 3.14159265
 #define TEAM_NUMBER 4904
@@ -47,6 +49,9 @@ void Field::load() {
     me.x = 250;
     me.y = 250;
     me.yaw = 0; // forward/up
+    std::printf("Initializing network tables: https://www.youtube.com/watch?v=dQw4w9WgXcQ...\n");
+    nt_inst = nt::GetDefaultInstance();
+    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
@@ -121,8 +126,13 @@ void Field::dumpPosesToNT(std::vector<Pose> poses, std::string mainKey) {
         yaws.push_back(pose.yaw);
         probs.push_back(pose.probability);
     }
-    NetworkTable.PutNumberArray(StringRef(mainKey + "Xs"), xs);
-    NetworkTable.PutNumberArray(StringRef(mainKey + "Ys"), ys);
-    NetworkTable.PutNumberArray(StringRef(mainKey + "Yaws"), yaws);
-    NetworkTable.PutNumberArray(StringRef(mainKey + "Probs"), probs);
+    mainKey = "/vision/" + mainKey;
+    auto x = nt::GetEntry(nt_inst, mainKey + "/Xs");
+    nt::SetEntryValue(x, nt::Value::MakeDoubleArray(xs));
+    auto y = nt::GetEntry(nt_inst, mainKey + "/Ys");
+    nt::SetEntryValue(y, nt::Value::MakeDoubleArray(xs));
+    auto yaw = nt::GetEntry(nt_inst, mainKey + "/Yaws");
+    nt::SetEntryValue(yaw, nt::Value::MakeDoubleArray(Yaws));
+    auto prob = nt::GetEntry(nt_inst, mainKey + "/Probs");
+    nt::SetEntryValue(prob, nt::Value::MakeDoubleArray(probs));
 }
