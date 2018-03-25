@@ -1,5 +1,6 @@
 #include "objects.hpp"
 #include <math.h>
+#include <cmath>
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
@@ -11,28 +12,31 @@
 
 Pose::Pose() = default;
 
-Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral, const float measuredAccelYaw) {
+Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral,
+           const float measuredAccelYaw) {
     x = static_cast<float>(prev.x + prev.dx);
     y = static_cast<float>(prev.y + prev.dy);
 
-    dx=static_cast<float>(prev.dx + measuredAccelForward * cos(prev.yaw) - measuredAccelLateral * sin(prev.yaw) + ZRAND * VELOCITY_NOISE);
-    dy=static_cast<float>(prev.dy + measuredAccelForward * sin(prev.yaw) + measuredAccelLateral * cos(prev.yaw) + ZRAND * VELOCITY_NOISE);
+    dx = static_cast<float>(prev.dx + measuredAccelForward * cos(prev.yaw) - measuredAccelLateral * sin(prev.yaw) +
+                            ZRAND * VELOCITY_NOISE);
+    dy = static_cast<float>(prev.dy + measuredAccelForward * sin(prev.yaw) + measuredAccelLateral * cos(prev.yaw) +
+                            ZRAND * VELOCITY_NOISE);
 
     yaw = prev.yaw + prev.rateYaw;
     rateYaw = prev.rateYaw + measuredAccelYaw + ZRAND * YAW_RATE_NOISE;
 }
 
 void Pose::seed() {
-    x=ZRAND;
-    y=RAND;
-    dx=0;
-    dy=0;
+    x = ZRAND;
+    y = RAND;
+    dx = 0;
+    dy = 0;
     rateYaw = 0;
     yaw = 0;
 }
 
 float Pose::plausibility(const std::string sensorData) {
-    if(x<-10 || x>10 || y<-10 || y>10) {
+    if (x < -10 || x > 10 || y < -10 || y > 10) {
         return 0.1;
     }
     return 1;
@@ -58,4 +62,8 @@ Pose &Pose::operator/(const int &other) {
     tmp.dy /= other;
     tmp.rateYaw /= other;
     return tmp;
+}
+
+bool Pose::operator==(const Pose &other) {
+    return (std::abs(this->x - other.x) < 3 && std::abs(this->y - other.y) < 3); // TODO tune this factor
 }

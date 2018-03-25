@@ -17,6 +17,7 @@ struct Pose {
     void seed();
     Pose& operator+(const Pose& other);
     Pose& operator/(const int& other);
+    bool operator==(const Pose& other);
 };
 
 #endif

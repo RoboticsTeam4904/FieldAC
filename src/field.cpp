@@ -14,6 +14,7 @@
 #define NETWORKTABLES_PORT 1735
 #define TEAM_NUMBER 4904
 #define NACHI_SUQQQQ 1000
+#define DEGRADATION_AMOUNT 0.05
 
 
 Field::Field() = default;
@@ -53,12 +54,41 @@ void Field::load() {
 void Field::update(std::vector<bbox_t> cubeTargets) {
     this->objects.clear(); // TODO degradation stuff
     // Predict new targets, decrease probability of all, but increase probability of those that are similar to cubeTargets
+    // Rotate points based on yawRate to get predicted pose
+    int i = 0;
+    for (auto &pose : this->objects) {
+        float s = sin(me.rateYaw);
+        float c = cos(me.rateYaw);
+
+        pose.x -= me.x;
+        pose.y -= me.y;
+
+        float xnew = pose.x * c - pose.y * s;
+        float ynew = pose.x * s + pose.y * c;
+
+        // translate point back:
+        pose.x = xnew + me.x;
+        pose.y = ynew + me.y;
+        pose.probability -= DEGRADATION_AMOUNT;
+        if (pose.probability < 1e-3) {
+            this->objects.erase(this->objects.begin() + i); // delet because it doesn't exist anymore
+        }
+        i++;
+    }
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        cubePose.x = 100 + i.x; // fix. this should be cos(pixel-to-angle) * width
-        cubePose.y = 250 - ((13 * NACHI_SUQQQQ) / (0.5 * (i.w + i.h))); // this should be size of cube * sin(pixel-to-angle)
-        cubePose.probability = i.prob;
-        this->objects.push_back(cubePose);
+        cubePose.x = 100 + i.x; // fix. this should be cos(pixel-to-angle) * distance (which comes from width) + robot_x
+        cubePose.y = 250 - ((13 * NACHI_SUQQQQ) / (0.5f * (i.w +
+                                                           i.h))); // this should be size of cube * sin(pixel-to-angle) * distance + robot_y
+        cubePose.probability = 0.5f + (i.prob / 2);
+        // see if this cube was predicted
+        for (auto &j : this->objects) {
+            if (cubePose == j) { // yep we predicted it (== is overloaded)
+                j = cubePose;
+            } else { // new cube
+                this->objects.push_back(cubePose);
+            }
+        }
     }
 }
 
@@ -80,9 +110,11 @@ void Field::tick() {
     this->old_data = latest_data;
     this->get_sensor_data();
     // TODO not sure which accel is forward or lateral
-    BotLocale::step(pose_distribution, latest_data.accelX, latest_data.accelY, latest_data.yaw-old_data.yaw, "is this even used?");
+    BotLocale::step(pose_distribution, latest_data.accelX, latest_data.accelY, latest_data.yaw - old_data.yaw,
+                    "is this even used?");
     me = BotLocale::get_best_pose(pose_distribution);
 }
+
 void Field::put_vision_data() {
     std::vector<double> x_vals;
     std::vector<double> y_vals;
@@ -95,17 +127,20 @@ void Field::put_vision_data() {
     auto y = nt::GetEntry(nt_inst, "/vision/y");
     nt::SetEntryValue(y, nt::Value::MakeDoubleArray(y_vals));
 }
+
 void Field::get_sensor_data() {
-    auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
-    this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
-    auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
-    this->latest_data.rightEncoder = nt::GetEntryValue(rightEncoder_table)->GetDouble();
-    auto accelX_table = nt::GetEntry(nt_inst, "/sensorData/accelX");
-    this->latest_data.accelX = nt::GetEntryValue(accelX_table)->GetDouble();
-    auto accelY_table = nt::GetEntry(nt_inst, "/sensorData/accelY");
-    this->latest_data.accelY = nt::GetEntryValue(accelY_table)->GetDouble();
-    auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
-    this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
+    while (this->latest_data == this->old_data) { // hang until we get new data
+        auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
+        this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
+        auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
+        this->latest_data.rightEncoder = nt::GetEntryValue(rightEncoder_table)->GetDouble();
+        auto accelX_table = nt::GetEntry(nt_inst, "/sensorData/accelX");
+        this->latest_data.accelX = nt::GetEntryValue(accelX_table)->GetDouble();
+        auto accelY_table = nt::GetEntry(nt_inst, "/sensorData/accelY");
+        this->latest_data.accelY = nt::GetEntryValue(accelY_table)->GetDouble();
+        auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
+        this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
+    }
 }
 
 void Field::render() {
