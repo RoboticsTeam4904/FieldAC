@@ -147,7 +147,7 @@ void Field::get_sensor_data() {
 }
 
 void Field::render() {
-    cv::Mat img(500, 500, CV_8UC3, cv::Scalar(255, 255, 255));
+    cv::Mat img(1700, 800, CV_8UC3, cv::Scalar(255, 255, 255));
     int robotRadius = 20;
     int middle_x = img.cols / 2;
     int middle_y = img.rows / 2;

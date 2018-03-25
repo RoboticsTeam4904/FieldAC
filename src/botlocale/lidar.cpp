@@ -73,6 +73,7 @@ void Lidar::run(const bool *stop) {
             for (int pos = 0; pos < (int) count; pos++) {
                 float angle = (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
                 tmp.measurements[((int) (angle + 0.5f)) % 360] = std::make_tuple(angle, nodes[pos].distance_q2 / 4.0f);
+                std::get<0>(tmp.measurements[((int) (angle + 0.5f)) % 360]) /= 10; // convert to centimeters
                 std::printf("%s theta: %03.2f Dist: %08.2f Q: %d\n",
                             (nodes[pos].sync_quality & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ? "S " : "  ",
                             (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f,
