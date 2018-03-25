@@ -2,6 +2,7 @@
 #define OBJECTS_H
 
 #include <string>
+#include <tuple>
 
 struct Pose {
     Pose();
