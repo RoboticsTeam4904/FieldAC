@@ -15,6 +15,17 @@ struct Pose {
     float probability;
     float plausibility(const std::string sensorData);
     void seed();
+    Pose& operator+(const Pose& other);
+    Pose& operator/(const int& other);
+    bool operator==(const Pose& other);
+};
+
+struct Segment {
+    Segment(double xi, double yi, double xf, double yf);
+    Segment(std::tuple<double, double> start, std::tuple<double, double> end);
+    Segment rotate(double, double, float);
+    std::tuple<double, double> start;
+    std::tuple<double, double> end;
 };
 
 #endif
