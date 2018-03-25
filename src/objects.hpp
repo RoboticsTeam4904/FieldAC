@@ -15,6 +15,8 @@ struct Pose {
     float probability;
     float plausibility(const std::string sensorData);
     void seed();
+    Pose& operator+(const Pose& other);
+    Pose& operator/(const int& other);
 };
 
 #endif

@@ -37,3 +37,25 @@ float Pose::plausibility(const std::string sensorData) {
     }
     return 1;
 }
+
+Pose &Pose::operator+(const Pose &other) {
+    static auto tmp = *this;
+    tmp.x += other.x;
+    tmp.y += other.y;
+    tmp.yaw += other.yaw;
+    tmp.dx += other.dx;
+    tmp.dy += other.dy;
+    tmp.rateYaw += other.rateYaw;
+    return tmp;
+}
+
+Pose &Pose::operator/(const int &other) {
+    static auto tmp = *this;
+    tmp.x /= other;
+    tmp.y /= other;
+    tmp.yaw /= other;
+    tmp.dx /= other;
+    tmp.dy /= other;
+    tmp.rateYaw /= other;
+    return tmp;
+}
