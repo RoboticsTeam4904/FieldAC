@@ -14,7 +14,7 @@
 #define TEAM_NUMBER 4904
 #define FOCAL_LENGTH 1000
 #define NETWORKTABLES_PORT 1735
-#define FIELD_SIZE std::tuple<int, int>(250, 250)
+#define FIELD_SIZE std::tuple<int, int>(500, 500)
 #define FEET_CONVERSION 24
 
 Segment::Segment(int xi, int yi, int xf, int yf) {
@@ -116,6 +116,7 @@ void Field::render() {
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
+// for all nt stuff we might want to use stringrefs insteaf of getEntries
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     ArrayRef<double> xs, ys, yaws, probs;
     for (const auto Pose& pose : poses) {
@@ -132,8 +133,26 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
 }
 
 void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<double>> data, std::string parent = "vision") {
-     mainKey = "/" + parent + "/" + mainKey + "/";
+    mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
-        nt::SetEntryValue(nt::GentEntry(nt_inst, mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
+        nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
     }
+}
+
+void Field::get_sensor_data_nt() {
+    this->latest_data.leftEncoder = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/leftEncoder"))->GetDouble();
+    this->latest_data.rightEncoder = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/rightEncoder"))->GetDouble();
+    this->latest_data.accelX = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelX"))->GetDouble();
+    this->latest_data.accelY = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelY"))->GetDouble();
+    this->latest_data.accelZ = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelZ"))->GetDouble();
+    this->latest_data.yaw = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/yaw"))->GetDouble();
+}
+
+std::map<std::string, double> Field::get_arrays_nt(std::ArrayRef<std::string> keys, std::string parent = "sensorData") {
+    std::string mainKey = "/" + parent + "/";
+    std::map<std::string, double> data;
+    for(const auto &i : data) {
+        data[i] = nt::GetEntryValue(StringRef(mainKey + i))->PutNumberArraygetDouble();
+    }
+    return data;
 }
