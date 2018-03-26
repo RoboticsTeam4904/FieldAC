@@ -116,12 +116,9 @@ void Field::render() {
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
-void Field::put_pose_data(std::vector<Pose> poses, std::string mainKey) {
-    ArrayRef<double> xs;
-    ArrayRef<double> ys;
-    ArrayRef<double> yaws;
-    ArrayRef<double> probs;
-    for (const Pose& pose : poses) {
+void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey) {
+    ArrayRef<double> xs, ys, yaws, probs;
+    for (const auto Pose& pose : poses) {
         xs.push_back((250 - pose.x) / 2); //I think this is the conversion from field to feet
         ys.push_back((250 - pose.y) / 2);
         yaws.push_back(pose.yaw);
@@ -132,4 +129,11 @@ void Field::put_pose_data(std::vector<Pose> poses, std::string mainKey) {
     nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/ys"), nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/yaws"), nt::Value::MakeDoubleArray(Yaws));
     nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/probs"), nt::Value::MakeDoubleArray(probs));
+}
+
+void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<double>> data) {
+     mainKey = "/vision/" + mainKey + "/";
+    for(const auto &i : data) {
+        nt::SetEntryValue(nt::GentEntry(nt_inst, mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
+    }
 }
