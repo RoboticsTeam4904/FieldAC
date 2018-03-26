@@ -27,7 +27,7 @@ Pose::Pose(const Pose prev, const float measuredAccelForward, const float measur
 }
 
 void Pose::seed() {
-    x = RAND*800;
+    x = RAND*849;
     y = RAND*1700;
     dx = 0;
     dy = 0;

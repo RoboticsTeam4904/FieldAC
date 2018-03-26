@@ -192,7 +192,7 @@ double LidarScan::raytrace(Pose robot_pose) {
                     err += (actual_mag - expected_mag);
                 }
                 free(intersection);
-                continue;
+                break;
             }
         }
     }

@@ -34,20 +34,69 @@ void Field::load() {
      *  TODO: Create a field from a vector graphic file-format
      *  TODO: using an std::vector of Segments
      */
-    // For now, just generate a square field as a test
 
-    construct.emplace_back(Segment(0, 0, 0, 1700));
-    construct.emplace_back(Segment(0, 1700, 800, 1700));
-    construct.emplace_back(Segment(800, 1700, 800, 0));
-    construct.emplace_back(Segment(800, 0, 0, 0));
-    std::printf("%lu\n", construct.size());
+    construct.emplace_back(Segment(75, 0, 0, 90));
+    construct.emplace_back(Segment(0, 90, 0, 1572));
+    construct.emplace_back(Segment(0, 1572, 75, 1660));
+    construct.emplace_back(Segment(75, 1660, 474, 1660));
+    construct.emplace_back(Segment(530, 1660, 775, 1660));
+    construct.emplace_back(Segment(775, 1660, 850, 1572));
+    construct.emplace_back(Segment(775, 1660, 850, 1572));
+    construct.emplace_back(Segment(850, 90, 850, 1572));
+    construct.emplace_back(Segment(775, 0, 850, 90));
+    construct.emplace_back(Segment(75, 0, 320, 0));
+    construct.emplace_back(Segment(376, 0, 775, 0));
+
+    construct.emplace_back(Segment(212, 330, 212, 500));
+    construct.emplace_back(Segment(212, 500, 636, 500));
+    construct.emplace_back(Segment(212, 330, 636, 330));
+    construct.emplace_back(Segment(636, 500, 636, 330));
+
+    construct.emplace_back(Segment(290, 808, 402, 808));
+    construct.emplace_back(Segment(402, 808, 402, 802));
+    construct.emplace_back(Segment(402, 802, 448, 802));
+    construct.emplace_back(Segment(448, 802, 448, 808));
+    construct.emplace_back(Segment(448, 808, 560, 808));
+    construct.emplace_back(Segment(560, 808, 560, 852));
+    construct.emplace_back(Segment(402, 852, 402, 858));
+    construct.emplace_back(Segment(402, 858, 448, 858));
+    construct.emplace_back(Segment(448, 858, 448, 852));
+    construct.emplace_back(Segment(448, 852, 560, 852));
+    construct.emplace_back(Segment(402, 852, 290, 852));
+    construct.emplace_back(Segment(290, 852, 290, 808));
+
+    construct.emplace_back(Segment(212, 1159, 212, 1302));
+    construct.emplace_back(Segment(212, 1302, 636, 1302));
+    construct.emplace_back(Segment(212, 1159, 636, 1159));
+    construct.emplace_back(Segment(636, 1302, 636, 1159));
+
+
+    field_width = 0;
+    field_height = 0;
+    for (auto seg : this->construct) {
+        if (std::get<0>(seg.start) > field_width) {
+            field_width = std::get<0>(seg.start);
+        }
+        if (std::get<0>(seg.end) > field_width) {
+            field_width = std::get<0>(seg.end);
+        }
+        if (std::get<1>(seg.start) > field_height) {
+            field_height = std::get<1>(seg.start);
+        }
+        if (std::get<1>(seg.end) > field_height) {
+            field_height = std::get<1>(seg.end);
+        }
+    }
+
+
+    std::printf("Field generated.\n\tNumber of segments: %lu\n\tSize: %f x %f\n", construct.size(), field_height, field_width);
     me.x = 250;
     me.y = 250;
     me.yaw = 0; // forward/up
     nt_inst = nt::GetDefaultInstance();
-    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
-    while (!nt::IsConnected(nt_inst))
-        continue;
+//    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
+//    while (!nt::IsConnected(nt_inst))
+//        continue;
 
     auto randomized = BotLocale::init();
     for (int i = 0; i < SAMPLES; ++i) {
@@ -104,19 +153,19 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
-    this->put_vision_data();
-    std::printf("published vision data\n");
-    this->old_data = latest_data;
-    this->get_sensor_data();
-    std::printf("got sensor data\n");
-    // TODO not sure which accel is forward or lateral
-    BotLocale::step(pose_distribution, latest_data.accelX,
-                    static_cast<const float>(latest_data.accelY),
-                    static_cast<const float>(latest_data.yaw - old_data.yaw),
-                    "is this even used?", latest_lidar_scan);
-    std::printf("stepped\n");
-    me = BotLocale::get_best_pose(pose_distribution);
-    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
+//    this->put_vision_data();
+//    std::printf("published vision data\n");
+//    this->old_data = latest_data;
+//    this->get_sensor_data();
+//    std::printf("got sensor data\n");
+//    // TODO not sure which accel is forward or lateral
+//    BotLocale::step(pose_distribution, latest_data.accelX,
+//                    static_cast<const float>(latest_data.accelY),
+//                    static_cast<const float>(latest_data.yaw - old_data.yaw),
+//                    "is this even used?", latest_lidar_scan);
+//    std::printf("stepped\n");
+//    me = BotLocale::get_best_pose(pose_distribution);
+//    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
 }
 
 void Field::put_vision_data() {
@@ -148,7 +197,7 @@ void Field::get_sensor_data() {
 }
 
 void Field::render() {
-    cv::Mat img(1700, 800, CV_8UC3, cv::Scalar(255, 255, 255));
+    cv::Mat img(field_height, field_width, CV_8UC3, cv::Scalar(255, 255, 255));
     int robotRadius = 20;
     int middle_x = img.cols / 2;
     int middle_y = img.rows / 2;

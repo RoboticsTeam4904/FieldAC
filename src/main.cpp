@@ -56,39 +56,39 @@ int main(int argc, const char **argv) {
         defaultDev = new Vision::Camera(parser.get<cv::String>("src"));
     }
 
-    std::printf("Initializing Darknet...");
-    Network* network;
+//    std::printf("Initializing Darknet...");
+//    Network* network;
+//
+//    std::printf("Beginning camera capture...\n");
+//    std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
+//    if(parser.get<cv::String>("net_save").empty()) {
+//        network = new Network(parser.get<cv::String>("net_cls"),
+//                              parser.get<cv::String>("net_cfg"),
+//                              parser.get<cv::String>("net_mdl"));
+//    } else {
+//        network = new Network(parser.get<cv::String>("net_cls"),
+//                              parser.get<cv::String>("net_cfg"),
+//                              parser.get<cv::String>("net_mdl"),
+//                              parser.get<cv::String>("net_save"),
+//                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
+//                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
+//    }
+//
+//    std::printf("Initializing Object Tracking: Cube Tracker...\n");
+//    auto cubeTracker = new ObjectTracking::CubeTracker(*network);
+//
+//    std::printf("Registering camera listener: Cube Tracker...\n");
+//    defaultDev->registerListener([cubeTracker](cv::Mat mat, int frameCount) {
+//        cubeTracker->update(mat, frameCount);
+//    });
+//    std::printf("Registering camera listener: Network...\n");
+//    defaultDev->registerListener([network](cv::Mat mat, int frameCount) {
+//        network->update(mat, frameCount);
+//    });
 
-    std::printf("Beginning camera capture...\n");
-    std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
-    if(parser.get<cv::String>("net_save").empty()) {
-        network = new Network(parser.get<cv::String>("net_cls"),
-                              parser.get<cv::String>("net_cfg"),
-                              parser.get<cv::String>("net_mdl"));
-    } else {
-        network = new Network(parser.get<cv::String>("net_cls"),
-                              parser.get<cv::String>("net_cfg"),
-                              parser.get<cv::String>("net_mdl"),
-                              parser.get<cv::String>("net_save"),
-                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_WIDTH),
-                              defaultDev->getCapProp(cv::CAP_PROP_FRAME_HEIGHT));
-    }
-
-    std::printf("Initializing Object Tracking: Cube Tracker...\n");
-    auto cubeTracker = new ObjectTracking::CubeTracker(*network);
-
-    std::printf("Registering camera listener: Cube Tracker...\n");
-    defaultDev->registerListener([cubeTracker](cv::Mat mat, int frameCount) {
-        cubeTracker->update(mat, frameCount);
-    });
-    std::printf("Registering camera listener: Network...\n");
-    defaultDev->registerListener([network](cv::Mat mat, int frameCount) {
-        network->update(mat, frameCount);
-    });
-
-    std::printf("Initializing Lidar...\n");
-    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
-                             parser.get<uint32_t>("ldr_baud"));
+//    std::printf("Initializing Lidar...\n");
+//    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
+//                             parser.get<uint32_t>("ldr_baud"));
 
 //    This code is non-threaded but also serves as a
 //    slightly cleaner demonstration of what's really being run.
@@ -118,27 +118,27 @@ int main(int argc, const char **argv) {
 //                             cubeTracker);
     std::printf("\n");
 
-    std::thread lidarRun(&Lidar::run,
-                         lidar,
-                         &ctrl_c_pressed);
+//    std::thread lidarRun(&Lidar::run,
+//                         lidar,
+//                         &ctrl_c_pressed);
 
     Field* field = Field::getInstance();
     field->load();
     while(true) {
-        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
-            return -1;
-        }
-        if(cv::waitKey(10) == 32) {
-            cubeTracker->recalc = true;
-        }
-        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
-            return -1;
-        }
-        if (ctrl_c_pressed){
-            break;
-        }
-        field->update(cubeTracker->optflow_targets);
-        field->update(lidar->current_scan);
+//        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
+//            return -1;
+//        }
+//        if(cv::waitKey(10) == 32) {
+//            cubeTracker->recalc = true;
+//        }
+//        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
+//            return -1;
+//        }
+//        if (ctrl_c_pressed){
+//            break;
+//        }
+//        field->update(cubeTracker->optflow_targets);
+//        field->update(lidar->current_scan);
         field->tick();
         defaultDev->displayImage(field->renderedImage, "Field");
     }
