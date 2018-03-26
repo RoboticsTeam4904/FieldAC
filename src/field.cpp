@@ -116,7 +116,7 @@ void Field::render() {
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
-void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey) {
+void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     ArrayRef<double> xs, ys, yaws, probs;
     for (const auto Pose& pose : poses) {
         xs.push_back((FIELD_SIZE.first - pose.x) / FEET_CONVERSION); 
@@ -124,15 +124,15 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey) {
         yaws.push_back(pose.yaw);
         probs.push_back(pose.probability);
     }
-    mainKey = "/vision/" + mainKey;
+    mainKey = "/" + parent + "/" + mainKey;
     nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/xs"), nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/ys"), nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/yaws"), nt::Value::MakeDoubleArray(Yaws));
     nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/probs"), nt::Value::MakeDoubleArray(probs));
 }
 
-void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<double>> data) {
-     mainKey = "/vision/" + mainKey + "/";
+void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<double>> data, std::string parent = "vision") {
+     mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
         nt::SetEntryValue(nt::GentEntry(nt_inst, mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
     }
