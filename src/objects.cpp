@@ -10,6 +10,7 @@
 
 #define YAW_RATE_NOISE 0.001
 
+
 Pose::Pose() = default;
 
 Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral,

@@ -10,6 +10,7 @@
 #include "objecttracking/cubetrack.hpp"
 #include "botlocale/lidar.hpp"
 #include "field.hpp"
+#include "NetworkTable.cpp"
 
 bool ctrl_c_pressed;
 void ctrlc(int)
@@ -135,6 +136,7 @@ int main(int argc, const char **argv) {
             return -1;
         }
         if (ctrl_c_pressed){
+            NetworkTable::Shutdown();
             break;
         }
         field->update(cubeTracker->optflow_targets);

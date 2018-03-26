@@ -12,9 +12,11 @@
 #include "vision.hpp"
 
 #define PI 3.14159265
-#define NETWORKTABLES_PORT 1735
 #define TEAM_NUMBER 4904
-#define NACHI_SUQQQQ 1000
+#define FOCAL_LENGTH 1000   
+#define NETWORKTABLES_PORT 1735
+#define FIELD_SIZE std::tuple<int, int>(500, 500)
+#define FEET_CONVERSION 24
 #define DEGRADATION_AMOUNT 0.05
 
 
@@ -175,25 +177,6 @@ void Field::put_vision_data() {
         x_vals.push_back(objects[i].x);
         y_vals.push_back(objects[i].y);
     }
-    auto x = nt::GetEntry(nt_inst, "/vision/x");
-    nt::SetEntryValue(x, nt::Value::MakeDoubleArray(x_vals));
-    auto y = nt::GetEntry(nt_inst, "/vision/y");
-    nt::SetEntryValue(y, nt::Value::MakeDoubleArray(y_vals));
-}
-
-void Field::get_sensor_data() {
-    auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
-    this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
-    auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
-    this->latest_data.rightEncoder = nt::GetEntryValue(rightEncoder_table)->GetDouble();
-    auto accelX_table = nt::GetEntry(nt_inst, "/sensorData/accelX");
-    this->latest_data.accelX = nt::GetEntryValue(accelX_table)->GetDouble();
-    auto accelY_table = nt::GetEntry(nt_inst, "/sensorData/accelY");
-    this->latest_data.accelY = nt::GetEntryValue(accelY_table)->GetDouble();
-    auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
-    this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
-    auto yaw = nt::GetEntry(nt_inst, "/sensorData/yaw");
-    this->latest_data.yaw = nt::GetEntryValue(yaw)->GetDouble();
 }
 
 void Field::render() {
@@ -229,4 +212,45 @@ void Field::render() {
 
     renderedImage = img;
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+}
+
+// for all nt stuff we might want to use stringrefs insteaf of getEntries
+void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
+    ArrayRef<double> xs, ys, yaws, probs;
+    for (const auto Pose& pose : poses) {
+        xs.push_back((Field->field_width - pose.x) / FEET_CONVERSION); 
+        ys.push_back((Field->field_height - pose.y) / FEET_CONVERSION);
+        yaws.push_back(pose.yaw);
+        probs.push_back(pose.probability);
+    }
+    mainKey = "/" + parent + "/" + mainKey;
+    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/xs"), nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/ys"), nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/yaws"), nt::Value::MakeDoubleArray(Yaws));
+    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/probs"), nt::Value::MakeDoubleArray(probs));
+}
+
+void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<double>> data, std::string parent = "vision") {
+    mainKey = "/" + parent + "/" + mainKey + "/";
+    for(const auto &i : data) {
+        nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
+    }
+}
+
+void Field::get_sensor_data_nt() {
+    this->latest_data.leftEncoder = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/leftEncoder"))->GetDouble();
+    this->latest_data.rightEncoder = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/rightEncoder"))->GetDouble();
+    this->latest_data.accelX = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelX"))->GetDouble();
+    this->latest_data.accelY = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelY"))->GetDouble();
+    this->latest_data.accelZ = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelZ"))->GetDouble();
+    this->latest_data.yaw = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/yaw"))->GetDouble();
+}
+
+std::map<std::string, double> Field::get_arrays_nt(std::ArrayRef<std::string> keys, std::string parent = "sensorData") {
+    std::string mainKey = "/" + parent + "/";
+    std::map<std::string, double> data;
+    for(const auto &i : data) {
+        data[i] = nt::GetEntryValue(StringRef(mainKey + i))->PutNumberArraygetDouble();
+    }
+    return data;
 }
