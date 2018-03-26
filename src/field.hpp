@@ -7,12 +7,22 @@
 #include <tuple>
 #include "network/network.hpp"
 #include "./botlocale/lidar.hpp"
+#include "./botlocale/mcl.hpp"
+#include <ntcore.h>
+#include <networktables/NetworkTable.h>
+#include "botlocale/lidar.hpp"
 
-struct Segment {
-    Segment(int xi, int yi, int xf, int yf);
-    Segment(std::tuple<int, int> start, std::tuple<int, int> end);
-    std::tuple<int, int> start;
-    std::tuple<int, int> end;
+
+struct SensorData {
+    double leftEncoder;
+    double rightEncoder;
+    double accelX;
+    double accelZ;
+    double accelY;
+    double yaw;
+    bool operator==(const SensorData other) {
+        return (leftEncoder == other.leftEncoder && rightEncoder == other.rightEncoder && accelX == other.accelX);
+    }
 };
 
 class Field {
@@ -25,12 +35,21 @@ public:
     void update(std::vector<bbox_t>);
     void update(LidarScan);
     void tick();
+    void get_sensor_data();
+    void put_vision_data();
     void render();
     std::vector<Segment> construct;
     std::vector<Pose> objects;
     std::vector<Pose> robots;
+    Pose pose_distribution[SAMPLES];
     Pose me;
     cv::Mat renderedImage;
+    NT_Inst nt_inst;
+    SensorData latest_data;
+    SensorData old_data;
+    LidarScan latest_lidar_scan;
+    double field_width;
+    double field_height;
 };
 
 #endif

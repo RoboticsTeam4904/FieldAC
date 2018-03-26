@@ -76,4 +76,8 @@ namespace Vision {
     double Camera::getCapProp(int propId) {
         return this->devCapture.get(propId);
     }
+
+    std::tuple<float, float> pixel_to_angle(double x, double y) {
+        return std::make_tuple(float(x), float(y)); // placeholder
+    };
 }

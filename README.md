@@ -47,6 +47,12 @@ A link to our labeled training data will be available [here](#) at the end of bu
 
 The YOLO model outputs a bounding box and class, which we use in conjunction with optical flow to detect and track cubes. This method allows us to run a heavier, more robust model while still maintaining real-time accuracy. The main downside to this approach is objects are less likely to be properly detected and tracked while the robot is in motion, due to the decreased operating frame-rate of the model.
 
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+
 ### Optical Flow
 
 We use the OpenCV implementation of the Lucas-Kanade optical flow method in between frames, then do large recalculations on each "keyframe" (darknet frame). The center of each detected object in the keyframe becomes a single feature to simplify the tracking. 

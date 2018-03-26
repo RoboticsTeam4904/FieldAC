@@ -22,7 +22,6 @@ namespace Vision {
 
         void captureImages();
         bool displayImage(cv::Mat frame, const std::string window);
-
         void registerListener(std::function<void (cv::Mat, int)> listener);
 
 //        std::vector<std::tuple<int, cv::Mat>> frameList;
@@ -55,6 +54,7 @@ namespace Vision {
         int frameCount;
         void notifyListeners(cv::Mat update);
     };
+    std::tuple<float, float> pixel_to_angle(double x, double y);
 }
 
 #endif

@@ -8,7 +8,8 @@
 #include "./botlocale/lidar.hpp"
 #include <ntcore.h>
 #include <networktables/NetworkTable.h>
-
+#include "./botlocale/mcl.hpp"
+#include "vision.hpp"
 
 #define PI 3.14159265
 #define TEAM_NUMBER 4904
@@ -16,16 +17,8 @@
 #define NETWORKTABLES_PORT 1735
 #define FIELD_SIZE std::tuple<int, int>(500, 500)
 #define FEET_CONVERSION 24
+#define DEGRADATION_AMOUNT 0.05
 
-Segment::Segment(int xi, int yi, int xf, int yf) {
-    this->start = std::tuple<int, int>(xi, yi);
-    this->end = std::tuple<int, int>(xf, yf);
-}
-
-Segment::Segment(std::tuple<int, int> start, std::tuple<int, int> end) {
-    this->start = start;
-    this->end = end;
-}
 
 Field::Field() = default;
 
@@ -43,73 +36,178 @@ void Field::load() {
      *  TODO: Create a field from a vector graphic file-format
      *  TODO: using an std::vector of Segments
      */
-    // For now, just generate a square field as a test
-    construct.emplace_back(Segment(0, 0, 0, 10));
-    construct.emplace_back(Segment(0, 10, 10, 10));
-    construct.emplace_back(Segment(10, 10, 10, 0));
-    construct.emplace_back(Segment(10, 0, 0, 0));
-    std::printf("%lu\n", construct.size());
-    me.x = FIELD_SIZE.first;
-    me.y = FIELD_SIZE.last;
+
+    construct.emplace_back(Segment(75, 0, 0, 90));
+    construct.emplace_back(Segment(0, 90, 0, 1572));
+    construct.emplace_back(Segment(0, 1572, 75, 1660));
+    construct.emplace_back(Segment(75, 1660, 474, 1660));
+    construct.emplace_back(Segment(530, 1660, 775, 1660));
+    construct.emplace_back(Segment(775, 1660, 850, 1572));
+    construct.emplace_back(Segment(775, 1660, 850, 1572));
+    construct.emplace_back(Segment(850, 90, 850, 1572));
+    construct.emplace_back(Segment(775, 0, 850, 90));
+    construct.emplace_back(Segment(75, 0, 320, 0));
+    construct.emplace_back(Segment(376, 0, 775, 0));
+
+    construct.emplace_back(Segment(212, 330, 212, 500));
+    construct.emplace_back(Segment(212, 500, 636, 500));
+    construct.emplace_back(Segment(212, 330, 636, 330));
+    construct.emplace_back(Segment(636, 500, 636, 330));
+
+    construct.emplace_back(Segment(290, 808, 402, 808));
+    construct.emplace_back(Segment(402, 808, 402, 802));
+    construct.emplace_back(Segment(402, 802, 448, 802));
+    construct.emplace_back(Segment(448, 802, 448, 808));
+    construct.emplace_back(Segment(448, 808, 560, 808));
+    construct.emplace_back(Segment(560, 808, 560, 852));
+    construct.emplace_back(Segment(402, 852, 402, 858));
+    construct.emplace_back(Segment(402, 858, 448, 858));
+    construct.emplace_back(Segment(448, 858, 448, 852));
+    construct.emplace_back(Segment(448, 852, 560, 852));
+    construct.emplace_back(Segment(402, 852, 290, 852));
+    construct.emplace_back(Segment(290, 852, 290, 808));
+
+    construct.emplace_back(Segment(212, 1159, 212, 1302));
+    construct.emplace_back(Segment(212, 1302, 636, 1302));
+    construct.emplace_back(Segment(212, 1159, 636, 1159));
+    construct.emplace_back(Segment(636, 1302, 636, 1159));
+
+
+    field_width = 0;
+    field_height = 0;
+    for (auto seg : this->construct) {
+        if (std::get<0>(seg.start) > field_width) {
+            field_width = std::get<0>(seg.start);
+        }
+        if (std::get<0>(seg.end) > field_width) {
+            field_width = std::get<0>(seg.end);
+        }
+        if (std::get<1>(seg.start) > field_height) {
+            field_height = std::get<1>(seg.start);
+        }
+        if (std::get<1>(seg.end) > field_height) {
+            field_height = std::get<1>(seg.end);
+        }
+    }
+
+
+    std::printf("Field generated.\n\tNumber of segments: %lu\n\tSize: %f x %f\n", construct.size(), field_height, field_width);
+    me.x = 250;
+    me.y = 250;
     me.yaw = 0; // forward/up
-    std::printf("Initializing network tables: https://www.youtube.com/watch?v=dQw4w9WgXcQ...\n");
     nt_inst = nt::GetDefaultInstance();
     nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
+    while (!nt::IsConnected(nt_inst))
+        continue;
+
+    auto randomized = BotLocale::init();
+    for (int i = 0; i < SAMPLES; ++i) {
+        pose_distribution[i] = randomized[i];
+    }
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
     this->objects.clear(); // TODO degradation stuff
     // Predict new targets, decrease probability of all, but increase probability of those that are similar to cubeTargets
+    // Rotate points based on yawRate to get predicted pose
+    int i = 0;
+    for (auto &pose : this->objects) {
+        float s = sin(me.rateYaw);
+        float c = cos(me.rateYaw);
+
+        pose.x -= me.x;
+        pose.y -= me.y;
+
+        float xnew = pose.x * c - pose.y * s;
+        float ynew = pose.x * s + pose.y * c;
+
+        // translate point back:
+        pose.x = xnew + me.x;
+        pose.y = ynew + me.y;
+        pose.probability -= DEGRADATION_AMOUNT;
+        if (pose.probability < 1e-3) {
+            this->objects.erase(this->objects.begin() + i); // delet because it doesn't exist anymore
+        }
+        i++;
+    }
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        cubePose.x = 100 + i.x;
-        cubePose.y = FIELD_SIZE.last - ((13 * FOCAL_LENGTH) / (0.5 * (i.w + i.h)));
-        cubePose.yaw = i.x; // TODO pl0x emperical pixels to degrees nikhil
-        cubePose.probability = i.prob;
-        this->objects.push_back(cubePose);
+        auto angles = Vision::pixel_to_angle(i.x, i.y);
+        auto distance = i.h; // TODO: some function of the height/width
+        distance = 10; // for now just hard code it to a random value lol
+        cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
+        cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
+        cubePose.probability = 0.5f + (i.prob / 2);
+        // see if this cube was predicted
+        for (auto &j : this->objects) {
+            if (cubePose == j) { // yep we predicted it (== is overloaded)
+                j = cubePose;
+            } else { // new cube
+                this->objects.push_back(cubePose);
+            }
+        }
     }
 }
 
 void Field::update(LidarScan scan) {
-    this->objects.clear(); // TODO degradation stuff
-    for (int i = 0; i < 360; ++i) {
-        auto dist = scan.getAtAngle(i);
-        Pose cubePose;
-        cubePose.x = FIELD_SIZE.first + static_cast<float>(cos((PI * i / 180) - (PI / 2)) * dist / 20);
-        cubePose.y = FIELD_SIZE.last + static_cast<float>(sin((PI * i / 180) - (PI / 2)) * dist / 20);
-        cubePose.yaw = i
-        cubePose.probability = 0.4;
-        this->objects.push_back(cubePose);
-    }
+    this->latest_lidar_scan = scan;
 }
 
 void Field::tick() {
     render();
-    double x_vals[this->objects.size()];
-    double y_vals[this->objects.size()];
+    this->put_vision_data();
+    std::printf("published vision data\n");
+    this->old_data = latest_data;
+    this->get_sensor_data();
+    std::printf("got sensor data\n");
+    // TODO not sure which accel is forward or lateral
+    BotLocale::step(pose_distribution, latest_data.accelX,
+                    static_cast<const float>(latest_data.accelY),
+                    static_cast<const float>(latest_data.yaw - old_data.yaw),
+                    "is this even used?", latest_lidar_scan);
+    std::printf("stepped\n");
+    me = BotLocale::get_best_pose(pose_distribution);
+    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
+}
+
+void Field::put_vision_data() {
+    std::vector<double> x_vals;
+    std::vector<double> y_vals;
     for (int i = 0; i < objects.size(); i++) {
-        x_vals[i] = objects[i].x;
-        y_vals[i] = objects[i].y;
+        x_vals.push_back(objects[i].x);
+        y_vals.push_back(objects[i].y);
     }
 }
 
 void Field::render() {
-    cv::Mat img(FIELD_SIZE.first, FIELD_SIZE.last, CV_8UC3, cv::Scalar(255, 255, 255));
+    cv::Mat img(field_height, field_width, CV_8UC3, cv::Scalar(255, 255, 255));
     int robotRadius = 20;
     int middle_x = img.cols / 2;
     int middle_y = img.rows / 2;
     cv::rectangle(img, cv::Rect(cv::Point2f(me.x - robotRadius / 2, me.y - robotRadius / 2),
                                 cv::Size(robotRadius, robotRadius)), cv::Scalar(0, 0, 0), 20);
-    cv::line(img, cv::Point(middle_x, middle_y),
-             cv::Point2f(middle_x + (cos(me.yaw - (PI / 2)) * robotRadius * 2),
-                         middle_y + (sin(me.yaw - (PI / 2)) * robotRadius * 2)),
+    cv::line(img, cv::Point(me.x, me.y),
+             cv::Point2f(static_cast<float>(me.x + (cos(me.yaw - (PI / 2)) * robotRadius * 2)),
+                         static_cast<float>(me.y + (sin(me.yaw - (PI / 2)) * robotRadius * 2))),
              cv::Scalar(0, 0, 0),
              3
     );
+    for (auto &line : this->construct) {
+//        // draw lines to represent field
+//        // transform segment around robot
+//        auto transformed = line.rotate(me.x, me.y, me.yaw);
+//        cv::line(img, tuple_to_point(transformed.start), tuple_to_point(transformed.end), cv::Scalar(0, 0, 0), 3);
+        cv::line(img, tuple_to_point(line.start), tuple_to_point(line.end), cv::Scalar(0, 0, 0), 3);
+    }
     for (auto &i : this->objects) {
 //        cv::ellipse(img, cv::Point(middle_x, middle_y), cv::Size(img.cols, img.rows), 0, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))-5, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))+5, cv::Scalar(50, 255, 255), -1);
         cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20),
                    cv::Scalar(20, 190, 190), -1);
+    }
+
+    for (auto p : this->pose_distribution) {
+        cv::circle(img, cv::Point2f(p.x, p.y), 1,
+                   cv::Scalar(255, 0, 0), -1);
     }
 
     renderedImage = img;
@@ -120,8 +218,8 @@ void Field::render() {
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     ArrayRef<double> xs, ys, yaws, probs;
     for (const auto Pose& pose : poses) {
-        xs.push_back((FIELD_SIZE.first - pose.x) / FEET_CONVERSION); 
-        ys.push_back((FIELD_SIZE.last - pose.y) / FEET_CONVERSION);
+        xs.push_back((Field->field_width - pose.x) / FEET_CONVERSION); 
+        ys.push_back((Field->field_height - pose.y) / FEET_CONVERSION);
         yaws.push_back(pose.yaw);
         probs.push_back(pose.probability);
     }
