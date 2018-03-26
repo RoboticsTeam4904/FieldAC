@@ -94,9 +94,9 @@ void Field::load() {
     me.y = 250;
     me.yaw = 0; // forward/up
     nt_inst = nt::GetDefaultInstance();
-//    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
-//    while (!nt::IsConnected(nt_inst))
-//        continue;
+    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
+    while (!nt::IsConnected(nt_inst))
+        continue;
 
     auto randomized = BotLocale::init();
     for (int i = 0; i < SAMPLES; ++i) {
@@ -153,19 +153,19 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
-//    this->put_vision_data();
-//    std::printf("published vision data\n");
-//    this->old_data = latest_data;
-//    this->get_sensor_data();
-//    std::printf("got sensor data\n");
-//    // TODO not sure which accel is forward or lateral
-//    BotLocale::step(pose_distribution, latest_data.accelX,
-//                    static_cast<const float>(latest_data.accelY),
-//                    static_cast<const float>(latest_data.yaw - old_data.yaw),
-//                    "is this even used?", latest_lidar_scan);
-//    std::printf("stepped\n");
-//    me = BotLocale::get_best_pose(pose_distribution);
-//    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
+    this->put_vision_data();
+    std::printf("published vision data\n");
+    this->old_data = latest_data;
+    this->get_sensor_data();
+    std::printf("got sensor data\n");
+    // TODO not sure which accel is forward or lateral
+    BotLocale::step(pose_distribution, latest_data.accelX,
+                    static_cast<const float>(latest_data.accelY),
+                    static_cast<const float>(latest_data.yaw - old_data.yaw),
+                    "is this even used?", latest_lidar_scan);
+    std::printf("stepped\n");
+    me = BotLocale::get_best_pose(pose_distribution);
+    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
 }
 
 void Field::put_vision_data() {
