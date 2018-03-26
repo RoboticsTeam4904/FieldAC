@@ -94,7 +94,7 @@ void Field::tick() {
 }
 
 void Field::render() {
-    cv::Mat img(500, 500, CV_8UC3, cv::Scalar(255, 255, 255));
+    cv::Mat img(FIELD_SIZE.first, FIELD_SIZE.last, CV_8UC3, cv::Scalar(255, 255, 255));
     int robotRadius = 20;
     int middle_x = img.cols / 2;
     int middle_y = img.rows / 2;
