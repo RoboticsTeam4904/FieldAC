@@ -14,6 +14,8 @@
 #define TEAM_NUMBER 4904
 #define FOCAL_LENGTH 1000
 #define NETWORKTABLES_PORT 1735
+#define FIELD_SIZE std::tuple<int, int>(250, 250)
+#define FEET_CONVERSION 24
 
 Segment::Segment(int xi, int yi, int xf, int yf) {
     this->start = std::tuple<int, int>(xi, yi);
@@ -47,8 +49,8 @@ void Field::load() {
     construct.emplace_back(Segment(10, 10, 10, 0));
     construct.emplace_back(Segment(10, 0, 0, 0));
     std::printf("%lu\n", construct.size());
-    me.x = 250;
-    me.y = 250;
+    me.x = FIELD_SIZE.first;
+    me.y = FIELD_SIZE.last;
     me.yaw = 0; // forward/up
     std::printf("Initializing network tables: https://www.youtube.com/watch?v=dQw4w9WgXcQ...\n");
     nt_inst = nt::GetDefaultInstance();
@@ -61,7 +63,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     for (auto &i : cubeTargets) {
         Pose cubePose;
         cubePose.x = 100 + i.x;
-        cubePose.y = 250 - ((13 * FOCAL_LENGTH) / (0.5 * (i.w + i.h)));
+        cubePose.y = FIELD_SIZE.last - ((13 * FOCAL_LENGTH) / (0.5 * (i.w + i.h)));
         cubePose.yaw = i.x; // TODO pl0x emperical pixels to degrees nikhil
         cubePose.probability = i.prob;
         this->objects.push_back(cubePose);
@@ -73,8 +75,8 @@ void Field::update(LidarScan scan) {
     for (int i = 0; i < 360; ++i) {
         auto dist = scan.getAtAngle(i);
         Pose cubePose;
-        cubePose.x = 250 + static_cast<float>(cos((PI * i / 180) - (PI / 2)) * dist / 20);
-        cubePose.y = 250 + static_cast<float>(sin((PI * i / 180) - (PI / 2)) * dist / 20);
+        cubePose.x = FIELD_SIZE.first + static_cast<float>(cos((PI * i / 180) - (PI / 2)) * dist / 20);
+        cubePose.y = FIELD_SIZE.last + static_cast<float>(sin((PI * i / 180) - (PI / 2)) * dist / 20);
         cubePose.yaw = i
         cubePose.probability = 0.4;
         this->objects.push_back(cubePose);
@@ -89,8 +91,6 @@ void Field::tick() {
         x_vals[i] = objects[i].x;
         y_vals[i] = objects[i].y;
     }
-//    nt->PutNumberArray("vision/x", *x_vals);
-//    nt->PutNumberArray("vision/y", *y_vals);
 }
 
 void Field::render() {
@@ -119,8 +119,8 @@ void Field::render() {
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey) {
     ArrayRef<double> xs, ys, yaws, probs;
     for (const auto Pose& pose : poses) {
-        xs.push_back((250 - pose.x) / 2); //I think this is the conversion from field to feet
-        ys.push_back((250 - pose.y) / 2);
+        xs.push_back((FIELD_SIZE.first - pose.x) / FEET_CONVERSION); 
+        ys.push_back((FIELD_SIZE.last - pose.y) / FEET_CONVERSION);
         yaws.push_back(pose.yaw);
         probs.push_back(pose.probability);
     }
