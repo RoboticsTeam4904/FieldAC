@@ -40,8 +40,8 @@ download_project(PROJ rplidar
 #        DOWNLOAD_NO_PROGRESS 1)
 
 download_project(PROJ ntcore
-        GIT_REPOSITORY https://github.com/wpilibsuite/ntcore
-        GIT_TAG 3025a18
+        GIT_REPOSITORY https://github.com/PeterJohnson/ntcore
+        GIT_TAG nativearm
         GIT_SHALLOW 1)
 
 download_project(PROJ wpiutil
