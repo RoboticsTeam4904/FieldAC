@@ -116,7 +116,7 @@ void Field::render() {
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
-void Field::dumpPosesToNT(std::vector<Pose> poses, std::string mainKey) {
+void Field::put_pose_data(std::vector<Pose> poses, std::string mainKey) {
     ArrayRef<double> xs;
     ArrayRef<double> ys;
     ArrayRef<double> yaws;
@@ -128,12 +128,8 @@ void Field::dumpPosesToNT(std::vector<Pose> poses, std::string mainKey) {
         probs.push_back(pose.probability);
     }
     mainKey = "/vision/" + mainKey;
-    auto x = nt::GetEntry(nt_inst, mainKey + "/xs");
-    nt::SetEntryValue(x, nt::Value::MakeDoubleArray(xs));
-    auto y = nt::GetEntry(nt_inst, mainKey + "/ys");
-    nt::SetEntryValue(y, nt::Value::MakeDoubleArray(xs));
-    auto yaw = nt::GetEntry(nt_inst, mainKey + "/yaws");
-    nt::SetEntryValue(yaw, nt::Value::MakeDoubleArray(Yaws));
-    auto prob = nt::GetEntry(nt_inst, mainKey + "/probs");
-    nt::SetEntryValue(prob, nt::Value::MakeDoubleArray(probs));
+    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/xs"), nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/ys"), nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/yaws"), nt::Value::MakeDoubleArray(Yaws));
+    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/probs"), nt::Value::MakeDoubleArray(probs));
 }
