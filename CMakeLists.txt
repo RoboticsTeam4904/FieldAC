@@ -91,14 +91,14 @@ add_custom_command(TARGET field
 
 add_custom_command(TARGET field
         PRE_BUILD
-        COMMAND ./gradlew build -PskipAthena -PreleaseBuild -PskipAllTests
+        COMMAND ./gradlew build -PskipAthena -PskipAllTests
         COMMAND cp ${ntcore_GRADLE_DIR}/libs/ntcore/shared/libntcore.dylib ${CMAKE_BINARY_DIR}/
         COMMENT "Building ntcore..."
         WORKING_DIRECTORY ${ntcore_SOURCE_DIR})
 
 add_custom_command(TARGET field
         PRE_BUILD
-        COMMAND ./gradlew build -PskipAthena -PreleaseBuild -PskipAllTests
+        COMMAND ./gradlew build -PskipAthena -PskipAllTests
         COMMAND cp ${wpiutil_GRADLE_DIR}/libs/wpiutil/shared/libwpiutil.dylib ${CMAKE_BINARY_DIR}/
         COMMENT "Building wpiutil..."
         WORKING_DIRECTORY ${wpiutil_SOURCE_DIR})
