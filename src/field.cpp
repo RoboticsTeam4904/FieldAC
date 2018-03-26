@@ -104,7 +104,7 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
-//    this->put_vision_data();
+    this->put_vision_data();
     std::printf("published vision data\n");
     this->old_data = latest_data;
     this->get_sensor_data();

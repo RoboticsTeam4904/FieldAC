@@ -202,20 +202,20 @@ namespace ObjectTracking {
                     // Carry over features which /were/ tracked.
                     features_next[j++] = features_next[i];
 
-                    cv::Mat mask;
-                    int b = (unsigned) cv::theRNG() & 255;
-                    int g = (unsigned) cv::theRNG() & 255;
-                    int r = (unsigned) cv::theRNG() & 255;
-                    cv::Rect ccomp;
-                    int lo = 4;
-                    int hi = 4;
-                    cv::Canny(optflowFrame, mask, 100, 150);
-                    cv::copyMakeBorder(mask, mask, 1, 1, 1, 1, cv::BORDER_REPLICATE);
+//                    cv::Mat mask;
+//                    int b = (unsigned) cv::theRNG() & 255;
+//                    int g = (unsigned) cv::theRNG() & 255;
+//                    int r = (unsigned) cv::theRNG() & 255;
+//                    cv::Rect ccomp;
+//                    int lo = 4;
+//                    int hi = 4;
+//                    cv::Canny(optflowFrame, mask, 100, 150);
+//                    cv::copyMakeBorder(mask, mask, 1, 1, 1, 1, cv::BORDER_REPLICATE);
 
-                    int area = floodFill(optflowFrame, mask, features_next[i], cv::Scalar(b, g, r), &ccomp,
-                                         cv::Scalar(lo, lo, lo),
-                                         cv::Scalar(hi, hi, hi),
-                                         4); // https://docs.opencv.org/3.3.0/d5/d26/ffilldemo_8cpp-example.html
+//                    int area = floodFill(optflowFrame, mask, features_next[i], cv::Scalar(b, g, r), &ccomp,
+//                                         cv::Scalar(lo, lo, lo),
+//                                         cv::Scalar(hi, hi, hi),
+//                                         4); // https://docs.opencv.org/3.3.0/d5/d26/ffilldemo_8cpp-example.html
                     cv::circle(optflowFrame, features_next[i], 3, cv::Scalar(80, 50, 40), -1, 8);
                     // uncomment the following lines if you want flood fill boxes
 //                    opticalFlowBox[i].x = static_cast<unsigned int>(ccomp.x);
