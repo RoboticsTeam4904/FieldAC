@@ -36,16 +36,18 @@ void Field::load() {
      */
     // For now, just generate a square field as a test
 
-    construct.emplace_back(Segment(0, 0, 0, 100));
-    construct.emplace_back(Segment(0, 100, 100, 100));
-    construct.emplace_back(Segment(100, 100, 100, 0));
-    construct.emplace_back(Segment(100, 0, 0, 0));
+    construct.emplace_back(Segment(0, 0, 0, 1700));
+    construct.emplace_back(Segment(0, 1700, 800, 1700));
+    construct.emplace_back(Segment(800, 1700, 800, 0));
+    construct.emplace_back(Segment(800, 0, 0, 0));
     std::printf("%lu\n", construct.size());
     me.x = 250;
     me.y = 250;
     me.yaw = 0; // forward/up
     nt_inst = nt::GetDefaultInstance();
     nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
+    while (!nt::IsConnected(nt_inst))
+        continue;
 
     auto randomized = BotLocale::init();
     for (int i = 0; i < SAMPLES; ++i) {
@@ -102,13 +104,19 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
-    this->put_vision_data();
+//    this->put_vision_data();
+    std::printf("published vision data\n");
     this->old_data = latest_data;
     this->get_sensor_data();
+    std::printf("got sensor data\n");
     // TODO not sure which accel is forward or lateral
-    BotLocale::step(pose_distribution, latest_data.accelX, latest_data.accelY, latest_data.yaw - old_data.yaw,
+    BotLocale::step(pose_distribution, latest_data.accelX,
+                    static_cast<const float>(latest_data.accelY),
+                    static_cast<const float>(latest_data.yaw - old_data.yaw),
                     "is this even used?", latest_lidar_scan);
+    std::printf("stepped\n");
     me = BotLocale::get_best_pose(pose_distribution);
+    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
 }
 
 void Field::put_vision_data() {
@@ -125,18 +133,18 @@ void Field::put_vision_data() {
 }
 
 void Field::get_sensor_data() {
-    while (this->latest_data == this->old_data) { // hang until we get new data
-        auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
-        this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
-        auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
-        this->latest_data.rightEncoder = nt::GetEntryValue(rightEncoder_table)->GetDouble();
-        auto accelX_table = nt::GetEntry(nt_inst, "/sensorData/accelX");
-        this->latest_data.accelX = nt::GetEntryValue(accelX_table)->GetDouble();
-        auto accelY_table = nt::GetEntry(nt_inst, "/sensorData/accelY");
-        this->latest_data.accelY = nt::GetEntryValue(accelY_table)->GetDouble();
-        auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
-        this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
-    }
+    auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
+    this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
+    auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
+    this->latest_data.rightEncoder = nt::GetEntryValue(rightEncoder_table)->GetDouble();
+    auto accelX_table = nt::GetEntry(nt_inst, "/sensorData/accelX");
+    this->latest_data.accelX = nt::GetEntryValue(accelX_table)->GetDouble();
+    auto accelY_table = nt::GetEntry(nt_inst, "/sensorData/accelY");
+    this->latest_data.accelY = nt::GetEntryValue(accelY_table)->GetDouble();
+    auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
+    this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
+    auto yaw = nt::GetEntry(nt_inst, "/sensorData/yaw");
+    this->latest_data.yaw = nt::GetEntryValue(yaw)->GetDouble();
 }
 
 void Field::render() {
@@ -163,6 +171,11 @@ void Field::render() {
 //        cv::ellipse(img, cv::Point(middle_x, middle_y), cv::Size(img.cols, img.rows), 0, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))-5, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))+5, cv::Scalar(50, 255, 255), -1);
         cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20),
                    cv::Scalar(20, 190, 190), -1);
+    }
+
+    for (auto p : this->pose_distribution) {
+        cv::circle(img, cv::Point2f(p.x, p.y), 1,
+                   cv::Scalar(255, 0, 0), -1);
     }
 
     renderedImage = img;

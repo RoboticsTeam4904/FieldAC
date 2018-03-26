@@ -14,14 +14,15 @@ Pose *BotLocale::init() {
     return poses;
 }
 
-void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
+Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
                      const float measuredAccelYaw, std::string sensorData, LidarScan scan) {
     Pose n[SAMPLES];
     float weights[SAMPLES];
     float weightsSum = 0;
     for (int i = 0; i < SAMPLES; i++) {
         n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, measuredAccelYaw);
-        weights[i] = static_cast<float>(scan.raytrace(n[i]));
+        weights[i] = 1.0f/static_cast<float>(scan.raytrace(n[i])); //TODO who knows
+        n[i].probability = weights[i];
         weightsSum += weights[i];
     }
     for (int i = 0; i < SAMPLES; i++) {
@@ -34,6 +35,7 @@ void BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, cons
             }
         }
     }
+    return input;
 }
 
 Pose BotLocale::get_best_pose(Pose input[SAMPLES]) {

@@ -6,29 +6,29 @@
 
 #define ZRAND (RAND - 0.5)
 
-#define VELOCITY_NOISE 0.0001
+#define VELOCITY_NOISE 0.001
 
-#define YAW_RATE_NOISE 0.0001
+#define YAW_RATE_NOISE 0.001
 
 Pose::Pose() = default;
 
 Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral,
            const float measuredAccelYaw) {
-    x = static_cast<float>(prev.x + prev.dx);
-    y = static_cast<float>(prev.y + prev.dy);
+    x = prev.x + prev.dx;
+    y = prev.y + prev.dy;
 
     dx = static_cast<float>(prev.dx + measuredAccelForward * cos(prev.yaw) - measuredAccelLateral * sin(prev.yaw) +
-                            ZRAND * VELOCITY_NOISE);
+            (ZRAND * VELOCITY_NOISE));
     dy = static_cast<float>(prev.dy + measuredAccelForward * sin(prev.yaw) + measuredAccelLateral * cos(prev.yaw) +
-                            ZRAND * VELOCITY_NOISE);
+            (ZRAND * VELOCITY_NOISE));
 
     yaw = prev.yaw + prev.rateYaw;
-    rateYaw = prev.rateYaw + measuredAccelYaw + ZRAND * YAW_RATE_NOISE;
+    rateYaw = static_cast<float>(prev.rateYaw + measuredAccelYaw + (ZRAND * YAW_RATE_NOISE));
 }
 
 void Pose::seed() {
-    x = ZRAND;
-    y = RAND;
+    x = RAND*800;
+    y = RAND*1700;
     dx = 0;
     dy = 0;
     rateYaw = 0;
@@ -43,24 +43,24 @@ float Pose::plausibility(const std::string sensorData) {
 }
 
 Pose &Pose::operator+(const Pose &other) {
-    static auto tmp = *this;
-    tmp.x += other.x;
-    tmp.y += other.y;
-    tmp.yaw += other.yaw;
-    tmp.dx += other.dx;
-    tmp.dy += other.dy;
-    tmp.rateYaw += other.rateYaw;
+    static auto tmp = Pose();
+    tmp.x = this->x + other.x;
+    tmp.y = this->y + other.y;
+    tmp.yaw = this->yaw + other.yaw;
+    tmp.dx = this->dx + other.dx;
+    tmp.dy = this->dy + other.dy;
+    tmp.rateYaw = this->rateYaw + other.rateYaw;
     return tmp;
 }
 
 Pose &Pose::operator/(const int &other) {
-    static auto tmp = *this;
-    tmp.x /= other;
-    tmp.y /= other;
-    tmp.yaw /= other;
-    tmp.dx /= other;
-    tmp.dy /= other;
-    tmp.rateYaw /= other;
+    static auto tmp = Pose();
+    tmp.x = this->x / other;
+    tmp.y = this->y / other;
+    tmp.yaw = this->yaw / other;
+    tmp.dx = this->dx / other;
+    tmp.dy = this->dy / other;
+    tmp.rateYaw = this->rateYaw + other;
     return tmp;
 }
 

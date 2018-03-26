@@ -5,11 +5,11 @@
 #include "lidar.hpp"
 
 #ifndef SAMPLES
-#define SAMPLES 1000
+#define SAMPLES 500
 #endif
 
 namespace BotLocale {
-    void step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,const float measuredAccelYaw, std::string sensorData, LidarScan scan);
+    Pose* step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,const float measuredAccelYaw, std::string sensorData, LidarScan scan);
     void tick();
     Pose* init();
     Pose get_best_pose(Pose[SAMPLES]);

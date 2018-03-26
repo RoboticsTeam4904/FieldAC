@@ -138,7 +138,7 @@ int main(int argc, const char **argv) {
             break;
         }
         field->update(cubeTracker->optflow_targets);
-//        field->update(lidar->current_scan);
+        field->update(lidar->current_scan);
         field->tick();
         defaultDev->displayImage(field->renderedImage, "Field");
     }

@@ -17,8 +17,8 @@ struct SensorData {
     double leftEncoder;
     double rightEncoder;
     double accelX;
-    double accelY;
     double accelZ;
+    double accelY;
     double yaw;
     bool operator==(const SensorData other) {
         return (leftEncoder == other.leftEncoder && rightEncoder == other.rightEncoder && accelX == other.accelX);
