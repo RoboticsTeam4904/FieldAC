@@ -17,7 +17,7 @@
 #define NETWORKTABLES_PORT 1735
 #define FIELD_SIZE std::tuple<int, int>(500, 500)
 #define DEGRADATION_AMOUNT 0.05
-#define CM_TO_FEET
+#define CM_TO_FEET 0.0328084
 
 
 Field::Field() = default;
