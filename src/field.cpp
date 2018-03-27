@@ -157,6 +157,10 @@ void Field::tick() {
     this->render();
     this->put_pose_nt(this->objects, "cubes");
     std::printf("published cube data\n");
+    map<std::string, double> lData;
+    lData.insert(std::make_pair("frontDist", dist_front_obstacle()));
+    lData.insert(std::make_pair("x", dist_front_obstacle()));
+    lData.insert(std::)
     this->put_values_nt("localization", std::map<std::string, double>{
         "frontDist": dist_front_obstacle(), "x":FT(me.x), "y":FT(me.y)});
     std::printf("published localization data\n");
@@ -214,16 +218,16 @@ float Field::dist_front_obstacle() {
 // for all nt stuff we might want to use stringrefs insteaf of getEntries
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     ArrayRef<double> xs, ys, yaws, probs;
-    for (const auto Pose& pose : poses) {
-        xs.push_back(FT(Field->field_width - pose.x)); 
-        ys.push_back(FT(Field->field_height - pose.y));
+    for (const Pose &pose : poses) {
+        xs.push_back(FT(this->field_width - pose.x)); 
+        ys.push_back(FT(this->field_height - pose.y));
         yaws.push_back(pose.yaw);
         probs.push_back(pose.probability);
     }
     mainKey = "/" + parent + "/" + mainKey;
     nt::SetEntryValue(StringRef(mainKey + "/x"), nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(StringRef(mainKey + "/y"), nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(StringRef(mainKey + "/yaw"), nt::Value::MakeDoubleArray(Yaws));
+    nt::SetEntryValue(StringRef(mainKey + "/yaw"), nt::Value::MakeDoubleArray(yaws));
     nt::SetEntryValue(StringRef(mainKey + "/prob"), nt::Value::MakeDoubleArray(probs));
 }
 
@@ -234,10 +238,26 @@ void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<do
     }
 }
 
+void Field::put_arrays_nt(std::string mainKey, std::string parent, int count, ...) {
+    va_list values;
+    for (int i = 0; i < count; ++i) {
+        std::pair<std::string, ArrayRef<double>> data = va_arg(i, std::pair<std::string, ArrayRef<double>>);
+        nt::SetEntryValue(StringRef("/" + parent + "/" + mainKey + "/" + data.first), nt::Value::MakeDoubleArray(data.last));
+    }
+}
+
 void Field::put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
         nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDouble(i.last));
+    }
+}
+
+void Field::put_values_nt(std::string mainKey, std::string parent, int count, ...) {
+    va_list values;
+    for (int i = 0; i < count; ++i) {
+        std::pair<std::string, double> data = va_arg(i, std::pair<std::string, ArrayRef<double>>);
+        nt::SetEntryValue(StringRef("/" + parent + "/" + mainKey + "/" + data.first), nt::Value::MakeDouble(data.last));
     }
 }
 
