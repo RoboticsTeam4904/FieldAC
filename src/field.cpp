@@ -155,10 +155,10 @@ void Field::update(LidarScan scan) {
 
 void Field::tick() {
     render();
-    this->put_vision_data();
+    this->put_pose_nt(this->objects, "cubes");
     std::printf("published vision data\n");
     this->old_data = latest_data;
-    this->get_sensor_data();
+    this->get_sensor_data_nt();
     std::printf("got sensor data\n");
     // TODO not sure which accel is forward or lateral
     BotLocale::step(pose_distribution, latest_data.accelX,
@@ -168,15 +168,6 @@ void Field::tick() {
     std::printf("stepped\n");
     me = BotLocale::get_best_pose(pose_distribution);
     std::printf("got best pose (%f, %f)\n",  me.x, me.y);
-}
-
-void Field::put_vision_data() {
-    std::vector<double> x_vals;
-    std::vector<double> y_vals;
-    for (int i = 0; i < objects.size(); i++) {
-        x_vals.push_back(objects[i].x);
-        y_vals.push_back(objects[i].y);
-    }
 }
 
 void Field::render() {
@@ -224,10 +215,10 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
         probs.push_back(pose.probability);
     }
     mainKey = "/" + parent + "/" + mainKey;
-    nt::SetEntryValue(StringRef(mainKey + "/xs"), nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(StringRef(mainKey + "/ys"), nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(StringRef(mainKey + "/yaws"), nt::Value::MakeDoubleArray(Yaws));
-    nt::SetEntryValue(StringRef(mainKey + "/probs"), nt::Value::MakeDoubleArray(probs));
+    nt::SetEntryValue(StringRef(mainKey + "/x"), nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(StringRef(mainKey + "/y"), nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(StringRef(mainKey + "/yaw"), nt::Value::MakeDoubleArray(Yaws));
+    nt::SetEntryValue(StringRef(mainKey + "/prob"), nt::Value::MakeDoubleArray(probs));
 }
 
 void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<double>> data, std::string parent = "vision") {

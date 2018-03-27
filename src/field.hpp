@@ -35,8 +35,6 @@ public:
     void update(std::vector<bbox_t>);
     void update(LidarScan);
     void tick();
-    void get_sensor_data();
-    void put_vision_data();
     void render();
     std::vector<Segment> construct;
     std::vector<Pose> objects;
