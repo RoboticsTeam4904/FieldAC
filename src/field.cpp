@@ -16,8 +16,8 @@
 #define FOCAL_LENGTH 1000   
 #define NETWORKTABLES_PORT 1735
 #define FIELD_SIZE std::tuple<int, int>(500, 500)
-#define FEET_CONVERSION 24
 #define DEGRADATION_AMOUNT 0.05
+#define CM_TO_FEET
 
 
 Field::Field() = default;
@@ -218,8 +218,8 @@ void Field::render() {
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     ArrayRef<double> xs, ys, yaws, probs;
     for (const auto Pose& pose : poses) {
-        xs.push_back((Field->field_width - pose.x) / FEET_CONVERSION); 
-        ys.push_back((Field->field_height - pose.y) / FEET_CONVERSION);
+        xs.push_back((Field->field_width - pose.x) * CM_TO_FEET); 
+        ys.push_back((Field->field_height - pose.y) * CM_TO_FEET);
         yaws.push_back(pose.yaw);
         probs.push_back(pose.probability);
     }
