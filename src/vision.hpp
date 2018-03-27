@@ -54,7 +54,7 @@ namespace Vision {
         int frameCount;
         void notifyListeners(cv::Mat update);
     };
-    std::tuple<float, float> pixel_to_angle(double x, double y);
+    std::tuple<float, float> pixel_to_angle(double x, double y, double fov_degrees, cv::Mat image);
 }
 
 #endif

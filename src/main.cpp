@@ -140,6 +140,7 @@ int main(int argc, const char **argv) {
         }
         field->update(cubeTracker->optflow_targets);
         field->update(lidar->current_scan);
+        field->cameraFrame = defaultDev->getFrame();
         defaultDev->displayImage(field->renderedImage, "Field");
     }
 }

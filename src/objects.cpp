@@ -6,9 +6,9 @@
 
 #define ZRAND (RAND - 0.5)
 
-#define VELOCITY_NOISE 0.0001
+#define VELOCITY_NOISE 0.01
 
-#define YAW_RATE_NOISE 0.0001
+#define YAW_RATE_NOISE 0.05
 
 Pose::Pose() = default;
 
@@ -18,17 +18,17 @@ Pose::Pose(const Pose prev, const float measuredAccelForward, const float measur
     y = prev.y + prev.dy;
 
     dx = static_cast<float>(prev.dx + measuredAccelForward * cos(prev.yaw) - measuredAccelLateral * sin(prev.yaw) +
-            (ZRAND * VELOCITY_NOISE));
+                            (ZRAND * VELOCITY_NOISE));
     dy = static_cast<float>(prev.dy + measuredAccelForward * sin(prev.yaw) + measuredAccelLateral * cos(prev.yaw) +
-            (ZRAND * VELOCITY_NOISE));
+                            (ZRAND * VELOCITY_NOISE));
 
-    yaw = prev.yaw + prev.rateYaw;
+    yaw = prev.yaw + (prev.rateYaw / 2);
     rateYaw = static_cast<float>(prev.rateYaw + measuredAccelYaw + (ZRAND * YAW_RATE_NOISE));
 }
 
 void Pose::seed() {
-    x = RAND*849;
-    y = RAND*1700;
+    x = RAND * 849;
+    y = RAND * 1700;
     dx = 0;
     dy = 0;
     rateYaw = 0;
@@ -58,8 +58,8 @@ Pose &Pose::operator/(const int &other) {
     tmp.x = this->x / other;
     tmp.y = this->y / other;
     tmp.yaw = this->yaw / other;
-    while (tmp.yaw > (M_PI*2)) {
-        tmp.yaw -= M_PI*2;
+    while (tmp.yaw > (M_PI * 2)) {
+        tmp.yaw -= M_PI * 2;
     }
     tmp.dx = this->dx / other;
     tmp.dy = this->dy / other;

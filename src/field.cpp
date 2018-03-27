@@ -131,7 +131,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     }
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        auto angles = Vision::pixel_to_angle(i.x, i.y);
+        auto angles = Vision::pixel_to_angle(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
         auto distance = i.h; // TODO: some function of the height/width
         distance = 10; // for now just hard code it to a random value lol
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
@@ -163,15 +163,25 @@ void Field::run() {
         // TODO not sure which accel is forward or lateral
         std::clock_t start = std::clock();
         std::printf("yawRate: %f", (latest_data.yaw - old_data.yaw));
+        bool lidarIsReady = false;
+        for (auto a : latest_lidar_scan.measurements) {
+            if (std::get<0>(a) != 0) {
+                lidarIsReady = true;
+            }
+        }
+        if (!lidarIsReady) {
+            continue;
+        }
         BotLocale::step(pose_distribution, static_cast<const float>(latest_data.accelX),
                         static_cast<const float>(latest_data.accelY),
-                        0,
-                        "is this even used?", latest_lidar_scan);
+                        static_cast<const float>(latest_data.yaw - old_data.yaw),
+                        latest_data, latest_lidar_scan);
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
         int fps = 1000 / ms;
         std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
         me = BotLocale::get_best_pose(pose_distribution);
-        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y, me.yaw*180/PI, me.dx, me.dy, me.rateYaw*180/PI);
+        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
+                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
     }
 }
 
@@ -239,6 +249,8 @@ void Field::render() {
     for (auto p : this->pose_distribution) {
         cv::circle(img, cv::Point2f(p.x, p.y), 1,
                    cv::Scalar(255, 0, 0), -1);
+        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+p.dx, p.y+p.dy),
+                   cv::Scalar(255, 255, 0), 1);
     }
     renderedImage = img;
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));

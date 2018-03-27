@@ -12,19 +12,6 @@
 #include <networktables/NetworkTable.h>
 #include "botlocale/lidar.hpp"
 
-
-struct SensorData {
-    double leftEncoder;
-    double rightEncoder;
-    double accelX;
-    double accelZ;
-    double accelY;
-    double yaw;
-    bool operator==(const SensorData other) {
-        return (leftEncoder == other.leftEncoder && rightEncoder == other.rightEncoder && accelX == other.accelX);
-    }
-};
-
 class Field {
 private:
     Field();
@@ -50,6 +37,7 @@ public:
     LidarScan latest_lidar_scan;
     double field_width;
     double field_height;
+    cv::Mat cameraFrame;
 };
 
 #endif
