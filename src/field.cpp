@@ -19,7 +19,6 @@
 #define DEGRADATION_AMOUNT 0.05
 #define CM_TO_FEET 0.0328084
 
-
 Field::Field() = default;
 
 Field *Field::Field::instance = nullptr;
@@ -159,7 +158,7 @@ void Field::tick() {
     this->put_pose_nt(this->objects, "cubes");
     std::printf("published cube data\n");
     this->put_values_nt("localization", std::map<std::string, double>{
-        "frontDist": dist_front_obstacle(), "x":me.x, "y":me.y});
+        "frontDist": dist_front_obstacle(), "x":me.x * CM_TO_FEET, "y":me.y * CM_TO_FEET});
     std::printf("published localization data\n");
     this->old_data = latest_data;
     this->get_sensor_data_nt();
