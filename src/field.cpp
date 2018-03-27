@@ -17,7 +17,7 @@
 #define NETWORKTABLES_PORT 1735
 #define FIELD_SIZE std::tuple<int, int>(500, 500)
 #define DEGRADATION_AMOUNT 0.05
-#define CM_TO_FEET 0.0328084
+#define FT(CM) (CM * 0.0328084)
 
 Field::Field() = default;
 
@@ -158,7 +158,7 @@ void Field::tick() {
     this->put_pose_nt(this->objects, "cubes");
     std::printf("published cube data\n");
     this->put_values_nt("localization", std::map<std::string, double>{
-        "frontDist": dist_front_obstacle(), "x":me.x * CM_TO_FEET, "y":me.y * CM_TO_FEET});
+        "frontDist": dist_front_obstacle(), "x":FT(me.x), "y":FT(me.y)});
     std::printf("published localization data\n");
     this->old_data = latest_data;
     this->get_sensor_data_nt();
@@ -215,8 +215,8 @@ float Field::dist_front_obstacle() {
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     ArrayRef<double> xs, ys, yaws, probs;
     for (const auto Pose& pose : poses) {
-        xs.push_back((Field->field_width - pose.x) * CM_TO_FEET); 
-        ys.push_back((Field->field_height - pose.y) * CM_TO_FEET);
+        xs.push_back(FT(Field->field_width - pose.x)); 
+        ys.push_back(FT(Field->field_height - pose.y));
         yaws.push_back(pose.yaw);
         probs.push_back(pose.probability);
     }
