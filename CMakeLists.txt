@@ -7,8 +7,8 @@ find_package( Threads )
 find_package( OpenCV REQUIRED )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(DARKNET_GPU 0)
-set(DARKNET_CUDNN 0)
+set(DARKNET_GPU 1)
+set(DARKNET_CUDNN 1)
 set(DARKNET_DEBUG 0)
 set(DARKNET_OPENMP 0)
 set(DARKNET_LIBSO_NAME libdarknet.so)
@@ -37,24 +37,26 @@ download_project(PROJ ntcore
         GIT_TAG 3025a18
         GIT_SHALLOW 1)
 
-download_project(PROJ ntcore-dylib
-        URL https://crate.botprovoking.org/fieldac/libntcore.dylib
-        URL_MD5 7fcbd6a85e1034ea2eb53baecc5d49e0
-        DOWNLOAD_NAME libntcore.dylib
+download_project(PROJ ntcore-shared
+        URL https://crate.botprovoking.org/fieldac/libntcore.so
+        URL_MD5 3dc47662ddf949a2212fa0cd02265940
+        DOWNLOAD_NAME libntcore.so
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
+#URL_MD5 7fcbd6a85e1034ea2eb53baecc5d49e0
 
 download_project(PROJ wpiutil
         GIT_REPOSITORY https://github.com/wpilibsuite/wpiutil
         GIT_TAG 71d06a1
         GIT_SHALLOW 1)
 
-download_project(PROJ wpiutil-dylib
-        URL https://crate.botprovoking.org/fieldac/libwpiutil.dylib
-        URL_MD5 d22a2f7f0c7787cfa35caa7a704b0afe
-        DOWNLOAD_NAME libwpiutil.dylib
+download_project(PROJ wpiutil-shared
+        URL https://crate.botprovoking.org/fieldac/libwpiutil.so
+        URL_MD5 2e9e8f0634a247c4b559da18555ee8e6
+        DOWNLOAD_NAME libwpiutil.so
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
+#URL_MD5 d22a2f7f0c7787cfa35caa7a704b0afe
 
 set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
 execute_process(COMMAND uname -s
@@ -74,8 +76,8 @@ include_directories(${ntcore_SOURCE_DIR}/src/main/native/cpp/)
 
 link_directories(${rplidar_OUTPUT_DIR})
 link_directories(${CMAKE_BINARY_DIR})
-link_directories(ntcore-dylib-download/ntcore-dylib-download-prefix/src/)
-link_directories(wpiutil-dylib-download/wpiutil-dylib-download-prefix/src/)
+link_directories(ntcore-shared-download/ntcore-shared-download-prefix/src/)
+link_directories(wpiutil-shared-download/wpiutil-shared-download-prefix/src/)
 
 MESSAGE(STATUS
         "CURR: "
@@ -89,13 +91,13 @@ add_executable(field ${CORE_SRC}
 
 add_custom_command(TARGET field
         PRE_LINK
-        COMMAND cp ntcore-dylib-download/ntcore-dylib-download-prefix/src/libntcore.dylib ${CMAKE_BINARY_DIR}/
+        COMMAND cp ntcore-shared-download/ntcore-shared-download-prefix/src/libntcore.so ${CMAKE_BINARY_DIR}/
         COMMENT "Copying ntcore..."
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_custom_command(TARGET field
         PRE_LINK
-        COMMAND cp wpiutil-dylib-download/wpiutil-dylib-download-prefix/src/libwpiutil.dylib ${CMAKE_BINARY_DIR}/
+        COMMAND cp wpiutil-shared-download/wpiutil-shared-download-prefix/src/libwpiutil.so ${CMAKE_BINARY_DIR}/
         COMMENT "Copying wpiutil..."
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
