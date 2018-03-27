@@ -153,10 +153,13 @@ void Field::update(LidarScan scan) {
     this->latest_lidar_scan = scan;
 }
 
+//unsure of whether or not it's better practice to but this-> before the functions or not
 void Field::tick() {
-    render();
+    this->render();
     this->put_pose_nt(this->objects, "cubes");
-    std::printf("published vision data\n");
+    std::printf("published cube data\n");
+    this->put_value_nt("frontDist", dist_front_obstacle(), "localization");
+    std::printf("published ")
     this->old_data = latest_data;
     this->get_sensor_data_nt();
     std::printf("got sensor data\n");
@@ -230,6 +233,14 @@ void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<do
     for(const auto &i : data) {
         nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
     }
+}
+
+void Field::put_value_nt(std::string key, double data, std::string parent = "vision") {
+    nt::SetEntryValue(StringRef("/" + parent + "/" + key), nt::Value::MakeDouble(data));
+}
+
+void Field::put_value_nt(std::string key, ArrayRef<double> data, std::string parent = "vision") {
+    nt::SetEntryValue(StringRef("/" + parent + "/" + key), nt::Value::MakeDoubleArray(data));
 }
 
 void Field::get_sensor_data_nt() {
