@@ -3,6 +3,8 @@
 #include "../field.hpp"
 #include <tuple>
 
+#define LIDAR_OFFSET = -3*PI / 4
+
 Lidar::Lidar(std::string path, _u32 baudrate) : path(path), baudrate(baudrate) {
     this->driver = rplidar::RPlidarDriver::CreateDriver(rplidar::RPlidarDriver::DRIVER_TYPE_SERIALPORT);
     if (!this->driver) {
@@ -28,6 +30,7 @@ bool Lidar::checkHealth() {
 };
 
 void Lidar::run(const bool *stop) {
+    
     auto connResp = this->driver->connect(this->path.c_str(), baudrate);
     if (IS_FAIL(connResp)) {
         std::fprintf(stderr, "Error; cannot bind to the specified serial port %s.\n", this->path.c_str());
@@ -80,6 +83,7 @@ void Lidar::run(const bool *stop) {
 //                            nodes[pos].distance_q2 / 4.0f,
 //                            nodes[pos].sync_quality >> RPLIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
             }
+            tmp.offset = LIDAR_OFFSET;
             this->current_scan = tmp;
         }
 
