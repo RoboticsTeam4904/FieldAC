@@ -205,6 +205,10 @@ void Field::render() {
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
+float Field::dist_front_obstacle() {
+    return this->latest_lidar_scan.getAtAngle(0);
+}
+
 // for all nt stuff we might want to use stringrefs insteaf of getEntries
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     ArrayRef<double> xs, ys, yaws, probs;
