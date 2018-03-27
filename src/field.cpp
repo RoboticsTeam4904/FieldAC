@@ -224,26 +224,26 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
         probs.push_back(pose.probability);
     }
     mainKey = "/" + parent + "/" + mainKey;
-    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/xs"), nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/ys"), nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/yaws"), nt::Value::MakeDoubleArray(Yaws));
-    nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + "/probs"), nt::Value::MakeDoubleArray(probs));
+    nt::SetEntryValue(StringRef(mainKey + "/xs"), nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(StringRef(mainKey + "/ys"), nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(StringRef(mainKey + "/yaws"), nt::Value::MakeDoubleArray(Yaws));
+    nt::SetEntryValue(StringRef(mainKey + "/probs"), nt::Value::MakeDoubleArray(probs));
 }
 
 void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<double>> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
-        nt::SetEntryValue(nt::GetEntry(nt_inst, mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
+        nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
     }
 }
 
 void Field::get_sensor_data_nt() {
-    this->latest_data.leftEncoder = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/leftEncoder"))->GetDouble();
-    this->latest_data.rightEncoder = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/rightEncoder"))->GetDouble();
-    this->latest_data.accelX = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelX"))->GetDouble();
-    this->latest_data.accelY = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelY"))->GetDouble();
-    this->latest_data.accelZ = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/accelZ"))->GetDouble();
-    this->latest_data.yaw = nt::GetEntryValue(nt::GetEntry(nt_inst, "/sensorData/yaw"))->GetDouble();
+    this->latest_data.leftEncoder = nt::GetEntryValue(StringRef("/sensorData/leftEncoder"))->GetDouble();
+    this->latest_data.rightEncoder = nt::GetEntryValue(StringRef("/sensorData/rightEncoder"))->GetDouble();
+    this->latest_data.accelX = nt::GetEntryValue(StringRef("/sensorData/accelX"))->GetDouble();
+    this->latest_data.accelY = nt::GetEntryValue(StringRef("/sensorData/accelY"))->GetDouble();
+    this->latest_data.accelZ = nt::GetEntryValue(StringRef("/sensorData/accelZ"))->GetDouble();
+    this->latest_data.yaw = nt::GetEntryValue(StringRef("/sensorData/yaw"))->GetDouble();
 }
 
 std::map<std::string, double> Field::get_arrays_nt(std::ArrayRef<std::string> keys, std::string parent = "sensorData") {
