@@ -158,8 +158,9 @@ void Field::tick() {
     this->render();
     this->put_pose_nt(this->objects, "cubes");
     std::printf("published cube data\n");
-    this->put_value_nt("frontDist", dist_front_obstacle(), "localization");
-    std::printf("published ");
+    this->put_values_nt("localization", std::map<std::string, double>{
+        "frontDist": dist_front_obstacle(), "x":me.x, "y":me.y});
+    std::printf("published localization data\n");
     this->old_data = latest_data;
     this->get_sensor_data_nt();
     std::printf("got sensor data\n");
@@ -231,6 +232,13 @@ void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<do
     mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
         nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
+    }
+}
+
+void Field::put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent = "vision") {
+    mainKey = "/" + parent + "/" + mainKey + "/";
+    for(const auto &i : data) {
+        nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDouble(i.last));
     }
 }
 
