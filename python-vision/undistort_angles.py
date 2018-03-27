@@ -52,7 +52,7 @@ def findPixelBoardCoords(coord, pixel_coords, board_coords):
 		print "y1 and y2", y_1, y_2
 		raise ValueError("Could not find a correct center y coord")
 		quit()
-	center_board_coords = np.array([bd_bl[0] + x, bd_bl[1] + y]) 
+	center_board_coords = np.array([bd_tl[0] + x, bd_tl[1] + y]) 
 	return center_board_coords
 
 # #width = side_length*row
@@ -201,33 +201,33 @@ def findBoard(img, row, col, display=False): # number of black corners in row an
 	return sub_pix_corners
 
 
-def undistort(corners, row, col, display=False): # number of black corners in row and column on chessboard picture
+# def undistort(corners, row, col, display=False): # number of black corners in row and column on chessboard picture
 
-	# Arrays to store object points and image points from all the images.
-	# 3d point in real world space like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-	objp = np.zeros((row*col,3), np.float32)
-	objp[:,:2] = np.mgrid[0:col,0:row].T.reshape(-1,2)
+# 	# Arrays to store object points and image points from all the images.
+# 	# 3d point in real world space like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+# 	objp = np.zeros((row*col,3), np.float32)
+# 	objp[:,:2] = np.mgrid[0:col,0:row].T.reshape(-1,2)
 
-	ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera([objp], [corners], (img_width,img_height), None, None)
-	dist = normalize(np.array([dist[0][i] if i < 2 else 0.0 for i in range(len(dist[0]))]))
-	#dist = np.array([-0.13615181, 0.53005398, 0, 0, 0]) # no translation 
-	newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(img_width,img_height),1,(img_width,img_height))
+# 	ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera([objp], [corners], (img_width,img_height), None, None)
+# 	dist = normalize(np.array([dist[0][i] if i < 2 else 0.0 for i in range(len(dist[0]))]))
+# 	#dist = np.array([-0.13615181, 0.53005398, 0, 0, 0]) # no translation 
+# 	newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(img_width,img_height),1,(img_width,img_height))
 
-	mapx,mapy = cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(img_width,img_height),5)
-	maps = [] #coordinates calculated by undistorting pixels 
+# 	mapx,mapy = cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(img_width,img_height),5)
+# 	maps = [] #coordinates calculated by undistorting pixels 
 
-	for corner in corners:
-		a, b = (int(corner[0][0]), int(corner[0][1]))
-		maps.append((mapx[b][a], mapy[b][a]))
+# 	for corner in corners:
+# 		a, b = (int(corner[0][0]), int(corner[0][1]))
+# 		maps.append((mapx[b][a], mapy[b][a]))
 
-	xy_undistorted = cv2.undistortPoints(corners, newcameramtx, dist, P=mtx) #coordinates calculated by undistorting points
-	#xy_undistorted = np.flipud(xy_undistorted)
+# 	xy_undistorted = cv2.undistortPoints(corners, newcameramtx, dist, P=mtx) #coordinates calculated by undistorting points
+# 	#xy_undistorted = np.flipud(xy_undistorted)
 
-	if display:
-		img_undistorted = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
-		cv2.imshow('calibresult2.png', img_undistorted)
+# 	if display:
+# 		img_undistorted = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
+# 		cv2.imshow('calibresult2.png', img_undistorted)
 
-	return xy_undistorted
+# 	return xy_undistorted
 
 def normalize(v):
 	norm = np.linalg.norm(v)
@@ -281,15 +281,15 @@ def calculateXYAngles(dists, center_board_coords, side_length):
 				true_dists[i,j] = dist
 			x_analog_dist = calcDist(angles_down[j], side_length*center_board_coords[0], true_dists[0,j])
 			y_analog_dist = calcDist(angles_right[i], side_length*center_board_coords[1], true_dists[i,0])
-			y_theta = calcAngle(dist, x_analog_dist, abs(i-center_board_coords[0])*side_length) if ((i - center_board_coords[0])*side_length>0) else calcAngle(dist, x_analog_dist, abs(i-center_board_coords[0])*side_length)
-			x_theta = calcAngle(dist, y_analog_dist, abs(j-center_board_coords[1])*side_length) if ((j - center_board_coords[1])*side_length>0) else calcAngle(dist, y_analog_dist, abs(j-center_board_coords[1])*side_length)
+			y_theta = -1*calcAngle(dist, x_analog_dist, abs(i-center_board_coords[0])*side_length) if ((i - center_board_coords[0])*side_length>0) else calcAngle(dist, x_analog_dist, abs(i-center_board_coords[0])*side_length)
+			x_theta = -1*calcAngle(dist, y_analog_dist, abs(j-center_board_coords[1])*side_length) if ((j - center_board_coords[1])*side_length>0) else calcAngle(dist, y_analog_dist, abs(j-center_board_coords[1])*side_length)
 			thetas[i,j,0] = x_theta * (180/math.pi)
 			thetas[i,j,1] = y_theta * (180/math.pi)
 
 	return thetas.reshape(col, row, 2)
 
 side_length = 2.3
-dist_to_top_left = 12.942 #cm units dont matter as long as all are in same units
+dist_to_top_left = 12.942 #cm, units dont matter as long as all are in same units
 dist_to_top_right = 11.796
 dist_to_bottom_left = 12.73
 dist_to_bottom_right = 12.218
@@ -302,9 +302,11 @@ center = np.array([img_width/2, img_height/2])
 
 distorted_corners = findBoard(img, col, row)
 corner_coords = undistortW(row, col, img)
+print corner_coords
 corner_coords = np.reshape(corner_coords, (col, row, 2))
 
 pixel_coords, board_coords = findPixelTile(center, corner_coords, row, col)
+print board_coords
 center_board_coords = findPixelBoardCoords(center, pixel_coords, board_coords)
 print center_board_coords
 thetas = calculateXYAngles(dists, center_board_coords, side_length)
