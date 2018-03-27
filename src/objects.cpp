@@ -6,9 +6,9 @@
 
 #define ZRAND (RAND - 0.5)
 
-#define VELOCITY_NOISE 0.001
+#define VELOCITY_NOISE 0.0001
 
-#define YAW_RATE_NOISE 0.001
+#define YAW_RATE_NOISE 0.0001
 
 Pose::Pose() = default;
 
@@ -58,9 +58,12 @@ Pose &Pose::operator/(const int &other) {
     tmp.x = this->x / other;
     tmp.y = this->y / other;
     tmp.yaw = this->yaw / other;
+    while (tmp.yaw > (M_PI*2)) {
+        tmp.yaw -= M_PI*2;
+    }
     tmp.dx = this->dx / other;
     tmp.dy = this->dy / other;
-    tmp.rateYaw = this->rateYaw + other;
+    tmp.rateYaw = this->rateYaw / other;
     return tmp;
 }
 

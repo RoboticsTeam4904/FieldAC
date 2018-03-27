@@ -3,13 +3,13 @@
 #include <chrono>
 #include <thread>
 #include <sys/time.h>
-#include <math.h>
 #include <tuple>
 #include "./botlocale/lidar.hpp"
 #include <ntcore.h>
 #include <networktables/NetworkTable.h>
 #include "./botlocale/mcl.hpp"
 #include "vision.hpp"
+#include <cmath>
 
 #define PI 3.14159265
 #define NETWORKTABLES_PORT 1735
@@ -89,7 +89,8 @@ void Field::load() {
     }
 
 
-    std::printf("Field generated.\n\tNumber of segments: %lu\n\tSize: %f x %f\n", construct.size(), field_height, field_width);
+    std::printf("Field generated.\n\tNumber of segments: %lu\n\tSize: %f x %f\n", construct.size(), field_height,
+                field_width);
     me.x = 250;
     me.y = 250;
     me.yaw = 0; // forward/up
@@ -151,21 +152,27 @@ void Field::update(LidarScan scan) {
     this->latest_lidar_scan = scan;
 }
 
-void Field::tick() {
-    render();
-    this->put_vision_data();
-    std::printf("published vision data\n");
-    this->old_data = latest_data;
-    this->get_sensor_data();
-    std::printf("got sensor data\n");
-    // TODO not sure which accel is forward or lateral
-    BotLocale::step(pose_distribution, latest_data.accelX,
-                    static_cast<const float>(latest_data.accelY),
-                    static_cast<const float>(latest_data.yaw - old_data.yaw),
-                    "is this even used?", latest_lidar_scan);
-    std::printf("stepped\n");
-    me = BotLocale::get_best_pose(pose_distribution);
-    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
+void Field::run() {
+    while (true) {
+        render();
+        this->put_vision_data();
+        std::printf("published vision data\n");
+        this->old_data = latest_data;
+        this->get_sensor_data();
+        std::printf("got sensor data\n");
+        // TODO not sure which accel is forward or lateral
+        std::clock_t start = std::clock();
+        std::printf("yawRate: %f", (latest_data.yaw - old_data.yaw));
+        BotLocale::step(pose_distribution, static_cast<const float>(latest_data.accelX),
+                        static_cast<const float>(latest_data.accelY),
+                        0,
+                        "is this even used?", latest_lidar_scan);
+        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
+        int fps = 1000 / ms;
+        std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
+        me = BotLocale::get_best_pose(pose_distribution);
+        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y, me.yaw*180/PI, me.dx, me.dy, me.rateYaw*180/PI);
+    }
 }
 
 void Field::put_vision_data() {
@@ -193,7 +200,7 @@ void Field::get_sensor_data() {
     auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
     this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
     auto yaw = nt::GetEntry(nt_inst, "/sensorData/yaw");
-    this->latest_data.yaw = nt::GetEntryValue(yaw)->GetDouble();
+    this->latest_data.yaw = (nt::GetEntryValue(yaw)->GetDouble()) * PI / 180;
 }
 
 void Field::render() {
@@ -222,11 +229,17 @@ void Field::render() {
                    cv::Scalar(20, 190, 190), -1);
     }
 
+    for (auto m : this->latest_lidar_scan.measurements) {
+        double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
+        double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
+        cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
+                   cv::Scalar(0, 255, 0), -1);
+    }
+
     for (auto p : this->pose_distribution) {
         cv::circle(img, cv::Point2f(p.x, p.y), 1,
                    cv::Scalar(255, 0, 0), -1);
     }
-
     renderedImage = img;
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }

@@ -5,7 +5,7 @@
 #include "lidar.hpp"
 
 #ifndef SAMPLES
-#define SAMPLES 500
+#define SAMPLES 1000
 #endif
 
 namespace BotLocale {

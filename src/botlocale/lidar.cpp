@@ -3,7 +3,8 @@
 #include "../field.hpp"
 #include <tuple>
 
-#define LIDAR_OFFSET = -3*PI / 4
+#define LIDAR_OFFSET -135
+#define dist(a) sqrt( (a.x)*(a.x) + (a.y)*(a.y) )
 
 Lidar::Lidar(std::string path, _u32 baudrate) : path(path), baudrate(baudrate) {
     this->driver = rplidar::RPlidarDriver::CreateDriver(rplidar::RPlidarDriver::DRIVER_TYPE_SERIALPORT);
@@ -30,7 +31,7 @@ bool Lidar::checkHealth() {
 };
 
 void Lidar::run(const bool *stop) {
-    
+
     auto connResp = this->driver->connect(this->path.c_str(), baudrate);
     if (IS_FAIL(connResp)) {
         std::fprintf(stderr, "Error; cannot bind to the specified serial port %s.\n", this->path.c_str());
@@ -75,15 +76,14 @@ void Lidar::run(const bool *stop) {
 
             for (int pos = 0; pos < (int) count; pos++) {
                 float angle = (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
-                tmp.measurements[((int) (angle + 0.5f)) % 360] = std::make_tuple(angle, nodes[pos].distance_q2 / 4.0f);
-                std::get<0>(tmp.measurements[((int) (angle + 0.5f)) % 360]) /= 10; // convert to centimeters
+                tmp.measurements[((int) (angle + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET))%360, nodes[pos].distance_q2 /
+                                                                                        40.0f); // convert to centimeters
 //                std::printf("%s theta: %03.2f Dist: %08.2f Q: %d\n",
 //                            (nodes[pos].sync_quality & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ? "S " : "  ",
 //                            (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f,
 //                            nodes[pos].distance_q2 / 4.0f,
 //                            nodes[pos].sync_quality >> RPLIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
             }
-            tmp.offset = LIDAR_OFFSET;
             this->current_scan = tmp;
         }
 
@@ -169,25 +169,36 @@ struct SegmentComparator {
 
 double LidarScan::raytrace(Pose robot_pose) {
     double robot_x = robot_pose.x;
-    double robot_y =  robot_pose.y;
+    double robot_y = robot_pose.y;
     float yaw_degrees = robot_pose.yaw;
     std::tuple<double, double> pos = std::tuple<double, double>(robot_x, robot_y);
     double err = 0;
 
-    for (auto measurement : measurements) {
-        auto rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180;
-        auto direction = cv::Vec2f(std::cos(rads), std::sin(rads));
+    double ms = 0;
+    auto pos_point = tuple_to_point(pos);
 
-        std::vector<Segment> sorted_segments = Field::getInstance()->construct;
-        std::sort(sorted_segments.begin(), sorted_segments.end(), SegmentComparator(pos));
-        for (auto seg : sorted_segments) {
-            auto intersection = this->intersect_ray_with_segment(tuple_to_point(pos), direction, seg);
+    std::vector<Segment> sorted_segments = Field::getInstance()->construct;
+    std::sort(sorted_segments.begin(), sorted_segments.end(), SegmentComparator(pos));
+    for (auto seg : sorted_segments) {
+        auto start_point = tuple_to_point(seg.start);
+        auto end_point = tuple_to_point(seg.end);
+        auto start_angle = cvFastArctan(pos_point.x + start_point.x, pos_point.y + start_point.y);
+        auto end_angle = cvFastArctan(pos_point.x + end_point.x, pos_point.y + end_point.y);
+        bool continyoo = false;
+        for (auto measurement : measurements) {
+            float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180;
+            auto direction = cv::Vec2f(std::cos(rads), std::sin(rads));
+            if (std::abs(start_angle - (int(rads * 180 / M_PI) % 360)) > (std::abs(start_angle - end_angle) + 5) ||
+                std::abs(end_angle - (int(rads * 180 / M_PI) % 360)) > (std::abs(start_angle - end_angle) + 5)) {
+                continue;
+            }
+            auto intersection = this->intersect_ray_with_segment(pos_point, direction, seg);
             if (intersection) {
                 cv::Point2f expected_point = *intersection;
                 cv::Point2f actual_point = cv::Point2f(direction * std::get<1>(measurement));
                 // angle should be the same because math so we just compare magnitudes
-                auto expected_mag = cv::norm(expected_point);
-                auto actual_mag = cv::norm(actual_point);
+                auto expected_mag = dist(expected_point);
+                auto actual_mag = dist(actual_point);
                 actual_mag = std::get<1>(measurement); // those SHOULD be the same
 //                std::printf("%f should be the same as %f\n", cv::norm(actual_point), actual_mag);
                 if (actual_mag < expected_mag) {
@@ -196,9 +207,14 @@ double LidarScan::raytrace(Pose robot_pose) {
                     err += (actual_mag - expected_mag);
                 }
                 free(intersection);
+                continyoo = true;
                 break;
             }
         }
+        if (continyoo) {
+            continue;
+        }
+
     }
     return err;
 }

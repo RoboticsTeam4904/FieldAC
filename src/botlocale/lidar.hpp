@@ -30,10 +30,7 @@ public:
     cv::Point2f* intersect_ray_with_segment(cv::Point2f origin, cv::Vec2f direction, Segment seg);
 
     inline float getAtAngle(int angle) const {
-		int o = angle + offset;
-		if(o >= 360)
-			o-=360;
-		return std::get<1>(measurements[o]);
+		return std::get<1>(measurements[angle]);
 	}
 private:
 

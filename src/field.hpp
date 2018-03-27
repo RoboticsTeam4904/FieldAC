@@ -34,7 +34,7 @@ public:
     void load();
     void update(std::vector<bbox_t>);
     void update(LidarScan);
-    void tick();
+    void run();
     void get_sensor_data();
     void put_vision_data();
     void render();

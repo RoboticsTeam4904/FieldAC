@@ -2,6 +2,7 @@
 #include <tuple>
 #include <cmath>
 #include <vector>
+#include <iostream>
 #include "lidar.hpp"
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
@@ -19,12 +20,17 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     Pose n[SAMPLES];
     float weights[SAMPLES];
     float weightsSum = 0;
+    double ms;
+    std::clock_t a = std::clock();
     for (int i = 0; i < SAMPLES; i++) {
         n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, measuredAccelYaw);
-        weights[i] = 1.0f/static_cast<float>(scan.raytrace(n[i])); //TODO who knows
-        n[i].probability = weights[i];
+        weights[i] = static_cast<float>(scan.raytrace(n[i])); //TODO who knows
+        n[i].probability = 1/weights[i];
         weightsSum += weights[i];
     }
+    ms = (std::clock() - a) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
+    std::cout << "Total raytrace time: " << ms << "ms" << std::endl;
+    std::clock_t start = std::clock();
     for (int i = 0; i < SAMPLES; i++) {
         float weight = weightsSum * RAND;
         for (int j = 0; j < SAMPLES; j++) {
@@ -35,6 +41,8 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
             }
         }
     }
+    ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
+    std::cout << "Average MCL time: " << ms/SAMPLES << "ms" << std::endl;
     return input;
 }
 
