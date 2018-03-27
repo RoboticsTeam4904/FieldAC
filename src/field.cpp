@@ -157,12 +157,9 @@ void Field::tick() {
     this->render();
     this->put_pose_nt(this->objects, "cubes");
     std::printf("published cube data\n");
-    map<std::string, double> lData;
-    lData.insert(std::make_pair("frontDist", dist_front_obstacle()));
-    lData.insert(std::make_pair("x", dist_front_obstacle()));
-    lData.insert(std::)
-    this->put_values_nt("localization", std::map<std::string, double>{
-        "frontDist": dist_front_obstacle(), "x":FT(me.x), "y":FT(me.y)});
+    this->put_values_nt("localization", "vision", 3, std::make_pair("frontDist", dist_front_obstacle()), 
+        std::make_pair("x", FT(me.x)), 
+        std::make_pair("y", FT(me.y)));
     std::printf("published localization data\n");
     this->old_data = latest_data;
     this->get_sensor_data_nt();
@@ -234,7 +231,7 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
 void Field::put_arrays_nt(std::string mainKey, std::map<std::string, ArrayRef<double>> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
-        nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDoubleArray(i.last));
+        nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDoubleArray(i.second));
     }
 }
 
@@ -242,14 +239,14 @@ void Field::put_arrays_nt(std::string mainKey, std::string parent, int count, ..
     va_list values;
     for (int i = 0; i < count; ++i) {
         std::pair<std::string, ArrayRef<double>> data = va_arg(i, std::pair<std::string, ArrayRef<double>>);
-        nt::SetEntryValue(StringRef("/" + parent + "/" + mainKey + "/" + data.first), nt::Value::MakeDoubleArray(data.last));
+        nt::SetEntryValue(StringRef("/" + parent + "/" + mainKey + "/" + data.first), nt::Value::MakeDoubleArray(data.second));
     }
 }
 
 void Field::put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
-        nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDouble(i.last));
+        nt::SetEntryValue(StringRef(mainKey + i.first), nt::Value::MakeDouble(i.second));
     }
 }
 
@@ -257,7 +254,7 @@ void Field::put_values_nt(std::string mainKey, std::string parent, int count, ..
     va_list values;
     for (int i = 0; i < count; ++i) {
         std::pair<std::string, double> data = va_arg(i, std::pair<std::string, ArrayRef<double>>);
-        nt::SetEntryValue(StringRef("/" + parent + "/" + mainKey + "/" + data.first), nt::Value::MakeDouble(data.last));
+        nt::SetEntryValue(StringRef("/" + parent + "/" + mainKey + "/" + data.first), nt::Value::MakeDouble(data.second));
     }
 }
 
