@@ -157,9 +157,9 @@ void Field::update(LidarScan scan) {
 void Field::tick() {
     this->render();
     this->put_pose_nt(this->objects, "cubes");
-    std::printf("published cube data\n");
-    this->put_value_nt("frontDist", dist_front_obstacle(), "localization");
-    std::printf("published ")
+    std::pue_nt("frontDist", dist_front_obstacle(), "localization");
+    std::printf(rintf("published cube data\n");
+    this->put_val"published ");
     this->old_data = latest_data;
     this->get_sensor_data_nt();
     std::printf("got sensor data\n");
