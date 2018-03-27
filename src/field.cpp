@@ -212,7 +212,6 @@ float Field::dist_front_obstacle() {
     return this->latest_lidar_scan.getAtAngle(0);
 }
 
-// for all nt stuff we might want to use llvm::StringRefs insteaf of getEntries
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     std::vector<double> xs, ys, yaws, probs;
     for (const Pose &pose : poses) {
@@ -222,16 +221,16 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
         probs.push_back(pose.probability);
     }
     mainKey = "/" + parent + "/" + mainKey;
-    nt::SetEntryValue(llvm::StringRef(mainKey + "/x"), nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(llvm::StringRef(mainKey + "/y"), nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(llvm::StringRef(mainKey + "/yaw"), nt::Value::MakeDoubleArray(yaws));
-    nt::SetEntryValue(llvm::StringRef(mainKey + "/prob"), nt::Value::MakeDoubleArray(probs));
+    nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(mainKey + "/yaw", nt::Value::MakeDoubleArray(yaws));
+    nt::SetEntryValue(mainKey + "/prob", nt::Value::MakeDoubleArray(probs));
 }
 
 void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
-        nt::SetEntryValue(llvm::StringRef(mainKey + i.first), nt::Value::MakeDoubleArray(i.second));
+        nt::SetEntryValue(mainKey + i.first, nt::Value::MakeDoubleArray(i.second));
     }
 }
 
@@ -239,14 +238,14 @@ void Field::put_arrays_nt(std::string mainKey, std::string parent, int count, ..
     va_list values;
     for (int i = 0; i < count; ++i) {
         std::pair<std::string, std::vector<double>> data = va_arg(i, std::pair<std::string, std::vector<double>>);
-        nt::SetEntryValue(llvm::StringRef("/" + parent + "/" + mainKey + "/" + data.first), nt::Value::MakeDoubleArray(data.second));
+        nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + data.first, nt::Value::MakeDoubleArray(data.second));
     }
 }
 
 void Field::put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
     for(const auto &i : data) {
-        nt::SetEntryValue(llvm::StringRef(mainKey + i.first), nt::Value::MakeDouble(i.second));
+        nt::SetEntryValue(mainKey + i.first, nt::Value::MakeDouble(i.second));
     }
 }
 
@@ -254,32 +253,32 @@ void Field::put_values_nt(std::string mainKey, std::string parent, int count, ..
     va_list values;
     for (int i = 0; i < count; ++i) {
         std::pair<std::string, double> data = va_arg(i, std::pair<std::string, std::vector<double>>);
-        nt::SetEntryValue(llvm::StringRef("/" + parent + "/" + mainKey + "/" + data.first), nt::Value::MakeDouble(data.second));
+        nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + data.first, nt::Value::MakeDouble(data.second));
     }
 }
 
 void Field::put_value_nt(std::string key, double data, std::string parent = "vision") {
-    nt::SetEntryValue(llvm::StringRef("/" + parent + "/" + key), nt::Value::MakeDouble(data));
+    nt::SetEntryValue("/" + parent + "/" + key, nt::Value::MakeDouble(data));
 }
 
 void Field::put_value_nt(std::string key, std::vector<double> data, std::string parent = "vision") {
-    nt::SetEntryValue(llvm::StringRef("/" + parent + "/" + key), nt::Value::MakeDoubleArray(data));
+    nt::SetEntryValue("/" + parent + "/" + key, nt::Value::MakeDoubleArray(data));
 }
 
 void Field::get_sensor_data_nt() {
-    this->latest_data.leftEncoder = nt::GetEntryValue(llvm::StringRef("/sensorData/leftEncoder"))->GetDouble();
-    this->latest_data.rightEncoder = nt::GetEntryValue(llvm::StringRef("/sensorData/rightEncoder"))->GetDouble();
-    this->latest_data.accelX = nt::GetEntryValue(llvm::StringRef("/sensorData/accelX"))->GetDouble();
-    this->latest_data.accelY = nt::GetEntryValue(llvm::StringRef("/sensorData/accelY"))->GetDouble();
-    this->latest_data.accelZ = nt::GetEntryValue(llvm::StringRef("/sensorData/accelZ"))->GetDouble();
-    this->latest_data.yaw = nt::GetEntryValue(llvm::StringRef("/sensorData/yaw"))->GetDouble();
+    this->latest_data.leftEncoder = nt::GetEntryValue("/sensorData/leftEncoder")->GetDouble();
+    this->latest_data.rightEncoder = nt::GetEntryValue("/sensorData/rightEncoder"))->GetDouble();
+    this->latest_data.accelX = nt::GetEntryValue("/sensorData/accelX")->GetDouble();
+    this->latest_data.accelY = nt::GetEntryValue("/sensorData/accelY")->GetDouble();
+    this->latest_data.accelZ = nt::GetEntryValue("/sensorData/accelZ")->GetDouble();
+    this->latest_data.yaw = nt::GetEntryValue("/sensorData/yaw")->GetDouble();
 }
 
 std::map<std::string, double> Field::get_arrays_nt(std::std::vector<std::string> keys, std::string parent = "sensorData") {
     std::string mainKey = "/" + parent + "/";
     std::map<std::string, double> data;
     for(const auto &i : data) {
-        data[i] = nt::GetEntryValue(llvm::StringRef(mainKey + i))->PutNumberArraygetDouble();
+        data[i] = nt::GetEntryValue(mainKey + i)->GetDoubleArray();
     }
     return data;
 }
