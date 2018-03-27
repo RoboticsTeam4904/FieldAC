@@ -29,4 +29,16 @@ struct Segment {
     std::tuple<double, double> end;
 };
 
+struct SensorData {
+    double leftEncoder;
+    double rightEncoder;
+    double accelX;
+    double accelZ;
+    double accelY;
+    double yaw;
+    bool operator==(const SensorData other) {
+        return (leftEncoder == other.leftEncoder && rightEncoder == other.rightEncoder && accelX == other.accelX);
+    }
+};
+
 #endif

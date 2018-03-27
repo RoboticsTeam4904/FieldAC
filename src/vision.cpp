@@ -10,23 +10,24 @@ namespace Vision {
         this->devCapture = cv::VideoCapture();
         this->src = true;
         this->devCapture.open(srcCapture);
-        if(!this->devCapture.isOpened()) {
+        if (!this->devCapture.isOpened()) {
             std::printf("--(!) Error opening source file\n");
             return;
         }
     }
+
     Camera::Camera(int devCapture) {
         this->devCapture = cv::VideoCapture();
         this->src = false;
         frameCount = 0;
         this->devCapture.open(devCapture);
-        if(!this->devCapture.isOpened()) {
+        if (!this->devCapture.isOpened()) {
             std::printf("--(!) Error opening video capture\n");
             return;
         }
     }
 
-    void Camera::registerListener(std::function<void (cv::Mat, int)> listener) {
+    void Camera::registerListener(std::function<void(cv::Mat, int)> listener) {
         this->listenersMutex.lock();
         this->listeners.push_back(listener);
         this->listenersMutex.unlock();
@@ -34,7 +35,7 @@ namespace Vision {
 
     void Camera::notifyListeners(cv::Mat update) {
         this->listenersMutex.lock();
-        for(const auto &listener : this->listeners) {
+        for (const auto &listener : this->listeners) {
             listener(update, frameCount);
         }
         this->listenersMutex.unlock();
@@ -47,11 +48,11 @@ namespace Vision {
             frameCount++;
             notifyListeners(getFrame());
             frameMutex.unlock();
-            if(frame.empty()) {
+            if (frame.empty()) {
                 std::printf("The frame was empty here");
                 return;
             }
-            if(src) {
+            if (src) {
                 // emulate camera delay
                 std::this_thread::sleep_for(std::chrono::milliseconds(110));
             }
@@ -60,7 +61,7 @@ namespace Vision {
 
     bool Camera::displayImage(cv::Mat frame, const std::string window) {
         cv::namedWindow(window, cv::WINDOW_AUTOSIZE);
-        if(frame.empty()) {
+        if (frame.empty()) {
             return false;
         }
         cv::imshow(window, frame);
@@ -77,7 +78,14 @@ namespace Vision {
         return this->devCapture.get(propId);
     }
 
-    std::tuple<float, float> pixel_to_angle(double x, double y) {
-        return std::make_tuple(float(x), float(y)); // placeholder
+    std::tuple<float, float> pixel_to_angle(double x, double y, double fov_degrees, cv::Mat image) {
+        double w = image.cols;
+        double h = image.rows;
+        double fov_radians = fov_degrees * M_PI / 180;
+        double fw = (w / 2.0) / tan(fov_radians / 2.0);
+        float x_rad = static_cast<float>(atan(x / fw));
+        double fh = (h / 2.0) / tan(fov_radians / 2.0);
+        float y_rad = static_cast<float>(atan(y / fh));
+        return std::make_tuple(x_rad, y_rad);
     };
 }

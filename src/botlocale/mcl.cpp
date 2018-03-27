@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include "lidar.hpp"
+#include "../field.hpp"
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
@@ -16,7 +17,7 @@ Pose *BotLocale::init() {
 }
 
 Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
-                     const float measuredAccelYaw, std::string sensorData, LidarScan scan) {
+                     const float measuredAccelYaw, SensorData sensorData, LidarScan scan) {
     Pose n[SAMPLES];
     float weights[SAMPLES];
     float weightsSum = 0;
@@ -24,8 +25,8 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     std::clock_t a = std::clock();
     for (int i = 0; i < SAMPLES; i++) {
         n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, measuredAccelYaw);
-        weights[i] = static_cast<float>(scan.raytrace(n[i])); //TODO who knows
-        n[i].probability = 1/weights[i];
+        weights[i] = static_cast<float>(1 / (scan.raytrace(n[i]) + (n[i].yaw - sensorData.yaw))); //TODO who knows
+        n[i].probability = weights[i];
         weightsSum += weights[i];
     }
     ms = (std::clock() - a) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
