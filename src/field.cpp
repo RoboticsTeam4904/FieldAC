@@ -159,6 +159,8 @@ void Field::update(LidarScan scan) {
     this->scan_mutex.unlock();
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 void Field::run() {
     this->old_lidar_scan = this->latest_lidar_scan;
     while (true) {
@@ -198,6 +200,7 @@ void Field::run() {
                     me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
     }
 }
+#pragma clang diagnostic pop
 
 void Field::put_vision_data() {
     std::vector<double> x_vals;
