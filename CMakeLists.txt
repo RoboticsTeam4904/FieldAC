@@ -13,6 +13,8 @@ set(DARKNET_DEBUG 0)
 set(DARKNET_OPENMP 0)
 set(DARKNET_LIBSO_NAME libdarknet.so)
 
+
+
 include(DownloadProject.cmake)
 
 file(GLOB NETWORK_SRC src/network/*.cpp)
