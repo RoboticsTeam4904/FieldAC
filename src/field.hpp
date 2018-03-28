@@ -15,16 +15,26 @@
 class Field {
 private:
     Field();
-    static Field* instance;
+
+    static Field *instance;
+    mutable std::mutex scan_mutex;
 public:
-    static Field* getInstance();
+    static Field *getInstance();
+
     void load();
+
     void update(std::vector<bbox_t>);
+
     void update(LidarScan);
+
     void run();
+
     void get_sensor_data();
+
     void put_vision_data();
+
     void render();
+
     std::vector<Segment> construct;
     std::vector<Pose> objects;
     std::vector<Pose> robots;
@@ -35,6 +45,7 @@ public:
     SensorData latest_data;
     SensorData old_data;
     LidarScan latest_lidar_scan;
+    LidarScan old_lidar_scan;
     double field_width;
     double field_height;
     cv::Mat cameraFrame;

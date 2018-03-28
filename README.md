@@ -43,7 +43,7 @@ When the TX\* must send an update, we send it over the robot LAN, formatted as J
 
 We use [AlexeyAB's implementation of the Darknet clang neural network framework](https://github.com/AlexeyAB/darknet) detect and track the dynamic game pieces using [pjreddie's YOLO object detection and classification model](https://pjreddie.com/darknet/yolo/) which we retrain.
 
-A link to our labeled training data will be available [here](#) at the end of build season.
+Our trained *Full YOLOv2 cube model*'s weights can be found [here](#https://crate.botprovoking.org/fieldac/weights/cube-full-v2.weights). You can also have `cmake` download and move the weights into `data/`  by building the project with the `-DDOWNLOAD_WEIGHTS=ON` flag (it will only be moved into  `data/` after running `make`). 
 
 The YOLO model outputs a bounding box and class, which we use in conjunction with optical flow to detect and track cubes. This method allows us to run a heavier, more robust model while still maintaining real-time accuracy. The main downside to this approach is objects are less likely to be properly detected and tracked while the robot is in motion, due to the decreased operating frame-rate of the model.
 
@@ -59,11 +59,9 @@ We use the OpenCV implementation of the Lucas-Kanade optical flow method in betw
 
 ## Robot Localization
 
-We use a 2D slice of the field built from [AutoDesk's models](https://www.autodesk.com/education/competitions-and-events/first/recommended-software#Kit-of-parts), and localize ourselves within this model using Monte Carlo Localization (MCL) based upon LIDAR measurements.
+We use a custom-built 2D-vector representation of the field, and localize ourselves within this model using Monte Carlo Localization (MCL) based upon LIDAR measurements.
 
-To increase accuracy and confidence in our pose estimation, we weight the points based on encoder measurements for distance and velocity, and IMU measurements for acceleration. 
-
-***WIP***: The code hereof will be abstracted out into a *point-cloud provider* which will be implemented based on specific LIDAR SDK limitations, and *point-cloud consumer* which implements the ray-tracing and the MCL therefrom, etc. 
+To increase accuracy and confidence in our pose estimation, we weight the points based on encoder measurements for distance and velocity, and IMU measurements for acceleration. Given the dynamic nature of the field, we discount measurements which we found to be closer than our expectation to account for robots, cubes, and the likes moving in front of us. 
 
 ## Robot Tracking
 
@@ -114,7 +112,7 @@ For more insight into the project structure, `CMakeLists.txt` and its companion 
 ### Software
 Minimum Dependencies:
 - C++11
-- OpenCV 3.x
+- OpenCV 3.4 or higher
 - CMake 9.4
 
 Advanced Dependencies:
@@ -122,6 +120,19 @@ Advanced Dependencies:
 - cuDNN 5 **and** cuDNN 6
 
 ## Installation
+
+#### CMake Flags
+```
+-D USING_GPU=[0/1]
+    Whether to build the project to use a GPU or not. Currently only works for NVIDIA GPUs due to an inherent reliance on CUDA.
+-D USING_CUDNN=[0/1]
+    Whether to take advantage of CUDNN (assumes it is already installed, that's on you). See Software Dependencies for version details.
+-D USING_OPENMP=[0/1]
+    Not implemented properly. Do not use.
+-D DOWNLOAD_WEIGHTS=[0/1]
+    If enabled, will fetch latest cube weights from remote and move them to data/ on make. 
+```
+
 ### macOS
 
 ```bash
@@ -136,7 +147,7 @@ make
 
 ### Ubuntu 16.04 (Jetson TX1/TX2)
 **Note:** 
->We have experienced troubles with CMake not properly following 302 redirects when downloading the static files on the TX1. You may have to set these up manually. The links and hashes are in [CMakeLists.txt](/CMakeLists.txt)
+>We have experienced troubles with CMake not properly following 302 redirects when downloading the static files on the TX1 and TX2. You may have to set these up manually. The links and hashes are in [CMakeLists.txt](/CMakeLists.txt)
 
 ```bash
 # Install all the dependencies here

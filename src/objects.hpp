@@ -3,9 +3,23 @@
 
 #include <string>
 #include <tuple>
+#include <opencv2/core/matx.hpp>
+
+struct SensorData {
+    double leftEncoder;
+    double rightEncoder;
+    double accelX;
+    double accelZ;
+    double accelY;
+    double yaw;
+    bool operator==(const SensorData other) {
+        return (leftEncoder == other.leftEncoder && rightEncoder == other.rightEncoder && accelX == other.accelX);
+    }
+};
 
 struct Pose {
     Pose();
+    Pose(const Pose prev, const cv::Vec2f offset, float yaw_diff, SensorData sensorData);
     Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral, const float measuredAccelYaw);
     float x;
     float y;
@@ -19,6 +33,7 @@ struct Pose {
     Pose& operator+(const Pose& other);
     Pose& operator/(const int& other);
     bool operator==(const Pose& other);
+    Pose& operator*(const float& other);
 };
 
 struct Segment {
@@ -29,16 +44,5 @@ struct Segment {
     std::tuple<double, double> end;
 };
 
-struct SensorData {
-    double leftEncoder;
-    double rightEncoder;
-    double accelX;
-    double accelZ;
-    double accelY;
-    double yaw;
-    bool operator==(const SensorData other) {
-        return (leftEncoder == other.leftEncoder && rightEncoder == other.rightEncoder && accelX == other.accelX);
-    }
-};
 
 #endif
