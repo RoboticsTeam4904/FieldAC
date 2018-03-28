@@ -7,21 +7,38 @@ find_package( Threads )
 find_package( OpenCV REQUIRED )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(DATA_DIR ${PROJECT_SOURCE_DIR}/data/)
+
 set(DARKNET_GPU 0)
 set(DARKNET_CUDNN 0)
 set(DARKNET_DEBUG 0)
 set(DARKNET_OPENMP 0)
 set(DARKNET_LIBSO_NAME libdarknet.so)
 
+set(PROV_CRATE_URL "https://crate.botprovoking.org/fieldac/")
+set(PROV_CRATE_WEIGHTS_FOLDER "weights/")
+set(PROV_CRATE_WEIGHTS_FILENAME "cube-full-v2.weights")
+set(PROV_CRATE_WEIGHTS_FILEMD5 947de697d772a6d31790a3ae89626978)
 
-
-include(DownloadProject.cmake)
+if(UNIX AND NOT APPLE)
+    set(NTCORE_SHARED_FILENAME "libntcore.so")
+    set(NTCORE_SHARED_FILEMD5 3dc47662ddf949a2212fa0cd02265940)
+    set(WPIUTIL_SHARED_FILENAME "libwpiutil.so")
+    set(WPIUTIL_SHARED_FILEMD5 2e9e8f0634a247c4b559da18555ee8e6)
+elseif(UNIX AND APPLE)
+    set(NTCORE_SHARED_FILENAME "libntcore.dylib")
+    set(NTCORE_SHARED_FILEMD5 "7fcbd6a85e1034ea2eb53baecc5d49e0")
+    set(WPIUTIL_SHARED_FILENAME "libwpiutil.dylib")
+    set(WPIUTIL_SHARED_FILEMD5 d22a2f7f0c7787cfa35caa7a704b0afe)
+endif()
 
 file(GLOB NETWORK_SRC src/network/*.cpp)
 file(GLOB BOT_LCL_SRC src/botlocale/*.cpp)
 file(GLOB BOT_TRK_SRC src/bottracking/*.cpp)
 file(GLOB OBJ_TRK_SRC src/objecttracking/*.cpp)
 file(GLOB CORE_SRC src/*.cpp)
+
+include(DownloadProject.cmake)
 
 download_project(PROJ darknet
         GIT_REPOSITORY https://github.com/RoboticsTeam4904/darknet
@@ -39,40 +56,33 @@ download_project(PROJ ntcore
         GIT_TAG 3025a18
         GIT_SHALLOW 1)
 
-if(UNIX AND NOT APPLE)
-    set(NTCORE_SHARED_FILENAME "libntcore.so")
-    set(NTCORE_SHARED_FILEMD5 3dc47662ddf949a2212fa0cd02265940)
-elseif(UNIX AND APPLE)
-    set(NTCORE_SHARED_FILENAME "libntcore.dylib")
-    set(NTCORE_SHARED_FILEMD5 "7fcbd6a85e1034ea2eb53baecc5d49e0")
-endif()
 download_project(PROJ ntcore-shared
-        URL "https://crate.botprovoking.org/fieldac/${NTCORE_SHARED_FILENAME}"
+        URL "${PROV_CRATE_URL}${NTCORE_SHARED_FILENAME}"
         URL_MD5 ${NTCORE_SHARED_FILEMD5}
         DOWNLOAD_NAME ${NTCORE_SHARED_FILENAME}
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
-#URL_MD5 7fcbd6a85e1034ea2eb53baecc5d49e0
 
 download_project(PROJ wpiutil
         GIT_REPOSITORY https://github.com/wpilibsuite/wpiutil
         GIT_TAG 71d06a1
         GIT_SHALLOW 1)
 
-if(UNIX AND NOT APPLE)
-    set(WPIUTIL_SHARED_FILENAME "libwpiutil.so")
-    set(WPIUTIL_SHARED_FILEMD5 2e9e8f0634a247c4b559da18555ee8e6)
-elseif(UNIX AND APPLE)
-    set(WPIUTIL_SHARED_FILENAME "libwpiutil.dylib")
-    set(WPIUTIL_SHARED_FILEMD5 d22a2f7f0c7787cfa35caa7a704b0afe)
-endif()
 download_project(PROJ wpiutil-shared
-        URL "https://crate.botprovoking.org/fieldac/${WPIUTIL_SHARED_FILENAME}"
+        URL "${PROV_CRATE_URL}${WPIUTIL_SHARED_FILENAME}"
         URL_MD5 ${WPIUTIL_SHARED_FILEMD5}
         DOWNLOAD_NAME ${WPIUTIL_SHARED_FILENAME}
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
-#URL_MD5 d22a2f7f0c7787cfa35caa7a704b0afe
+
+if("${DOWNLOAD_WEIGHTS}" STREQUAL "ON")
+    download_project(PROJ crate-weights
+            URL "${PROV_CRATE_URL}${PROV_CRATE_WEIGHTS_FOLDER}${PROV_CRATE_WEIGHTS_FILENAME}"
+            URL_MD5 ${PROV_CRATE_WEIGHTS_FILEMD5}
+            DOWNLOAD_NAME ${PROV_CRATE_WEIGHTS_FILENAME}
+            DOWNLOAD_NO_EXTRACT 1
+            DOWNLOAD_NO_PROGRESS 0)
+endif()
 
 set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
 execute_process(COMMAND uname -s
@@ -132,6 +142,14 @@ add_custom_command(TARGET field
         COMMENT "Building ${rplidar_SDK_DIR}"
         BYPRODUCTS ${rplidar_OUTPUT_DIR}/librplidar_sdk.a)
 
+if("${DOWNLOAD_WEIGHTS}" STREQUAL "ON" AND NOT EXISTS "${DATA_DIR}${PROV_CRATE_WEIGHTS_FILENAME}")
+    add_custom_command(TARGET field
+            PRE_LINK
+            COMMAND mv crate-weights-download/crate-weights-download-prefix/src/${PROV_CRATE_WEIGHTS_FILENAME} ${DATA_DIR}
+            COMMENT "Copying latest crate weights..."
+            BYPRODUCTS ${DATA_DIR}${PROV_CRATE_WEIGHTS_FILENAME}
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+endif()
 target_link_libraries(field ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(field rplidar_sdk)
 target_link_libraries(field darknet)
