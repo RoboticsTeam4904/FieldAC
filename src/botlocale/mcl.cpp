@@ -56,7 +56,7 @@ Pose *BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
 }
 
 Pose BotLocale::get_best_pose(Pose input[SAMPLES]) {
-    return input[(int)RAND*SAMPLES];
+//    return input[(int)RAND*SAMPLES];
     Pose total_pose;
     float probSum = 0;
     std::vector<float> probs;

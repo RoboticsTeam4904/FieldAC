@@ -221,6 +221,7 @@ double LidarScan::raytrace(Pose robot_pose) {
 
     double ms = 0;
     auto pos_point = tuple_to_point(pos);
+    double numGoodMeasurements = 0;
 
     std::vector<Segment> sorted_segments = Field::getInstance()->construct;
     std::sort(sorted_segments.begin(), sorted_segments.end(), SegmentComparator(pos));
@@ -229,7 +230,7 @@ double LidarScan::raytrace(Pose robot_pose) {
         if (std::get<1>(measurement) <= 0) {
             continue;
         }
-        float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180;
+        float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180 - M_PI/2;
         auto direction = cv::Vec2f(std::cos(rads), std::sin(rads));
         bool continyoo = false;
 
@@ -242,9 +243,10 @@ double LidarScan::raytrace(Pose robot_pose) {
             auto intersection = this->intersect_ray_with_segment(pos_point, direction, seg);
 
             if (intersection) {
+                numGoodMeasurements++;
                 continyoo = true;
                 cv::Point2f expected_point = *intersection;
-                cv::Point2f actual_point = cv::Point2f(direction * std::get<1>(measurement));
+                cv::Point2f actual_point = cv::Point2f(std::cos(rads) * std::get<1>(measurement) + robot_pose.x, std::sin(rads) * std::get<1>(measurement) + robot_pose.y);
                 // angle should be the same because math so we just compare magnitudes
                 auto expected_mag = dist(expected_point);
                 auto actual_mag = dist(actual_point);
@@ -265,9 +267,9 @@ double LidarScan::raytrace(Pose robot_pose) {
 
     }
     if (totalErr == 0) {
-        totalErr = 10000;
+        totalErr = 100000;
     }
-    return totalErr;
+    return totalErr/numGoodMeasurements;
 }
 
 
@@ -289,7 +291,7 @@ double LidarScan::raytrace_visual(Pose robot_pose, cv::Mat &img) {
         if (std::get<1>(measurement) <= 0) {
             continue;
         }
-        float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180;
+        float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180 - M_PI/2;
         auto direction = cv::Vec2f(std::cos(rads), std::sin(rads));
         bool continyoo = false;
 
@@ -304,9 +306,11 @@ double LidarScan::raytrace_visual(Pose robot_pose, cv::Mat &img) {
             if (intersection) {
                 continyoo = true;
                 cv::Point2f expected_point = *intersection;
-                cv::Point2f actual_point = cv::Point2f(direction * std::get<1>(measurement));
+                std::cout << "rads: "<<rads <<std::endl;
+                std::cout << "measurement - yaw: "<<std::get<0>(measurement) - yaw_degrees<<std::endl;
+                cv::Point2f actual_point = cv::Point2f(std::cos(rads) * std::get<1>(measurement) + robot_pose.x, std::sin(rads) * std::get<1>(measurement) + robot_pose.y);
                 cv::circle(img, expected_point, 2, cv::Scalar(10, 10, 255), -1);
-                cv::line(img, pos_point, expected_point, cv::Scalar(10, 10, 255), 1);
+                cv::line(img, actual_point, expected_point, cv::Scalar(90, 128, 255), 1);
                 // angle should be the same because math so we just compare magnitudes
                 auto expected_mag = dist(expected_point);
                 auto actual_mag = dist(actual_point);
