@@ -267,9 +267,9 @@ void Field::render() {
     }
 
     for (auto p : this->pose_distribution) {
-        cv::circle(img, cv::Point2f(p.x, p.y), p.probability,
-                   cv::Scalar(255, 128, 128), -1);
-        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+(p.dx)*10, p.y+(p.dy)*10),
+        cv::circle(img, cv::Point2f(p.x, p.y), 3,
+                   cv::Scalar(p.probability, p.probability, p.probability), -1);
+        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+(p.dx), p.y+(p.dy)),
                  cv::Scalar(128, 128, 0), 1);
     }
 

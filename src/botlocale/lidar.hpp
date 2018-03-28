@@ -10,6 +10,7 @@
 #include <vector>
 #include <tuple>
 #include <opencv/cv.h>
+#include <queue>
 
 #ifndef _countof
 #define _countof(_Array) (int)((sizeof(_Array)) / (sizeof(_Array[0])))

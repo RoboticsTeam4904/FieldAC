@@ -16,8 +16,8 @@ Pose *BotLocale::init() {
     return poses;
 }
 
-Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
-                     SensorData prevData, SensorData currData, LidarScan prevScan, LidarScan currScan) {
+Pose *BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
+                      SensorData prevData, SensorData currData, LidarScan prevScan, LidarScan currScan) {
     prevData.yaw = 0;
     currData.yaw = 0;
     Pose n[SAMPLES];
@@ -51,11 +51,12 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
         }
     }
     ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
-    std::cout << "Average MCL time: " << ms/SAMPLES << "ms" << std::endl;
+    std::cout << "Average MCL time: " << ms / SAMPLES << "ms" << std::endl;
     return input;
 }
 
 Pose BotLocale::get_best_pose(Pose input[SAMPLES]) {
+    return input[(int)RAND*SAMPLES];
     Pose total_pose;
     float probSum = 0;
     std::vector<float> probs;
@@ -66,6 +67,6 @@ Pose BotLocale::get_best_pose(Pose input[SAMPLES]) {
     for (int i = 0; i < SAMPLES; ++i) {
         total_pose = input[i] + total_pose;
     }
-    Pose average_pose = total_pose/SAMPLES;
+    Pose average_pose = total_pose / SAMPLES;
     return average_pose;
 }

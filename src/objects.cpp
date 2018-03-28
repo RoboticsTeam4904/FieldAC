@@ -21,13 +21,13 @@ Pose::Pose(const Pose prev, const cv::Vec2f scanDiff, float yaw_diff, SensorData
     auto imu_dx = sensorData.accelX; // TODO NOT SURE WHICH ACCEL IS WHICH
     auto imu_dy = sensorData.accelY; // ^^^
 
-    dx = (lidar_dx + (imu_dx * 2)) / 3;
-    dy = (lidar_dy + (imu_dy * 2)) / 3;
+    dx = ((dx + lidar_dx + (imu_dx * 2)) / 4) * (ZRAND * VELOCITY_NOISE);
+    dy = ((dx + lidar_dy + (imu_dy * 2)) / 4) * (ZRAND * VELOCITY_NOISE);
 
     x = prev.x + dx;
     y = prev.y + dy;
 
-    yaw = sensorData.yaw;
+    yaw = sensorData.yaw + (ZRAND * YAW_RATE_NOISE);
 }
 
 Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral,
