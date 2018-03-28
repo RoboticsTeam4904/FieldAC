@@ -30,8 +30,8 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     auto diff = LidarScan::calcOffset(prevScan, prevYaw, currScan, currYaw);
     std::cout << std::get<0>(diff) << std::endl;
     for (int i = 0; i < SAMPLES; i++) {
-        n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, 0);
-        n[i] = Pose(n[i], std::get<0>(diff), std::get<1>(diff));
+        //n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, 0);
+        n[i] = Pose(input[i], -1 * std::get<0>(diff), std::get<1>(diff));
         weights[i] = 10000/static_cast<float>(prevScan.raytrace(n[i])); //TODO who knows
         n[i].probability = weights[i];
         weightsSum += weights[i];

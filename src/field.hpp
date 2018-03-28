@@ -16,6 +16,7 @@ class Field {
 private:
     Field();
     static Field* instance;
+    mutable std::mutex scan_mutex;
 public:
     static Field* getInstance();
     void load();
