@@ -4,7 +4,7 @@
 #include <tuple>
 
 #define LIDAR_OFFSET 0
-#define dist(a) sqrt( (a.x)*(a.x) + (a.y)*(a.y) )
+#define dist(a, b) sqrt( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) )
 
 Lidar::Lidar(std::string path, _u32 baudrate) : path(path), baudrate(baudrate) {
     this->driver = rplidar::RPlidarDriver::CreateDriver(rplidar::RPlidarDriver::DRIVER_TYPE_SERIALPORT);
@@ -228,6 +228,7 @@ double LidarScan::raytrace(Pose robot_pose) {
 
     for (auto measurement : measurements) {
         if (std::get<1>(measurement) <= 0) {
+            totalErr += 500;
             continue;
         }
         float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180 - M_PI/2;
@@ -248,12 +249,11 @@ double LidarScan::raytrace(Pose robot_pose) {
                 cv::Point2f expected_point = *intersection;
                 cv::Point2f actual_point = cv::Point2f(std::cos(rads) * std::get<1>(measurement) + robot_pose.x, std::sin(rads) * std::get<1>(measurement) + robot_pose.y);
                 // angle should be the same because math so we just compare magnitudes
-                auto expected_mag = dist(expected_point);
-                auto actual_mag = dist(actual_point);
-                actual_mag = std::get<1>(measurement); // those SHOULD be the same
-//                std::printf("%f should be the same as %f\n", cv::norm(actual_point), actual_mag);
+                auto expected_mag = dist(pos_point, expected_point);
+                auto actual_mag = std::get<1>(measurement);
+//                std::printf("%f should be the same as %f\n", dist(pos_point, actual_point), actual_mag);
                 if (actual_mag < expected_mag) {
-                    totalErr += (expected_mag - actual_mag) * 0.1;
+                    totalErr += (expected_mag - actual_mag) * 1;
                 } else {
                     totalErr += (actual_mag - expected_mag);
                 }
@@ -267,9 +267,9 @@ double LidarScan::raytrace(Pose robot_pose) {
 
     }
     if (totalErr == 0) {
-        totalErr = 100000;
+        totalErr = 10000;
     }
-    return totalErr/numGoodMeasurements;
+    return numGoodMeasurements/totalErr;
 }
 
 
@@ -306,14 +306,12 @@ double LidarScan::raytrace_visual(Pose robot_pose, cv::Mat &img) {
             if (intersection) {
                 continyoo = true;
                 cv::Point2f expected_point = *intersection;
-                std::cout << "rads: "<<rads <<std::endl;
-                std::cout << "measurement - yaw: "<<std::get<0>(measurement) - yaw_degrees<<std::endl;
                 cv::Point2f actual_point = cv::Point2f(std::cos(rads) * std::get<1>(measurement) + robot_pose.x, std::sin(rads) * std::get<1>(measurement) + robot_pose.y);
                 cv::circle(img, expected_point, 2, cv::Scalar(10, 10, 255), -1);
                 cv::line(img, actual_point, expected_point, cv::Scalar(90, 128, 255), 1);
                 // angle should be the same because math so we just compare magnitudes
-                auto expected_mag = dist(expected_point);
-                auto actual_mag = dist(actual_point);
+                auto expected_mag = dist(pos_point, expected_point);
+                auto actual_mag = dist(pos_point, actual_point);
                 actual_mag = std::get<1>(measurement); // those SHOULD be the same
 //                std::printf("%f should be the same as %f\n", cv::norm(actual_point), actual_mag);
                 if (actual_mag < expected_mag) {

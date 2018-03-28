@@ -75,6 +75,11 @@ void Field::load() {
     construct.emplace_back(Segment(636, 1302, 636, 1159));
 
 
+//    construct.emplace_back(Segment(30, 30, 330, 30));
+//    construct.emplace_back(Segment(330, 30, 330, 230));
+//    construct.emplace_back(Segment(330, 230, 30, 230));
+//    construct.emplace_back(Segment(30, 230, 30, 30));
+
     field_width = 0;
     field_height = 0;
     for (auto seg : this->construct) {
@@ -192,9 +197,9 @@ void Field::run() {
         render();
         this->scan_mutex.unlock();
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
-        int fps = 1000 / ms;
+        int fps = 1000 / (ms+1);
         std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
-        me = BotLocale::get_best_pose(pose_distribution);
+        me = BotLocale::get_best_pose(pose_distribution, latest_lidar_scan);
         me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
         std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
                     me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
@@ -268,7 +273,7 @@ void Field::render() {
 
     for (auto p : this->pose_distribution) {
         cv::circle(img, cv::Point2f(p.x, p.y), 3,
-                   cv::Scalar(255, 255, 255) - cv::Scalar(p.probability, p.probability, p.probability), -1);
+                   cv::Scalar(p.probability, p.probability, p.probability), -1);
         cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+(p.dx), p.y+(p.dy)),
                  cv::Scalar(128, 128, 0), 1);
     }

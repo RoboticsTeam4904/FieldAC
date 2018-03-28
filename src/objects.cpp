@@ -3,14 +3,15 @@
 #include <math.h>
 #include <cmath>
 #include <opencv2/core/matx.hpp>
+#include <iostream>
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
 #define ZRAND (RAND - 0.5)
 
-#define VELOCITY_NOISE 0.01
+#define VELOCITY_NOISE 1
 
-#define YAW_RATE_NOISE 0.0005
+#define YAW_RATE_NOISE 0.005
 
 Pose::Pose() = default;
 
@@ -21,8 +22,8 @@ Pose::Pose(const Pose prev, const cv::Vec2f scanDiff, float yaw_diff, SensorData
     auto imu_dx = sensorData.accelX; // TODO NOT SURE WHICH ACCEL IS WHICH
     auto imu_dy = sensorData.accelY; // ^^^
 
-    dx = ((dx + lidar_dx + (imu_dx * 2)) / 4) * (ZRAND * VELOCITY_NOISE);
-    dy = ((dx + lidar_dy + (imu_dy * 2)) / 4) * (ZRAND * VELOCITY_NOISE);
+    dx = ((dx + lidar_dx + (imu_dx)) / 3) * (ZRAND * VELOCITY_NOISE);
+    dy = ((dx + lidar_dy + (imu_dy)) / 3) * (ZRAND * VELOCITY_NOISE);
 
     x = prev.x + dx;
     y = prev.y + dy;
@@ -45,7 +46,7 @@ Pose::Pose(const Pose prev, const float measuredAccelForward, const float measur
 }
 
 void Pose::seed() {
-    x = RAND * 849;
+    x = RAND * 800;
     y = RAND * 1700;
     dx = 0;
     dy = 0;

@@ -30,9 +30,9 @@ Pose *BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     auto diff = LidarScan::calcOffset(prevScan, prevYaw, currScan, currYaw);
     std::cout << std::get<0>(diff) << std::endl;
     for (int i = 0; i < SAMPLES; i++) {
-        //n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, 0);
+//        n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, 0);
         n[i] = Pose(input[i], std::get<0>(diff), std::get<1>(diff), currData);
-        weights[i] = 10000/static_cast<float>(currScan.raytrace(n[i])); //TODO who knows
+        weights[i] = static_cast<float>(currScan.raytrace(input[i])); //TODO who knows
         n[i].probability = weights[i];
         weightsSum += weights[i];
     }
@@ -55,12 +55,17 @@ Pose *BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     return input;
 }
 
-Pose BotLocale::get_best_pose(Pose input[SAMPLES]) {
+Pose BotLocale::get_best_pose(Pose input[SAMPLES], LidarScan scan) {
 //    return input[(int)RAND*SAMPLES];
     Pose total_pose;
     float probSum = 0;
     std::vector<float> probs;
+    Pose best_pose;
+    best_pose.probability = 0;
     for (int i = 0; i < SAMPLES; ++i) {
+        if (input[i].probability > best_pose.probability) {
+            best_pose = input[i];
+        }
         probSum += input[i].probability;
         probs.push_back(input[i].probability);
     }
@@ -68,5 +73,6 @@ Pose BotLocale::get_best_pose(Pose input[SAMPLES]) {
         total_pose = input[i] + total_pose;
     }
     Pose average_pose = total_pose / SAMPLES;
+    std::cout << "best score :" << best_pose.probability << std::endl;
     return average_pose;
 }
