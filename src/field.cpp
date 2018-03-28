@@ -171,7 +171,6 @@ void Field::run() {
         std::printf("got sensor data\n");
         // TODO not sure which accel is forward or lateral
         std::clock_t start = std::clock();
-        std::printf("yawRate: %f", (latest_data.yaw - old_data.yaw));
         bool lidarIsReady = false;
         for (auto a : latest_lidar_scan.measurements) {
             if (std::get<0>(a) != 0) {

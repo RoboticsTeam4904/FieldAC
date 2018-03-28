@@ -18,9 +18,6 @@ Pose::Pose(const Pose prev, const cv::Vec2f scanDiff, float yaw_diff) {
     x = prev.x + scanDiff[0];
     y = prev.y + scanDiff[1];
 
-    dx = scanDiff[0];
-    dy = scanDiff[1];
-
     yaw = prev.yaw + yaw_diff;
 }
 
