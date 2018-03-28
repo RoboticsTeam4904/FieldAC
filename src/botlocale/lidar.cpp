@@ -3,7 +3,7 @@
 #include "../field.hpp"
 #include <tuple>
 
-#define LIDAR_OFFSET -135
+#define LIDAR_OFFSET 0
 #define dist(a) sqrt( (a.x)*(a.x) + (a.y)*(a.y) )
 
 Lidar::Lidar(std::string path, _u32 baudrate) : path(path), baudrate(baudrate) {
@@ -76,8 +76,14 @@ void Lidar::run(const bool *stop) {
 
             for (int pos = 0; pos < (int) count; pos++) {
                 float angle = (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
-                tmp.measurements[((int) (angle + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET))%360, nodes[pos].distance_q2 /
-                                                                                        40.0f); // convert to centimeters
+                auto distance = nodes[pos].distance_q2 / 40.0f; // convert to centimeters
+                if ((int) (angle + LIDAR_OFFSET) % 360 - 90 > 0 && (int) (angle + LIDAR_OFFSET) % 360 - 90 < 270) {
+                    distance = -1;
+                }
+                tmp.measurements[((int) (angle + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET)) % 360,
+                                                                                 distance);
+
+
 //                std::printf("%s theta: %03.2f Dist: %08.2f Q: %d\n",
 //                            (nodes[pos].sync_quality & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ? "S " : "  ",
 //                            (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f,
@@ -142,7 +148,7 @@ cv::Point2f *LidarScan::intersect_ray_with_segment(cv::Point2f origin, cv::Vec2f
     auto t2 = (v1.dot(v3)) / dot;
 
     if (t1 >= 0.0 && (t2 >= 0.0 && t2 <= 1.0)) {
-        *intersection = origin + cv::Point2f((t1 * direction));
+        *intersection = origin + cv::Point2f(t1 * direction);
         return intersection;
     }
 
@@ -167,12 +173,29 @@ struct SegmentComparator {
     std::tuple<double, double> pos;
 };
 
+cv::Vec2f LidarScan::calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees) {
+    cv::Vec2f scanOffset;
+    std::vector<cv::Vec2f> scanOffsets = std::vector<cv::Vec2f>();
+    for (int i = 0; i < 360; i++) {
+        auto prevX = (cos((std::get<0>(prevScan.measurements[i]) - prevYawDegrees)) * (180 / M_PI)) * std::get<1>(prevScan.measurements[i]);
+        auto prevY = (sin((std::get<0>(prevScan.measurements[i]) - prevYawDegrees)) * (180 / M_PI)) * std::get<1>(prevScan.measurements[i]);
+        auto currX = (cos((std::get<0>(currScan.measurements[i]) - currYawDegrees)) * (180 / M_PI)) * std::get<1>(currScan.measurements[i]);
+        auto currY = (sin((std::get<0>(currScan.measurements[i]) - currYawDegrees)) * (180 / M_PI)) * std::get<1>(currScan.measurements[i]);
+
+        auto vec = cv::Vec2f(currX - prevX, currY - prevY);
+        scanOffset += vec;
+        scanOffsets.push_back(vec);
+    }
+    return scanOffset / 360;
+};
+
 double LidarScan::raytrace(Pose robot_pose) {
     double robot_x = robot_pose.x;
     double robot_y = robot_pose.y;
-    float yaw_degrees = robot_pose.yaw;
+    float yaw_degrees = (int) (robot_pose.yaw * 180 / M_PI) % 360;
+    yaw_degrees = 0;
     std::tuple<double, double> pos = std::tuple<double, double>(robot_x, robot_y);
-    double err = 0;
+    double totalErr = 0;
 
     double ms = 0;
     auto pos_point = tuple_to_point(pos);
@@ -180,12 +203,17 @@ double LidarScan::raytrace(Pose robot_pose) {
     std::vector<Segment> sorted_segments = Field::getInstance()->construct;
     std::sort(sorted_segments.begin(), sorted_segments.end(), SegmentComparator(pos));
     for (auto seg : sorted_segments) {
+        double segErr = 0;
         auto start_point = tuple_to_point(seg.start);
         auto end_point = tuple_to_point(seg.end);
         auto start_angle = cvFastArctan(pos_point.x + start_point.x, pos_point.y + start_point.y);
         auto end_angle = cvFastArctan(pos_point.x + end_point.x, pos_point.y + end_point.y);
         bool continyoo = false;
+        double numGoodMeasurements = 1;
         for (auto measurement : measurements) {
+            if (std::get<1>(measurement) <= 0) {
+                continue;
+            }
             float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180;
             auto direction = cv::Vec2f(std::cos(rads), std::sin(rads));
             if (std::abs(start_angle - (int(rads * 180 / M_PI) % 360)) > (std::abs(start_angle - end_angle) + 5) ||
@@ -193,6 +221,8 @@ double LidarScan::raytrace(Pose robot_pose) {
                 continue;
             }
             auto intersection = this->intersect_ray_with_segment(pos_point, direction, seg);
+            numGoodMeasurements++;
+
             if (intersection) {
                 cv::Point2f expected_point = *intersection;
                 cv::Point2f actual_point = cv::Point2f(direction * std::get<1>(measurement));
@@ -202,21 +232,23 @@ double LidarScan::raytrace(Pose robot_pose) {
                 actual_mag = std::get<1>(measurement); // those SHOULD be the same
 //                std::printf("%f should be the same as %f\n", cv::norm(actual_point), actual_mag);
                 if (actual_mag < expected_mag) {
-                    err += (expected_mag - actual_mag) * 0.1;
+                    segErr += (expected_mag - actual_mag) * 1;
                 } else {
-                    err += (actual_mag - expected_mag);
+                    segErr += (actual_mag - expected_mag);
                 }
                 free(intersection);
-                continyoo = true;
-                break;
             }
         }
+        totalErr += segErr / numGoodMeasurements;
         if (continyoo) {
             continue;
         }
 
     }
-    return err;
+    if (totalErr == 0) {
+        totalErr = 10000;
+    }
+    return totalErr;
 }
 
 float LidarScan::calc(float amount, float x, float y, float t1) {

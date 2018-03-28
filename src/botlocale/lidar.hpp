@@ -21,6 +21,7 @@ class LidarScan {
 public:
 	std::tuple<float, float> measurements[360];
 	int offset;
+	std::vector<double> confidence;
 public:
 	LidarScan();
 	LidarScan(const LidarScan& other, int newOffset);
@@ -28,8 +29,9 @@ public:
 	LidarScan getAtLocation(int xCm, int yCm);
 	double raytrace(Pose);
     cv::Point2f* intersect_ray_with_segment(cv::Point2f origin, cv::Vec2f direction, Segment seg);
+	static cv::Vec2f calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees);
 
-    inline float getAtAngle(int angle) const {
+		inline float getAtAngle(int angle) const {
 		return std::get<1>(measurements[angle]);
 	}
 private:
