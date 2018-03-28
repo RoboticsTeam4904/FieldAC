@@ -186,7 +186,7 @@ cv::Vec2f LidarScan::calcOffset(LidarScan &prevScan, float prevYawDegrees, Lidar
         scanOffset += vec;
         scanOffsets.push_back(vec);
     }
-    return scanOffset / 360;
+    return std::make_tuple(scanOffset / 360, currYawDegrees - prevYawDegrees);
 };
 
 double LidarScan::raytrace(Pose robot_pose) {

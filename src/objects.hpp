@@ -7,7 +7,7 @@
 
 struct Pose {
     Pose();
-    Pose(const Pose prev, const cv::Vec2f offset);
+    Pose(const Pose prev, const cv::Vec2f offset, float yaw_diff);
     Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral, const float measuredAccelYaw);
     float x;
     float y;

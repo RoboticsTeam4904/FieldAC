@@ -17,15 +17,19 @@ Pose *BotLocale::init() {
 }
 
 Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
-                     const float measuredAccelYaw, SensorData sensorData, LidarScan prevScan, LidarScan currScan, ) {
+                     SensorData prevData, SensorData currData, LidarScan prevScan, LidarScan currScan) {
     sensorData.yaw = 0;
     Pose n[SAMPLES];
     float weights[SAMPLES];
     float weightsSum = 0;
     double ms;
+    auto prevYaw = prevData.yaw;
+    auto currYaw = currData.yaw;
     std::clock_t a = std::clock();
     for (int i = 0; i < SAMPLES; i++) {
-        n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, measuredAccelYaw);
+        auto diff = LidarScan::calcOffset(prevScan, prevYaw, currScan, currYaw);
+        n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, 0);
+        n[i] = Pose(n[i], std::get<0>(diff), std::get<1>(diff));
         weights[i] = 10000/static_cast<float>(prevScan.raytrace(n[i])); //TODO who knows
         n[i].probability = weights[i];
         weightsSum += weights[i];
@@ -37,18 +41,12 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     for (int i = 0; i < SAMPLES; i++) {
         float weight = weightsSum * RAND;
         for (int j = 0; j < SAMPLES; j++) {
-            if ((int) (RAND * 20) >= 15) {
-                weight -= weights[j];
-                poseRegen.push_back(j);
-            }
+            weight -= weights[j];
             if (weight < 0) {
                 input[i] = n[j];
                 break;
             }
         }
-    }
-    for(int i = 0; i < poseRegen.size(); i++) {
-        input[i] =
     }
     ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
     std::cout << "Average MCL time: " << ms/SAMPLES << "ms" << std::endl;

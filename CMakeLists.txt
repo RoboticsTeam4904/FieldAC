@@ -37,6 +37,10 @@ download_project(PROJ ntcore
         GIT_TAG 3025a18
         GIT_SHALLOW 1)
 
+if(UNIX AND NOT APPLE)
+    set(NTCORE_SHARED_FILENAME libntcore.so)
+    set(NTCORE_SHARED_FILEMD5 3dc47662ddf949a2212fa0cd02265940)
+endif()
 download_project(PROJ ntcore-shared
         URL https://crate.botprovoking.org/fieldac/libntcore.so
         URL_MD5 3dc47662ddf949a2212fa0cd02265940
