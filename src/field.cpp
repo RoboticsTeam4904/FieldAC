@@ -20,6 +20,7 @@
 #define ZRAND RAND -0.5
 
 
+#define IMU_TO_CM_S2 980.6649999788 // Gs to cm/s^2
 
 Field::Field() = default;
 
@@ -232,6 +233,10 @@ void Field::get_sensor_data() {
     this->latest_data.accelX = 0;
     this->latest_data.accelY = 0;
     this->latest_data.accelZ = 0;
+
+    this->latest_data.accelX = latest_data.accelX * IMU_TO_CM_S2;
+    this->latest_data.accelY = latest_data.accelY * IMU_TO_CM_S2;
+    this->latest_data.accelZ =latest_data.accelZ * IMU_TO_CM_S2;
 }
 
 void Field::render() {

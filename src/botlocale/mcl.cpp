@@ -31,8 +31,8 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     std::cout << std::get<0>(diff) << std::endl;
     for (int i = 0; i < SAMPLES; i++) {
         //n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, 0);
-        n[i] = Pose(input[i], std::get<0>(diff), std::get<1>(diff));
-        weights[i] = 10000/static_cast<float>(prevScan.raytrace(n[i])); //TODO who knows
+        n[i] = Pose(input[i], std::get<0>(diff), std::get<1>(diff), currData);
+        weights[i] = 10000/static_cast<float>(currScan.raytrace(n[i])); //TODO who knows
         n[i].probability = weights[i];
         weightsSum += weights[i];
     }
