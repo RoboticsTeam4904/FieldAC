@@ -38,13 +38,16 @@ download_project(PROJ ntcore
         GIT_SHALLOW 1)
 
 if(UNIX AND NOT APPLE)
-    set(NTCORE_SHARED_FILENAME libntcore.so)
+    set(NTCORE_SHARED_FILENAME "libntcore.so")
     set(NTCORE_SHARED_FILEMD5 3dc47662ddf949a2212fa0cd02265940)
+elseif(UNIX AND APPLE)
+    set(NTCORE_SHARED_FILENAME "libntcore.dylib")
+    set(NTCORE_SHARED_FILEMD5 "7fcbd6a85e1034ea2eb53baecc5d49e0")
 endif()
 download_project(PROJ ntcore-shared
-        URL https://crate.botprovoking.org/fieldac/libntcore.so
-        URL_MD5 3dc47662ddf949a2212fa0cd02265940
-        DOWNLOAD_NAME libntcore.so
+        URL "https://crate.botprovoking.org/fieldac/${NTCORE_SHARED_FILENAME}"
+        URL_MD5 ${NTCORE_SHARED_FILEMD5}
+        DOWNLOAD_NAME ${NTCORE_SHARED_FILENAME}
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
 #URL_MD5 7fcbd6a85e1034ea2eb53baecc5d49e0
@@ -54,10 +57,17 @@ download_project(PROJ wpiutil
         GIT_TAG 71d06a1
         GIT_SHALLOW 1)
 
+if(UNIX AND NOT APPLE)
+    set(WPIUTIL_SHARED_FILENAME "libwpiutil.so")
+    set(WPIUTIL_SHARED_FILEMD5 2e9e8f0634a247c4b559da18555ee8e6)
+elseif(UNIX AND APPLE)
+    set(WPIUTIL_SHARED_FILENAME "libwpiutil.dylib")
+    set(WPIUTIL_SHARED_FILEMD5 d22a2f7f0c7787cfa35caa7a704b0afe)
+endif()
 download_project(PROJ wpiutil-shared
-        URL https://crate.botprovoking.org/fieldac/libwpiutil.so
-        URL_MD5 2e9e8f0634a247c4b559da18555ee8e6
-        DOWNLOAD_NAME libwpiutil.so
+        URL "https://crate.botprovoking.org/fieldac/${WPIUTIL_SHARED_FILENAME}"
+        URL_MD5 ${WPIUTIL_SHARED_FILEMD5}
+        DOWNLOAD_NAME ${WPIUTIL_SHARED_FILENAME}
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
 #URL_MD5 d22a2f7f0c7787cfa35caa7a704b0afe
@@ -95,13 +105,13 @@ add_executable(field ${CORE_SRC}
 
 add_custom_command(TARGET field
         PRE_LINK
-        COMMAND cp ntcore-shared-download/ntcore-shared-download-prefix/src/libntcore.so ${CMAKE_BINARY_DIR}/
+        COMMAND cp ntcore-shared-download/ntcore-shared-download-prefix/src/${NTCORE_SHARED_FILENAME} ${CMAKE_BINARY_DIR}/
         COMMENT "Copying ntcore..."
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_custom_command(TARGET field
         PRE_LINK
-        COMMAND cp wpiutil-shared-download/wpiutil-shared-download-prefix/src/libwpiutil.so ${CMAKE_BINARY_DIR}/
+        COMMAND cp wpiutil-shared-download/wpiutil-shared-download-prefix/src/${WPIUTIL_SHARED_FILENAME} ${CMAKE_BINARY_DIR}/
         COMMENT "Copying wpiutil..."
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
