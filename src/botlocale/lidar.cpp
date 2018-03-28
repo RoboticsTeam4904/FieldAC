@@ -173,7 +173,7 @@ struct SegmentComparator {
     std::tuple<double, double> pos;
 };
 
-cv::Vec2f LidarScan::calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees) {
+std::tuple<cv::Vec2f, float> LidarScan::calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees) {
     cv::Vec2f scanOffset;
     std::vector<cv::Vec2f> scanOffsets = std::vector<cv::Vec2f>();
     for (int i = 0; i < 360; i++) {
