@@ -3,9 +3,11 @@
 
 #include <string>
 #include <tuple>
+#include <opencv2/core/matx.hpp>
 
 struct Pose {
     Pose();
+    Pose(const Pose prev, const cv::Vec2f offset);
     Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral, const float measuredAccelYaw);
     float x;
     float y;
@@ -19,6 +21,7 @@ struct Pose {
     Pose& operator+(const Pose& other);
     Pose& operator/(const int& other);
     bool operator==(const Pose& other);
+    Pose& operator*(const float& other);
 };
 
 struct Segment {

@@ -16,6 +16,9 @@
 #define TEAM_NUMBER 4904
 #define NACHI_SUQQQQ 1000
 #define DEGRADATION_AMOUNT 0.05
+#define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
+#define ZRAND RAND -0.5
+
 
 
 Field::Field() = default;
@@ -91,8 +94,8 @@ void Field::load() {
 
     std::printf("Field generated.\n\tNumber of segments: %lu\n\tSize: %f x %f\n", construct.size(), field_height,
                 field_width);
-    me.x = 250;
-    me.y = 250;
+    me.x = 0;
+    me.y = 0;
     me.yaw = 0; // forward/up
     nt_inst = nt::GetDefaultInstance();
     nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
@@ -172,14 +175,18 @@ void Field::run() {
         if (!lidarIsReady) {
             continue;
         }
-        BotLocale::step(pose_distribution, static_cast<const float>(latest_data.accelX),
-                        static_cast<const float>(latest_data.accelY),
-                        static_cast<const float>(latest_data.yaw - old_data.yaw),
+        for (auto &p : pose_distribution) {
+            p.yaw = static_cast<float>(0);
+        }
+        BotLocale::step(pose_distribution, static_cast<const float>(0),
+                        static_cast<const float>(0),
+                        static_cast<const float>(0),
                         latest_data, latest_lidar_scan);
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
         int fps = 1000 / ms;
         std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
         me = BotLocale::get_best_pose(pose_distribution);
+        me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
         std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
                     me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
     }
@@ -247,9 +254,9 @@ void Field::render() {
     }
 
     for (auto p : this->pose_distribution) {
-        cv::circle(img, cv::Point2f(p.x, p.y), 1,
+        cv::circle(img, cv::Point2f(p.x, p.y), p.probability,
                    cv::Scalar(255, 0, 0), -1);
-        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+p.dx, p.y+p.dy),
+        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+(p.dx)*10, p.y+(p.dy)*10),
                    cv::Scalar(255, 255, 0), 1);
     }
     renderedImage = img;

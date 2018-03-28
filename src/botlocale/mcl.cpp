@@ -17,7 +17,8 @@ Pose *BotLocale::init() {
 }
 
 Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
-                     const float measuredAccelYaw, SensorData sensorData, LidarScan scan) {
+                     const float measuredAccelYaw, SensorData sensorData, LidarScan prevScan, LidarScan currScan, ) {
+    sensorData.yaw = 0;
     Pose n[SAMPLES];
     float weights[SAMPLES];
     float weightsSum = 0;
@@ -25,22 +26,29 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     std::clock_t a = std::clock();
     for (int i = 0; i < SAMPLES; i++) {
         n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, measuredAccelYaw);
-        weights[i] = static_cast<float>(1 / (scan.raytrace(n[i]) + (n[i].yaw - sensorData.yaw))); //TODO who knows
+        weights[i] = 10000/static_cast<float>(prevScan.raytrace(n[i])); //TODO who knows
         n[i].probability = weights[i];
         weightsSum += weights[i];
     }
     ms = (std::clock() - a) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
     std::cout << "Total raytrace time: " << ms << "ms" << std::endl;
     std::clock_t start = std::clock();
+    std::vector<int> poseRegen = std::vector<int>();
     for (int i = 0; i < SAMPLES; i++) {
         float weight = weightsSum * RAND;
         for (int j = 0; j < SAMPLES; j++) {
-            weight -= weights[j];
+            if ((int) (RAND * 20) >= 15) {
+                weight -= weights[j];
+                poseRegen.push_back(j);
+            }
             if (weight < 0) {
                 input[i] = n[j];
                 break;
             }
         }
+    }
+    for(int i = 0; i < poseRegen.size(); i++) {
+        input[i] =
     }
     ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
     std::cout << "Average MCL time: " << ms/SAMPLES << "ms" << std::endl;
@@ -49,9 +57,15 @@ Pose* BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
 
 Pose BotLocale::get_best_pose(Pose input[SAMPLES]) {
     Pose total_pose;
+    float probSum = 0;
+    std::vector<float> probs;
+    for (int i = 0; i < SAMPLES; ++i) {
+        probSum += input[i].probability;
+        probs.push_back(input[i].probability);
+    }
     for (int i = 0; i < SAMPLES; ++i) {
         total_pose = input[i] + total_pose;
     }
-    Pose average_pose = total_pose / SAMPLES;
+    Pose average_pose = total_pose/SAMPLES;
     return average_pose;
 }

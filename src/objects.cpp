@@ -1,6 +1,8 @@
 #include "objects.hpp"
+#include "botlocale/lidar.hpp"
 #include <math.h>
 #include <cmath>
+#include <opencv2/core/matx.hpp>
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
@@ -8,9 +10,17 @@
 
 #define VELOCITY_NOISE 0.01
 
-#define YAW_RATE_NOISE 0.05
+#define YAW_RATE_NOISE 0.0005
 
 Pose::Pose() = default;
+
+Pose::Pose(const Pose prev, const cv::Vec2f scanDiff) {
+    x = prev.x + scanDiff[0];
+    y = prev.y + scanDiff[1];
+
+    dx = scanDiff[0];
+    dy = scanDiff[1];
+}
 
 Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral,
            const float measuredAccelYaw) {
@@ -22,7 +32,7 @@ Pose::Pose(const Pose prev, const float measuredAccelForward, const float measur
     dy = static_cast<float>(prev.dy + measuredAccelForward * sin(prev.yaw) + measuredAccelLateral * cos(prev.yaw) +
                             (ZRAND * VELOCITY_NOISE));
 
-    yaw = prev.yaw + (prev.rateYaw / 2);
+    yaw = prev.yaw + prev.rateYaw;
     rateYaw = static_cast<float>(prev.rateYaw + measuredAccelYaw + (ZRAND * YAW_RATE_NOISE));
 }
 
@@ -64,6 +74,20 @@ Pose &Pose::operator/(const int &other) {
     tmp.dx = this->dx / other;
     tmp.dy = this->dy / other;
     tmp.rateYaw = this->rateYaw / other;
+    return tmp;
+}
+
+Pose &Pose::operator*(const float &other) {
+    static auto tmp = Pose();
+    tmp.x = this->x * other;
+    tmp.y = this->y * other;
+    tmp.yaw = this->yaw * other;
+    while (tmp.yaw > (M_PI * 2)) {
+        tmp.yaw -= M_PI * 2;
+    }
+    tmp.dx = this->dx * other;
+    tmp.dy = this->dy * other;
+    tmp.rateYaw = this->rateYaw * other;
     return tmp;
 }
 
