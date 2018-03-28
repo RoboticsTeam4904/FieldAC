@@ -285,6 +285,7 @@ void Field::render() {
         cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
                    cv::Scalar(50, 128, 50), -1);
     }
+    this->latest_lidar_scan.raytrace_visual(me, img);
 
     renderedImage = img;
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
