@@ -10,6 +10,8 @@
 #include <networktables/NetworkTable.h>
 #include "./botlocale/mcl.hpp"
 #include "vision.hpp"
+// #include <stdarg.h>
+#include <cstdarg>
 
 #define PI 3.14159265
 #define TEAM_NUMBER 4904
@@ -152,28 +154,6 @@ void Field::update(LidarScan scan) {
     this->latest_lidar_scan = scan;
 }
 
-//unsure of whether or not it's better practice to but this-> before the functions or not
-void Field::tick() {
-    this->render();
-    this->put_pose_nt(this->objects, "cubes");
-    std::printf("published cube data\n");
-    this->put_values_nt("localization", "vision", 3, std::make_pair("frontDist", dist_front_obstacle()), 
-        std::make_pair("x", FT(me.x)), 
-        std::make_pair("y", FT(me.y)));
-    std::printf("published localization data\n");
-    this->old_data = latest_data;
-    this->get_sensor_data_nt();
-    std::printf("got sensor data\n");
-    // TODO not sure which accel is forward or lateral
-    BotLocale::step(pose_distribution, latest_data.accelX,
-                    static_cast<const float>(latest_data.accelY),
-                    static_cast<const float>(latest_data.yaw - old_data.yaw),
-                    "is this even used?", latest_lidar_scan);
-    std::printf("stepped\n");
-    me = BotLocale::get_best_pose(pose_distribution);
-    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
-}
-
 void Field::render() {
     cv::Mat img(field_height, field_width, CV_8UC3, cv::Scalar(255, 255, 255));
     int robotRadius = 20;
@@ -236,6 +216,7 @@ void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector
 
 void Field::put_arrays_nt(std::string mainKey, std::string parent, int count, ...) {
     va_list values;
+    va_start(values, count);
     for (int i = 0; i < count; ++i) {
         std::pair<std::string, std::vector<double>> data = va_arg(i, std::pair<std::string, std::vector<double>>);
         nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + data.first, nt::Value::MakeDoubleArray(data.second));
@@ -251,6 +232,7 @@ void Field::put_values_nt(std::string mainKey, std::map<std::string, double> dat
 
 void Field::put_values_nt(std::string mainKey, std::string parent, int count, ...) {
     va_list values;
+    va_start(values, count);
     for (int i = 0; i < count; ++i) {
         std::pair<std::string, double> data = va_arg(i, std::pair<std::string, std::vector<double>>);
         nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + data.first, nt::Value::MakeDouble(data.second));
@@ -267,18 +249,39 @@ void Field::put_value_nt(std::string key, std::vector<double> data, std::string 
 
 void Field::get_sensor_data_nt() {
     this->latest_data.leftEncoder = nt::GetEntryValue("/sensorData/leftEncoder")->GetDouble();
-    this->latest_data.rightEncoder = nt::GetEntryValue("/sensorData/rightEncoder"))->GetDouble();
+    this->latest_data.rightEncoder = nt::GetEntryValue("/sensorData/rightEncoder")->GetDouble();
     this->latest_data.accelX = nt::GetEntryValue("/sensorData/accelX")->GetDouble();
     this->latest_data.accelY = nt::GetEntryValue("/sensorData/accelY")->GetDouble();
     this->latest_data.accelZ = nt::GetEntryValue("/sensorData/accelZ")->GetDouble();
     this->latest_data.yaw = nt::GetEntryValue("/sensorData/yaw")->GetDouble();
 }
 
-std::map<std::string, double> Field::get_arrays_nt(std::std::vector<std::string> keys, std::string parent = "sensorData") {
+std::map<std::string, double> Field::get_values_nt(std::vector<std::string> keys, std::string parent = "sensorData") {
     std::string mainKey = "/" + parent + "/";
     std::map<std::string, double> data;
     for(const auto &i : data) {
-        data[i] = nt::GetEntryValue(mainKey + i)->GetDoubleArray();
+        data[i.first] = nt::GetEntryValue(mainKey + i.first)->GetDouble();
     }
     return data;
+}
+
+void Field::tick() {
+    this->render();
+    this->put_pose_nt(this->objects, "cubes");
+    std::printf("published cube data\n");
+    this->put_values_nt("localization", "vision", 3, std::make_pair("frontDist", dist_front_obstacle()), 
+        std::make_pair("x", FT(me.x)), 
+        std::make_pair("y", FT(me.y)));
+    std::printf("published localization data\n");
+    this->old_data = latest_data;
+    this->get_sensor_data_nt();
+    std::printf("got sensor data\n");
+    // TODO not sure which accel is forward or lateral
+    BotLocale::step(pose_distribution, latest_data.accelX,
+                    static_cast<const float>(latest_data.accelY),
+                    static_cast<const float>(latest_data.yaw - old_data.yaw),
+                    "is this even used?", latest_lidar_scan);
+    std::printf("stepped\n");
+    me = BotLocale::get_best_pose(pose_distribution);
+    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
 }
