@@ -152,13 +152,14 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 }
 
 void Field::update(LidarScan scan) {
-    this->old_lidar_scan = this->latest_lidar_scan;
     this->latest_lidar_scan = scan;
 }
 
 void Field::run() {
+    this->old_lidar_scan = this->latest_lidar_scan;
     while (true) {
         render();
+        this->old_lidar_scan = this->latest_lidar_scan;
         this->put_vision_data();
         std::printf("published vision data\n");
         this->old_data = latest_data;
@@ -231,6 +232,7 @@ void Field::render() {
     int robotRadius = 20;
     int middle_x = img.cols / 2;
     int middle_y = img.rows / 2;
+
     cv::rectangle(img, cv::Rect(cv::Point2f(me.x - robotRadius / 2, me.y - robotRadius / 2),
                                 cv::Size(robotRadius, robotRadius)), cv::Scalar(0, 0, 0), 20);
     cv::line(img, cv::Point(me.x, me.y),
@@ -252,19 +254,26 @@ void Field::render() {
                    cv::Scalar(20, 190, 190), -1);
     }
 
+    for (auto p : this->pose_distribution) {
+        cv::circle(img, cv::Point2f(p.x, p.y), p.probability,
+                   cv::Scalar(255, 128, 128), -1);
+        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+(p.dx)*10, p.y+(p.dy)*10),
+                 cv::Scalar(128, 128, 0), 1);
+    }
+
     for (auto m : this->latest_lidar_scan.measurements) {
         double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
         double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
         cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
                    cv::Scalar(0, 255, 0), -1);
     }
-
-    for (auto p : this->pose_distribution) {
-        cv::circle(img, cv::Point2f(p.x, p.y), p.probability,
-                   cv::Scalar(255, 0, 0), -1);
-        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+(p.dx)*10, p.y+(p.dy)*10),
-                   cv::Scalar(255, 255, 0), 1);
+    for (auto m : this->old_lidar_scan.measurements) {
+        double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
+        double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
+        cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
+                   cv::Scalar(50, 128, 50), -1);
     }
+
     renderedImage = img;
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }

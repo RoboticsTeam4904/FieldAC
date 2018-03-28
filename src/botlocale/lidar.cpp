@@ -77,9 +77,9 @@ void Lidar::run(const bool *stop) {
             for (int pos = 0; pos < (int) count; pos++) {
                 float angle = (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
                 auto distance = nodes[pos].distance_q2 / 40.0f; // convert to centimeters
-                if ((int) (angle + LIDAR_OFFSET) % 360 - 90 > 0 && (int) (angle + LIDAR_OFFSET) % 360 - 90 < 270) {
-                    distance = -1;
-                }
+//                if ((int) (angle + LIDAR_OFFSET) % 360 - 90 > 0 && (int) (angle + LIDAR_OFFSET) % 360 - 90 < 270) {
+//                    distance = -1;
+//                }
                 tmp.measurements[((int) (angle + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET)) % 360,
                                                                                  distance);
 
