@@ -89,30 +89,17 @@ int main(int argc, const char **argv) {
     std::printf("Initializing Lidar...\n");
     Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
                              parser.get<uint32_t>("ldr_baud"));
-
-//    This code is non-threaded but also serves as a
-//    slightly cleaner demonstration of what's really being run.
-//
-//    network->run([defaultDev]() {
-//        return defaultDev->getFrame();
-//    },
-//                 {
-//                         {"cube", [cubeTracker](std::vector<Target> targets) {
-//                             return cubeTracker->update(targets);
-//                         }}
-//                 }
-//    );
-//
-//    std::thread networkRun(&Network::run,
-//                           network,
-//                           [defaultDev]() {
-//                               return defaultDev->getFrame();
-//                           }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
-//                           {
-//                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
-//                                       return cubeTracker->update(targets);
-//                                   }}}
-//    );
+    
+    std::thread networkRun(&Network::run,
+                           network,
+                           [defaultDev]() {
+                               return defaultDev->getFrame();
+                           }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
+                           {
+                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
+                                       return cubeTracker->update(targets);
+                                   }}}
+    );
 
     std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
                              cubeTracker);
