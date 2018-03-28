@@ -253,7 +253,7 @@ double LidarScan::raytrace(Pose robot_pose) {
                 auto actual_mag = std::get<1>(measurement);
 //                std::printf("%f should be the same as %f\n", dist(pos_point, actual_point), actual_mag);
                 if (actual_mag < expected_mag) {
-                    totalErr += (expected_mag - actual_mag) * 1;
+                    totalErr += (expected_mag - actual_mag) * 0.25;
                 } else {
                     totalErr += (actual_mag - expected_mag);
                 }
