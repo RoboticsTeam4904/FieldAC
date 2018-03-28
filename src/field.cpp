@@ -152,6 +152,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 }
 
 void Field::update(LidarScan scan) {
+    this->old_lidar_scan = this->latest_lidar_scan;
     this->latest_lidar_scan = scan;
 }
 
@@ -180,8 +181,8 @@ void Field::run() {
         }
         BotLocale::step(pose_distribution, static_cast<const float>(0),
                         static_cast<const float>(0),
-                        static_cast<const float>(0),
-                        latest_data, latest_lidar_scan);
+                        old_data, latest_data,
+                        old_lidar_scan, latest_lidar_scan);
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
         int fps = 1000 / ms;
         std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;

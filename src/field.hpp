@@ -35,6 +35,7 @@ public:
     SensorData latest_data;
     SensorData old_data;
     LidarScan latest_lidar_scan;
+    LidarScan old_lidar_scan;
     double field_width;
     double field_height;
     cv::Mat cameraFrame;
