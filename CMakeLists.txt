@@ -9,8 +9,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(DATA_DIR ${PROJECT_SOURCE_DIR}/data/)
 
-set(DARKNET_GPU 0)
-set(DARKNET_CUDNN 0)
+set(USING_GPU 0)
+set(USING_CUDNN 0)
+set(USING_OPENMP 0)
+
+set(DOWNLOAD_WEIGHTS 0)
+
 set(DARKNET_DEBUG 0)
 set(DARKNET_OPENMP 0)
 set(DARKNET_LIBSO_NAME libdarknet.so)
@@ -75,13 +79,13 @@ download_project(PROJ wpiutil-shared
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
 
-if("${DOWNLOAD_WEIGHTS}" STREQUAL "ON")
+if(${DOWNLOAD_WEIGHTS} EQUAL 1)
     download_project(PROJ crate-weights
             URL "${PROV_CRATE_URL}${PROV_CRATE_WEIGHTS_FOLDER}${PROV_CRATE_WEIGHTS_FILENAME}"
             URL_MD5 ${PROV_CRATE_WEIGHTS_FILEMD5}
             DOWNLOAD_NAME ${PROV_CRATE_WEIGHTS_FILENAME}
             DOWNLOAD_NO_EXTRACT 1
-            DOWNLOAD_NO_PROGRESS 0)
+            DOWNLOAD_NO_PROGRESS 1)
 endif()
 
 set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
@@ -102,12 +106,6 @@ include_directories(${ntcore_SOURCE_DIR}/src/main/native/cpp/)
 
 link_directories(${rplidar_OUTPUT_DIR})
 link_directories(${CMAKE_BINARY_DIR})
-link_directories(ntcore-shared-download/ntcore-shared-download-prefix/src/)
-link_directories(wpiutil-shared-download/wpiutil-shared-download-prefix/src/)
-
-MESSAGE(STATUS
-        "CURR: "
-        ${CMAKE_BINARY_DIR})
 
 add_executable(field ${CORE_SRC}
         ${BOT_LCL_SRC}
@@ -142,14 +140,15 @@ add_custom_command(TARGET field
         COMMENT "Building ${rplidar_SDK_DIR}"
         BYPRODUCTS ${rplidar_OUTPUT_DIR}/librplidar_sdk.a)
 
-if("${DOWNLOAD_WEIGHTS}" STREQUAL "ON" AND NOT EXISTS "${DATA_DIR}${PROV_CRATE_WEIGHTS_FILENAME}")
+if(${DOWNLOAD_WEIGHTS} EQUAL 1 AND NOT EXISTS "${DATA_DIR}${PROV_CRATE_WEIGHTS_FILENAME}")
     add_custom_command(TARGET field
             PRE_LINK
             COMMAND mv crate-weights-download/crate-weights-download-prefix/src/${PROV_CRATE_WEIGHTS_FILENAME} ${DATA_DIR}
-            COMMENT "Copying latest crate weights..."
+            COMMENT "Moving weights ${PROV_CRATE_WEIGHTS_FILENAME}..."
             BYPRODUCTS ${DATA_DIR}${PROV_CRATE_WEIGHTS_FILENAME}
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
+
 target_link_libraries(field ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(field rplidar_sdk)
 target_link_libraries(field darknet)
