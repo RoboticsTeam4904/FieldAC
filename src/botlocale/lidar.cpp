@@ -177,10 +177,10 @@ std::tuple<cv::Vec2f, float> LidarScan::calcOffset(LidarScan &prevScan, float pr
     cv::Vec2f scanOffset;
     std::vector<cv::Vec2f> scanOffsets = std::vector<cv::Vec2f>();
     for (int i = 0; i < 360; i++) {
-        auto prevX = (cos((std::get<0>(prevScan.measurements[i]) - prevYawDegrees)) * (180 / M_PI)) * std::get<1>(prevScan.measurements[i]);
-        auto prevY = (sin((std::get<0>(prevScan.measurements[i]) - prevYawDegrees)) * (180 / M_PI)) * std::get<1>(prevScan.measurements[i]);
-        auto currX = (cos((std::get<0>(currScan.measurements[i]) - currYawDegrees)) * (180 / M_PI)) * std::get<1>(currScan.measurements[i]);
-        auto currY = (sin((std::get<0>(currScan.measurements[i]) - currYawDegrees)) * (180 / M_PI)) * std::get<1>(currScan.measurements[i]);
+        auto prevX = (cos((std::get<0>(prevScan.measurements[i]) - prevYawDegrees)) * (M_PI / 180)) * std::get<1>(prevScan.measurements[i]);
+        auto prevY = (sin((std::get<0>(prevScan.measurements[i]) - prevYawDegrees)) * (M_PI / 180)) * std::get<1>(prevScan.measurements[i]);
+        auto currX = (cos((std::get<0>(currScan.measurements[i]) - currYawDegrees)) * (M_PI / 180)) * std::get<1>(currScan.measurements[i]);
+        auto currY = (sin((std::get<0>(currScan.measurements[i]) - currYawDegrees)) * (M_PI / 180)) * std::get<1>(currScan.measurements[i]);
 
         auto vec = cv::Vec2f(currX - prevX, currY - prevY);
         scanOffset += vec;
