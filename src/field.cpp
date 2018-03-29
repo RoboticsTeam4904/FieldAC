@@ -189,51 +189,6 @@ void Field::update(LidarScan scan) {
     this->scan_mutex.unlock();
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
-
-void Field::run() {
-    while (true) {
-        if(this->lidar_scans.size() < 1) {
-            continue;
-        }
-        // this->put_vision_data_nt();
-        std::printf("published vision data\n");
-        this->old_data = latest_data;
-        this->get_sensor_data();
-        std::printf("got sensor data\n");
-        // TODO not sure which accel is forward or lateral
-        std::clock_t start = std::clock();
-        bool lidarIsReady = false;
-        for (auto a : lidar_scans.back().measurements) {
-            if (std::get<0>(a) != 0) {
-                lidarIsReady = true;
-            }
-        }
-        if (!lidarIsReady) {
-            continue;
-        }
-        for (auto &p : pose_distribution) {
-            p.yaw = static_cast<float>(0);
-        }
-        this->scan_mutex.lock();
-        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
-        render();
-        this->scan_mutex.unlock();
-        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
-        int fps = 1000 / (ms + 1);
-        std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
-        this->scan_mutex.lock();
-        me = BotLocale::get_best_pose(pose_distribution, this->lidar_scans.back());
-        this->scan_mutex.unlock();
-        me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
-        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
-                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
-    }
-}
-
-#pragma clang diagnostic pop
-
 void Field::put_vision_data_nt() {
     std::vector<double> x_vals;
     std::vector<double> y_vals;
@@ -337,7 +292,7 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
         relangles.push_back(pose.relangle);
         probs.push_back(pose.probability);
     }
-    mainKey = "/" + parent + "/" + mainKey
+    mainKey = "/" + parent + "/" + mainKey;
     nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(ys));
     nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles));
@@ -407,3 +362,50 @@ std::map<std::string, double> Field::get_values_nt(std::vector<std::string> keys
     }
     return data;
 }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+
+void Field::run() {
+    while (true) {
+        if(this->lidar_scans.size() < 1) {
+            continue;
+        }
+        this->put_pose_nt(this->objects, "cubes");
+        std::printf("published cube data\n");
+        this->put_values_nt("localization", "vision", 3, "frontObsticalDist", dist_front_obstacle(), "x", me.x, "y", me.y);
+        std::printf("published localization data\n");
+        this->old_data = latest_data;
+        this->get_sensor_data();
+        std::printf("got sensor data\n");
+        // TODO not sure which accel is forward or lateral
+        std::clock_t start = std::clock();
+        bool lidarIsReady = false;
+        for (auto a : lidar_scans.back().measurements) {
+            if (std::get<0>(a) != 0) {
+                lidarIsReady = true;
+            }
+        }
+        if (!lidarIsReady) {
+            continue;
+        }
+        for (auto &p : pose_distribution) {
+            p.yaw = static_cast<float>(0);
+        }
+        this->scan_mutex.lock();
+        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
+        render();
+        this->scan_mutex.unlock();
+        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
+        int fps = 1000 / (ms + 1);
+        std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
+        this->scan_mutex.lock();
+        me = BotLocale::get_best_pose(pose_distribution, this->lidar_scans.back());
+        this->scan_mutex.unlock();
+        me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
+        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
+                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
+    }
+}
+
+#pragma clang diagnostic pop
