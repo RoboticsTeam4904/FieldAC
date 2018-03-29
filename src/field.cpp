@@ -171,6 +171,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         distance = 10; // for now just hard code it to a random value lol
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
         cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
+        cubePose.dist = distance;
         cubePose.relangle = std::get<0>(angles);
         cubePose.probability = 0.5f + (i.prob / 2);
         this->objects.push_back(cubePose);
@@ -285,36 +286,39 @@ float Field::dist_front_obstacle() {
 }
 
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
-    std::vector<double> xs, ys, probs, relangles;
+    std::vector<double> xs, ys, dists, relangles;
     for (const Pose &pose : poses) {
         xs.push_back(FT(this->field_width - pose.x)); 
         ys.push_back(FT(this->field_height - pose.y));
+        dists.push_back(FT(pose.dist));
         relangles.push_back(pose.relangle);
-        probs.push_back(pose.probability);
     }
     //hold on bois, its about to get baaaaad
-    float s = 9999999;
+    double s = 9999999;
     int e;
     for (int i = 0; i < relangles.size(); ++i) {
-        float cube_dist = pow(pow(objects[i].x - me.x, 2) + pow(objects[i].y - me.y, 2), 0.5);
-        if (cube_dist < s) {
-            s = cube_dist;
+        if (objects[i].dist < s) {
+            s = objects[i].dist;
             e = i;
         }
     }
-    xs.push_back(xs[0]);
+    s = xs[0];
     xs[0] = xs[e];
-    ys.push_back(ys[0]);
+    xs[e] = s;
+    s = ys[0];
     ys[0] = ys[e];
-    relangles.push_back(relangles[0]);
+    ys[e] = s;
+    s = dists[0];
+    dists[0] = dists[e];
+    dists[e] = s;
+    s = relangles[0];
     relangles[0] = relangles[e];
-    probs.push_back(probs[0]);
-    probs[0] = probs[e];
+    relangles[e] = s;
     mainKey = "/" + parent + "/" + mainKey;
     nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(ys));
+    nt::SetEntryValue(mainKey + "/distance", nt::Value::MakeDoubleArray(dists));
     nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles));
-    nt::SetEntryValue(mainKey + "/prob", nt::Value::MakeDoubleArray(probs));
 }
 
 void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data, std::string parent = "vision") {

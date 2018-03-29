@@ -25,6 +25,7 @@ struct Pose {
     float y;
     float dx;
     float dy;
+    float dist;
     float relangle;
     float yaw;
     float rateYaw;
