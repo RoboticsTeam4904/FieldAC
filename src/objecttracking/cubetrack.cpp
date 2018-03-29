@@ -27,8 +27,10 @@ namespace ObjectTracking {
         timeval old;
         gettimeofday(&old, nullptr);
         this->mutexTargets.lock();
+        this->track_optflow_mutex.lock();
         while (!track_optflow_queue.empty())
             track_optflow_queue.pop(); // we're gonna track it to current time so no need to keep the old frames
+        this->track_optflow_mutex.unlock();
         this->targets = this->extrapolate_bbox_through_queue(targetsUpdate, network.skippedFrames);
 
         timeval newt;
@@ -120,6 +122,7 @@ namespace ObjectTracking {
 //            }
             while (this->track_optflow_queue.size() > 1) {
                 cv::Mat original_current_frame = this->track_optflow_queue.front().clone();
+                this->track_optflow_mutex.lock();
                 cv::Mat current_frame(this->track_optflow_queue.front().size(),
                                       CV_8UC1); // Initialize greyscale current frame mat
                 cv::cvtColor(this->track_optflow_queue.front(), current_frame, CV_BGR2GRAY,
@@ -130,6 +133,7 @@ namespace ObjectTracking {
                 cv::cvtColor(this->track_optflow_queue.front(), next_frame, CV_BGR2GRAY,
                              1); // Convert front of queue to greyscale and put it in next_frame
                 this->track_optflow_queue.pop();
+                this->track_optflow_queue.unlock();
                 optflowFrame = original_current_frame;
 
                 features_prev = features_next;

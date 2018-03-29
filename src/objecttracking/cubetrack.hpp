@@ -36,6 +36,7 @@ namespace ObjectTracking {
         mutable std::mutex mutexTargets;
 
         Tracker_optflow *tracker_flow;
+        mutable std::mutex track_optflow_mutex;
         std::queue<cv::Mat> track_optflow_queue;
         extrapolate_coords_t extrapolate_coords;
 
