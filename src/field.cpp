@@ -139,15 +139,16 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         if (pose.probability < 1e-3) {
             this->objects.erase(this->objects.begin() + i); // delet because it doesn't exist anymore
         }
-        i++;
+        ++i;
     }
     for (auto &i : cubeTargets) {
         Pose cubePose;
         auto angles = Vision::pixel_to_angle(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
         auto distance = i.h; // TODO: some function of the height/width
-        distance = 10; // for now just hard code it to a random value lol
+        distance = 
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
-        cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
+        cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y; 
+        cubePose.relangle = std::get<0>(angles);
         cubePose.probability = 0.5f + (i.prob / 2);
         // see if this cube was predicted
         for (auto &j : this->objects) {
@@ -303,17 +304,17 @@ float Field::dist_front_obstacle() {
 }
 
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
-    std::vector<double> xs, ys, yaws, probs;
+    std::vector<double> xs, ys, probs, relangles;
     for (const Pose &pose : poses) {
         xs.push_back(FT(this->field_width - pose.x)); 
         ys.push_back(FT(this->field_height - pose.y));
-        yaws.push_back(pose.yaw);
+        relangles.push_back(pose.relangle);
         probs.push_back(pose.probability);
     }
-    mainKey = "/" + parent + "/" + mainKey;
+    mainKey = "/" + parent + "/" + mainKey
     nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(xs));
-    nt::SetEntryValue(mainKey + "/yaw", nt::Value::MakeDoubleArray(yaws));
+    nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(ys));
+    nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles))
     nt::SetEntryValue(mainKey + "/prob", nt::Value::MakeDoubleArray(probs));
 }
 
