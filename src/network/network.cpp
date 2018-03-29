@@ -107,7 +107,7 @@ void Network::run(std::function<cv::Mat()> frameFunc,
         int fps = 1000/ms;
         std::cout << "Finished in " << ms << "ms (" << fps << " fps)" << std::endl;
         std::printf("result size: %d\n", result_vec.size());
-        this->draw_boxes(annotated, result_vec);
+//        this->draw_boxes(annotated, result_vec);
         for (auto &item : result_vec) {
             targetMapInter[classNames[item.obj_id]].emplace_back(item);
             this->show_console_result(item);

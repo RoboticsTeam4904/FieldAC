@@ -54,7 +54,7 @@ namespace Vision {
         int frameCount;
         void notifyListeners(cv::Mat update);
     };
-    std::tuple<float, float> pixel_to_rad(float x, float y, double fov_degrees, cv::Mat image);
+    std::tuple<float, float> pixel_to_rad(float x, float y, double fov_degrees, int w, int h);
 }
 
 #endif

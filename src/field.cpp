@@ -116,6 +116,9 @@ void Field::load() {
     for (int i = 0; i < SAMPLES; ++i) {
         pose_distribution[i] = randomized[i];
     }
+
+    this->fieldFrameWriter = cv::VideoWriter("field.avi", CV_FOURCC('M', 'J', 'P', 'G'), 10,
+                                             cv::Size(field_height, field_width), true); // rotated so switch field_height and field_width
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
@@ -168,8 +171,9 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
             continue;
         }
         Pose cubePose;
-        auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
-        std::cout << "Found cube at " << std::get<0>(angles)*180/M_PI << " degrees" << std::endl;
+        auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame.cols,
+                                           this->cameraFrame.rows); // logitech c920 has 78 degree fov
+        std::cout << "Found cube at " << std::get<0>(angles) * 180 / M_PI << " degrees" << std::endl;
         float distance = (CUBE_SIZE * FOCAL_LENGTH) / (0.5 * (i.h + i.w));
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
         cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
@@ -186,7 +190,7 @@ void Field::update(LidarScan scan) {
     this->scan_mutex.lock();
     scan.yaw = (float) sensorData.yaw;
     this->lidar_scans.push_back(scan);
-    if(this->lidar_scans.size() > 5) {
+    if (this->lidar_scans.size() > 5) {
         this->lidar_scans.pop_front();
     }
     this->scan_mutex.unlock();
@@ -280,6 +284,7 @@ void Field::render() {
 //    cv::resize(img, img, cv::Size(0.5, 0.5));
 
     renderedImage = img;
+    this->fieldFrameWriter.write(renderedImage);
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
@@ -293,13 +298,13 @@ float Field::dist_front_obstacle() {
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     std::vector<double> xs, ys, dists, relangles;
     for (const Pose &pose : poses) {
-        xs.push_back(FT(this->field_width - pose.x)); 
+        xs.push_back(FT(this->field_width - pose.x));
         ys.push_back(FT(this->field_height - pose.y));
         dists.push_back(FT(pose.dist));
         relangles.push_back(pose.relangle);
     }
-    if(xs.size() < 1) {
-      return;
+    if (xs.size() < 1) {
+        return;
     };
     //hold on bois, its about to get baaaaad
     double s = 9999999;
@@ -329,9 +334,10 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
     nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles));
 }
 
-void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data, std::string parent = "vision") {
+void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data,
+                          std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
-    for(const auto &i : data) {
+    for (const auto &i : data) {
         nt::SetEntryValue(mainKey + i.first, nt::Value::MakeDoubleArray(i.second));
     }
 }
@@ -350,7 +356,7 @@ void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector
 
 void Field::put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
-    for(const auto &i : data) {
+    for (const auto &i : data) {
         nt::SetEntryValue(mainKey + i.first, nt::Value::MakeDouble(i.second));
     }
 }
@@ -360,7 +366,7 @@ void Field::put_values_nt(std::string mainKey, std::string parent, int count, ..
     va_list values;
     va_start(values, count);
     for (int i = 0; i < count; i += 2) {
-        char* key = va_arg(values, char*);
+        char *key = va_arg(values, char*);
         double data = va_arg(values, double);
         nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + key, nt::Value::MakeDouble(data));
     }
@@ -387,7 +393,7 @@ void Field::get_sensor_data_nt() {
 std::map<std::string, double> Field::get_values_nt(std::vector<std::string> keys, std::string parent = "sensorData") {
     std::string mainKey = "/" + parent + "/";
     std::map<std::string, double> data;
-    for(const auto &i : data) {
+    for (const auto &i : data) {
         data[i.first] = nt::GetEntryValue(mainKey + i.first)->GetDouble();
     }
     return data;
@@ -398,14 +404,15 @@ std::map<std::string, double> Field::get_values_nt(std::vector<std::string> keys
 
 void Field::run() {
     while (true) {
-        if(this->lidar_scans.size() < 1) {
+        if (this->lidar_scans.size() < 1) {
             isReady = false;
             continue;
         }
         isReady = true;
         this->put_pose_nt(this->objects, "cubes", "pose");
         std::printf("published cube data\n");
-        this->put_values_nt("localization", "vision", 3, "frontObsticalDist", dist_front_obstacle(), "x", me.x, "y", me.y);
+        this->put_values_nt("localization", "vision", 3, "frontObsticalDist", dist_front_obstacle(), "x", me.x, "y",
+                            me.y);
         std::printf("published localization data\n");
         this->old_data = latest_data;
         this->get_sensor_data();

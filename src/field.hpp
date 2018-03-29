@@ -51,6 +51,7 @@ public:
     double field_width;
     double field_height;
     cv::Mat cameraFrame;
+    cv::VideoWriter fieldFrameWriter;
 };
 
 #endif
