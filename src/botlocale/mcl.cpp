@@ -17,7 +17,7 @@ Pose *BotLocale::init() {
 }
 
 Pose *BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
-                      SensorData prevData, SensorData currData, LidarScan prevScan, LidarScan currScan) {
+                      SensorData prevData, SensorData currData, std::deque<LidarScan> scans) {
     prevData.yaw = 0;
     currData.yaw = 0;
     Pose n[SAMPLES];
@@ -27,12 +27,11 @@ Pose *BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     auto prevYaw = prevData.yaw;
     auto currYaw = currData.yaw;
     std::clock_t a = std::clock();
-    auto diff = LidarScan::calcOffset(prevScan, prevYaw, currScan, currYaw);
+    auto diff = LidarScan::calcOffset(scans);
     std::cout << std::get<0>(diff) << std::endl;
     for (int i = 0; i < SAMPLES; i++) {
-//        n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, 0);
         n[i] = Pose(input[i], std::get<0>(diff), std::get<1>(diff), currData);
-        weights[i] = static_cast<float>(currScan.raytrace(input[i])); //TODO who knows
+        weights[i] = static_cast<float>(scans.back().raytrace(input[i]));
         n[i].probability = weights[i];
         weightsSum += weights[i];
     }

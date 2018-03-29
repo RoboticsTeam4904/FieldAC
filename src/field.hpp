@@ -29,7 +29,7 @@ public:
 
     void run();
 
-    void get_sensor_data();
+    SensorData get_sensor_data();
 
     void put_vision_data();
 
@@ -44,8 +44,7 @@ public:
     NT_Inst nt_inst;
     SensorData latest_data;
     SensorData old_data;
-    LidarScan latest_lidar_scan;
-    LidarScan old_lidar_scan;
+    std::deque<LidarScan> lidar_scans;
     double field_width;
     double field_height;
     cv::Mat cameraFrame;
