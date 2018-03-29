@@ -292,6 +292,24 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
         relangles.push_back(pose.relangle);
         probs.push_back(pose.probability);
     }
+    //hold on bois, its about to get baaaaad
+    float s = 9999999;
+    int e;
+    for (int i = 0; i < relangles.size(); ++i) {
+        float cube_dist = pow(pow(objects[i].x - me.x, 2) + pow(objects[i].y - me.y, 2), 0.5);
+        if (cube_dist < s) {
+            s = cube_dist;
+            e = i;
+        }
+    }
+    xs.push_back(xs[0]);
+    xs[0] = xs[e];
+    ys.push_back(ys[0]);
+    ys[0] = ys[e];
+    relangles.push_back(relangles[0]);
+    relangles[0] = relangles[e];
+    probs.push_back(probs[0]);
+    probs[0] = probs[e];
     mainKey = "/" + parent + "/" + mainKey;
     nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(ys));
