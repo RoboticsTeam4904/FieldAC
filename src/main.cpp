@@ -113,21 +113,21 @@ int main(int argc, const char **argv) {
                          lidar,
                          &ctrl_c_pressed);
     while(true) {
-        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
-            return -1;
-        }
-        if(cv::waitKey(10) == 32) {
-            cubeTracker->recalc = true;
-        }
-        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
-            return -1;
-        }
+//        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
+//            return -1;
+//        }
+//        if(cv::waitKey(10) == 32) {
+//            cubeTracker->recalc = true;
+//        }
+//        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
+//            return -1;
+//        }
         if (ctrl_c_pressed){
             break;
         }
         field->update(cubeTracker->optflow_targets);
         field->update(lidar->current_scan);
         field->cameraFrame = defaultDev->getFrame();
-        defaultDev->displayImage(field->renderedImage, "Field");
+//        defaultDev->displayImage(field->renderedImage, "Field");
     }
 }
