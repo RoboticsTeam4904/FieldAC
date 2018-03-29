@@ -18,6 +18,7 @@
 #define FT(CM) (CM * 0.0328084)
 #define TEAM_NUMBER 4904
 #define NACHI_SUQQQQ 1000
+#define CUBE_SIZE 13
 #define DEGRADATION_AMOUNT 0.05
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 #define ZRAND RAND -0.5
@@ -142,12 +143,14 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         ++i;
     }
     for (auto &i : cubeTargets) {
+        if (i.w + i.h == 0) {
+            continue;
+        }
         Pose cubePose;
         auto angles = Vision::pixel_to_angle(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
-        auto distance = i.h; // TODO: some function of the height/width
-        distance = 
+        auto distance = 10; //TODO: real
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
-        cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y; 
+        cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
         cubePose.relangle = std::get<0>(angles);
         cubePose.probability = 0.5f + (i.prob / 2);
         // see if this cube was predicted
