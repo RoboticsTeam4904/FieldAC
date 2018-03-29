@@ -20,14 +20,13 @@ private:
     mutable std::mutex scan_mutex;
 public:
     static Field *getInstance();
-
     void load();
     void update(std::vector<bbox_t>);
     void update(LidarScan);
-    void tick();
+    SensorData get_sensor_data();
+    void put_vision_data();
     void render();
     float dist_front_obstacle();
-    void put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent);
     void put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data, std::string parent);
     void put_arrays_nt(std::string mainKey, std::string parent, int count, ...);
     void put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent);
@@ -45,8 +44,7 @@ public:
     NT_Inst nt_inst;
     SensorData latest_data;
     SensorData old_data;
-    LidarScan latest_lidar_scan;
-    LidarScan old_lidar_scan;
+    std::deque<LidarScan> lidar_scans;
     double field_width;
     double field_height;
     cv::Mat cameraFrame;

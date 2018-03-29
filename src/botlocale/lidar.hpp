@@ -22,6 +22,7 @@ class LidarScan {
 public:
     std::tuple<float, float> measurements[360];
     int offset;
+    float yaw;
     std::vector<double> confidence;
 public:
     LidarScan();
@@ -37,8 +38,8 @@ public:
 
     cv::Point2f *intersect_ray_with_segment(cv::Point2f origin, cv::Vec2f direction, Segment seg);
 
-    static std::tuple<cv::Vec2f, float>
-    calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees);
+    static std::tuple<cv::Vec2f, float> calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees);
+    static std::tuple<cv::Vec2f, float> calcOffset(std::deque<LidarScan> scans);
 
     double raytrace_visual(Pose robot_pose, cv::Mat &img);
 

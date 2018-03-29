@@ -89,7 +89,7 @@ int main(int argc, const char **argv) {
     std::printf("Initializing Lidar...\n");
     Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
                              parser.get<uint32_t>("ldr_baud"));
-    
+
     std::thread networkRun(&Network::run,
                            network,
                            [defaultDev]() {
