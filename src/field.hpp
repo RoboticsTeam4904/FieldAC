@@ -21,10 +21,11 @@ private:
 public:
     static Field *getInstance();
     void load();
+    void tick();
     void update(std::vector<bbox_t>);
     void update(LidarScan);
     SensorData get_sensor_data();
-    void put_vision_data();
+    void put_vision_data_nt();
     void render();
     float dist_front_obstacle();
     void put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data, std::string parent);

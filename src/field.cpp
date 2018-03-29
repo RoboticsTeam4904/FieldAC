@@ -197,7 +197,7 @@ void Field::run() {
         if(this->lidar_scans.size() < 1) {
             continue;
         }
-        this->put_vision_data();
+        // this->put_vision_data_nt();
         std::printf("published vision data\n");
         this->old_data = latest_data;
         this->get_sensor_data();
@@ -326,7 +326,7 @@ void Field::render() {
 }
 
 float Field::dist_front_obstacle() {
-    return this->latest_lidar_scan.getAtAngle(0);
+    return this->lidar_scans.front().getAtAngle(0);
 }
 
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
@@ -340,7 +340,7 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
     mainKey = "/" + parent + "/" + mainKey
     nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(ys));
-    nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles))
+    nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles));
     nt::SetEntryValue(mainKey + "/prob", nt::Value::MakeDoubleArray(probs));
 }
 
@@ -406,25 +406,4 @@ std::map<std::string, double> Field::get_values_nt(std::vector<std::string> keys
         data[i.first] = nt::GetEntryValue(mainKey + i.first)->GetDouble();
     }
     return data;
-}
-
-void Field::tick() {
-    this->render();
-    this->put_pose_nt(this->objects, "cubes");
-    std::printf("published cube data\n");
-    this->put_values_nt("localization", "vision", 3, "frontObstacleDist", dist_front_obstacle(), 
-            "x", FT(me.x), 
-            "y", FT(me.y));
-    std::printf("published localization data\n");
-    this->old_data = latest_data;
-    this->get_sensor_data_nt();
-    std::printf("got sensor data\n");
-    // TODO not sure which accel is forward or lateral
-    BotLocale::step(pose_distribution, latest_data.accelX,
-                    static_cast<const float>(latest_data.accelY),
-                    static_cast<const float>(latest_data.yaw - old_data.yaw),
-                    "is this even used?", latest_lidar_scan);
-    std::printf("stepped\n");
-    me = BotLocale::get_best_pose(pose_distribution);
-    std::printf("got best pose (%f, %f)\n",  me.x, me.y);
 }
