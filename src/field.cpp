@@ -9,12 +9,16 @@
 #include <networktables/NetworkTable.h>
 #include "./botlocale/mcl.hpp"
 #include "vision.hpp"
+// #include <stdarg.h>
+#include <cstdarg>
 #include <cmath>
 
 #define PI 3.14159265
 #define NETWORKTABLES_PORT 1735
+#define FT(CM) (CM * 0.0328084)
 #define TEAM_NUMBER 4904
 #define NACHI_SUQQQQ 1000
+#define CUBE_SIZE 13
 #define DEGRADATION_AMOUNT 0.05
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 #define ZRAND RAND -0.5
@@ -157,6 +161,9 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 //        std::cout << "Number of objects detected: " << objects.size() << std::endl;
 //    }
     for (auto &i : cubeTargets) {
+        if (i.w + i.h == 0) {
+            continue;
+        }
         Pose cubePose;
         auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
         std::cout << "Found cube at " << std::get<0>(angles)*180/M_PI << " degrees" << std::endl;
@@ -164,6 +171,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         distance = 10; // for now just hard code it to a random value lol
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
         cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
+        cubePose.relangle = std::get<0>(angles);
         cubePose.probability = 0.5f + (i.prob / 2);
         this->objects.push_back(cubePose);
         std::cout << "Number of objects detected: " << objects.size() << std::endl;
@@ -181,52 +189,7 @@ void Field::update(LidarScan scan) {
     this->scan_mutex.unlock();
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
-
-void Field::run() {
-    while (true) {
-        if(this->lidar_scans.size() < 1) {
-            continue;
-        }
-        this->put_vision_data();
-        std::printf("published vision data\n");
-        this->old_data = latest_data;
-        this->get_sensor_data();
-        std::printf("got sensor data\n");
-        // TODO not sure which accel is forward or lateral
-        std::clock_t start = std::clock();
-        bool lidarIsReady = false;
-        for (auto a : lidar_scans.back().measurements) {
-            if (std::get<0>(a) != 0) {
-                lidarIsReady = true;
-            }
-        }
-        if (!lidarIsReady) {
-            continue;
-        }
-        for (auto &p : pose_distribution) {
-            p.yaw = static_cast<float>(0);
-        }
-        this->scan_mutex.lock();
-        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
-        render();
-        this->scan_mutex.unlock();
-        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
-        int fps = 1000 / (ms + 1);
-        std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
-        this->scan_mutex.lock();
-        me = BotLocale::get_best_pose(pose_distribution, this->lidar_scans.back());
-        this->scan_mutex.unlock();
-        me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
-        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
-                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
-    }
-}
-
-#pragma clang diagnostic pop
-
-void Field::put_vision_data() {
+void Field::put_vision_data_nt() {
     std::vector<double> x_vals;
     std::vector<double> y_vals;
     for (int i = 0; i < objects.size(); i++) {
@@ -286,7 +249,6 @@ void Field::render() {
         cv::line(img, tuple_to_point(line.start), tuple_to_point(line.end), cv::Scalar(0, 0, 0), 3);
     }
     for (auto &i : this->objects) {
-//        cv::ellipse(img, cv::Point(middle_x, middle_y), cv::Size(img.cols, img.rows), 0, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))-5, (180/(2*PI))*(atan2(i.y-middle_y, i.x-middle_x))+5, cv::Scalar(50, 255, 255), -1);
         cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20),
                    cv::Scalar(20, 190, 190), -1);
     }
@@ -317,3 +279,133 @@ void Field::render() {
     renderedImage = img;
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
+
+float Field::dist_front_obstacle() {
+    return this->lidar_scans.front().getAtAngle(0);
+}
+
+void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
+    std::vector<double> xs, ys, probs, relangles;
+    for (const Pose &pose : poses) {
+        xs.push_back(FT(this->field_width - pose.x)); 
+        ys.push_back(FT(this->field_height - pose.y));
+        relangles.push_back(pose.relangle);
+        probs.push_back(pose.probability);
+    }
+    mainKey = "/" + parent + "/" + mainKey;
+    nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
+    nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(ys));
+    nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles));
+    nt::SetEntryValue(mainKey + "/prob", nt::Value::MakeDoubleArray(probs));
+}
+
+void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data, std::string parent = "vision") {
+    mainKey = "/" + parent + "/" + mainKey + "/";
+    for(const auto &i : data) {
+        nt::SetEntryValue(mainKey + i.first, nt::Value::MakeDoubleArray(i.second));
+    }
+}
+
+// void Field::put_arrays_nt(std::string mainKey, std::string parent, int count, ...) {
+//     count *= 2;
+//     va_list values;
+//     va_start(values, count);
+//     for (int i = 0; i < count; i += 2) {
+//         std::string key = va_arg(values, std::string);
+//         std::vector<double> data = va_arg(values, std::vector<double>);
+//         nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + key, nt::Value::MakeDoubleArray(data));
+//     }
+//     va_end(values);
+// }
+
+void Field::put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent = "vision") {
+    mainKey = "/" + parent + "/" + mainKey + "/";
+    for(const auto &i : data) {
+        nt::SetEntryValue(mainKey + i.first, nt::Value::MakeDouble(i.second));
+    }
+}
+
+void Field::put_values_nt(std::string mainKey, std::string parent, int count, ...) {
+    count *= 2;
+    va_list values;
+    va_start(values, count);
+    for (int i = 0; i < count; i += 2) {
+        char* key = va_arg(values, char*);
+        double data = va_arg(values, double);
+        nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + key, nt::Value::MakeDouble(data));
+    }
+    va_end(values);
+}
+
+void Field::put_value_nt(std::string key, double data, std::string parent = "vision") {
+    nt::SetEntryValue("/" + parent + "/" + key, nt::Value::MakeDouble(data));
+}
+
+void Field::put_value_nt(std::string key, std::vector<double> data, std::string parent = "vision") {
+    nt::SetEntryValue("/" + parent + "/" + key, nt::Value::MakeDoubleArray(data));
+}
+
+void Field::get_sensor_data_nt() {
+    this->latest_data.leftEncoder = nt::GetEntryValue("/sensorData/leftEncoder")->GetDouble();
+    this->latest_data.rightEncoder = nt::GetEntryValue("/sensorData/rightEncoder")->GetDouble();
+    this->latest_data.accelX = nt::GetEntryValue("/sensorData/accelX")->GetDouble();
+    this->latest_data.accelY = nt::GetEntryValue("/sensorData/accelY")->GetDouble();
+    this->latest_data.accelZ = nt::GetEntryValue("/sensorData/accelZ")->GetDouble();
+    this->latest_data.yaw = nt::GetEntryValue("/sensorData/yaw")->GetDouble();
+}
+
+std::map<std::string, double> Field::get_values_nt(std::vector<std::string> keys, std::string parent = "sensorData") {
+    std::string mainKey = "/" + parent + "/";
+    std::map<std::string, double> data;
+    for(const auto &i : data) {
+        data[i.first] = nt::GetEntryValue(mainKey + i.first)->GetDouble();
+    }
+    return data;
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+
+void Field::run() {
+    while (true) {
+        if(this->lidar_scans.size() < 1) {
+            continue;
+        }
+        this->put_pose_nt(this->objects, "cubes");
+        std::printf("published cube data\n");
+        this->put_values_nt("localization", "vision", 3, "frontObsticalDist", dist_front_obstacle(), "x", me.x, "y", me.y);
+        std::printf("published localization data\n");
+        this->old_data = latest_data;
+        this->get_sensor_data();
+        std::printf("got sensor data\n");
+        // TODO not sure which accel is forward or lateral
+        std::clock_t start = std::clock();
+        bool lidarIsReady = false;
+        for (auto a : lidar_scans.back().measurements) {
+            if (std::get<0>(a) != 0) {
+                lidarIsReady = true;
+            }
+        }
+        if (!lidarIsReady) {
+            continue;
+        }
+        for (auto &p : pose_distribution) {
+            p.yaw = static_cast<float>(0);
+        }
+        this->scan_mutex.lock();
+        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
+        render();
+        this->scan_mutex.unlock();
+        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
+        int fps = 1000 / (ms + 1);
+        std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
+        this->scan_mutex.lock();
+        me = BotLocale::get_best_pose(pose_distribution, this->lidar_scans.back());
+        this->scan_mutex.unlock();
+        me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
+        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
+                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
+    }
+}
+
+#pragma clang diagnostic pop

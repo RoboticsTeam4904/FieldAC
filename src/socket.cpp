@@ -13,7 +13,7 @@ Socket::Socket(std::string address, int port) : address(address), port(port) {
         if((he = gethostbyname(address.c_str())) == NULL) {
             herror("gethostbyname");
             std::fprintf(stderr, "Couldn't resolve hostname of non-IP address \"%s\"", address.c_str());
-            exit(-2);
+            // exit(-2);
         }
         addr_list = ((struct in_addr **) he->h_addr_list);
         for(int i = 0; addr_list[i] != NULL; i++) {
@@ -30,7 +30,7 @@ Socket::Socket(std::string address, int port) : address(address), port(port) {
 void Socket::open() {
     if(connect(sock, (struct sockaddr *) &server, sizeof(server)) > 0) {
         std::fprintf(stderr, "Error: Socket connect failed");
-        exit(-1);
+        // exit(-1);
     }
 }
 

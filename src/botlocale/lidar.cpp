@@ -31,7 +31,6 @@ bool Lidar::checkHealth() {
 };
 
 void Lidar::run(const bool *stop) {
-
     auto connResp = this->driver->connect(this->path.c_str(), baudrate);
     if (IS_FAIL(connResp)) {
         std::fprintf(stderr, "Error; cannot bind to the specified serial port %s.\n", this->path.c_str());
@@ -90,6 +89,7 @@ void Lidar::run(const bool *stop) {
 //                            nodes[pos].distance_q2 / 4.0f,
 //                            nodes[pos].sync_quality >> RPLIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
             }
+            tmp.offset = LIDAR_OFFSET;
             this->current_scan = tmp;
         }
 
