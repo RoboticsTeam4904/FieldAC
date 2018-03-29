@@ -78,6 +78,11 @@ download_project(PROJ wpiutil-shared
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
 
+download_project(PROJ websocket
+        GIT_REPOSITORY https://github.com/eidheim/Simple-WebSocket-Server
+        GIT_TAG 1162211
+        GIT_SHALLOW 1)
+
 if(${DOWNLOAD_WEIGHTS} EQUAL 1)
     download_project(PROJ crate-weights
             URL "${PROV_CRATE_URL}${PROV_CRATE_WEIGHTS_FOLDER}${PROV_CRATE_WEIGHTS_FILENAME}"
@@ -101,6 +106,7 @@ include_directories(${darknet_SOURCE_DIR}/src/)
 include_directories(${wpiutil_SOURCE_DIR}/src/main/native/include/)
 include_directories(${ntcore_SOURCE_DIR}/src/main/native/include/)
 include_directories(${ntcore_SOURCE_DIR}/src/main/native/cpp/)
+include_directories(${websocket_SOURCE_DIR})
 #include_directories(${nlohmann-json_SOURCE_DIR}/nlohmann/)
 
 link_directories(${rplidar_OUTPUT_DIR})
