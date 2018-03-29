@@ -43,22 +43,41 @@ file(GLOB CORE_SRC src/*.cpp)
 
 include(DownloadProject.cmake)
 
+### ALEXEYAB/DARKNET START ###
 download_project(PROJ darknet
         GIT_REPOSITORY https://github.com/RoboticsTeam4904/darknet
         GIT_TAG botprov-compat
         GIT_SHALLOW 1)
 
+include_directories(${darknet_SOURCE_DIR}/src/)
+### ALEXEYAB/DARKNET END ###
+
+### RPLIDAR SDK START ###
 download_project(PROJ rplidar
         URL https://download.slamtec.com/api/download/rplidar-sdk/1.5.7
         URL_MD5 e2a894e706f9ec6118967101c11d1dee
         DOWNLOAD_NAME rplidar-sdk.zip
         DOWNLOAD_NO_PROGRESS 1)
 
+set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
+execute_process(COMMAND uname -s
+        OUTPUT_VARIABLE RPLIDAR_PLATFORM
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(rplidar_OUTPUT_DIR ${rplidar_SOURCE_DIR}/sdk/output/${RPLIDAR_PLATFORM}/Release/)
+
+include_directories(${rplidar_SDK_DIR}/include/)
+link_directories(${rplidar_OUTPUT_DIR})
+### RPLIDAR SDK END ###
+
+### NTCORE START ###
 download_project(PROJ ntcore
         GIT_REPOSITORY https://github.com/wpilibsuite/ntcore
         GIT_TAG 3025a18
         GIT_SHALLOW 1)
 
+# Download the shared objects from our
+# artifact host as compiling them on the fly
+# sucks. Same goes for #{wpiutil-shared}
 download_project(PROJ ntcore-shared
         URL "${PROV_CRATE_URL}${NTCORE_SHARED_FILENAME}"
         URL_MD5 ${NTCORE_SHARED_FILEMD5}
@@ -66,6 +85,11 @@ download_project(PROJ ntcore-shared
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
 
+include_directories(${ntcore_SOURCE_DIR}/src/main/native/include/)
+include_directories(${ntcore_SOURCE_DIR}/src/main/native/cpp/)
+### NTCORE END ###
+
+### WPIUTIL START ###
 download_project(PROJ wpiutil
         GIT_REPOSITORY https://github.com/wpilibsuite/wpiutil
         GIT_TAG 71d06a1
@@ -78,11 +102,18 @@ download_project(PROJ wpiutil-shared
         DOWNLOAD_NO_EXTRACT 1
         DOWNLOAD_NO_PROGRESS 1)
 
+include_directories(${wpiutil_SOURCE_DIR}/src/main/native/include/)
+### WPIUTIL END ###
+
+### WEBSOCKET START ###
 download_project(PROJ websocket
         GIT_REPOSITORY https://github.com/eidheim/Simple-WebSocket-Server
         GIT_TAG 1162211
         GIT_SHALLOW 1)
+include_directories(${websocket_SOURCE_DIR})
+### WEBSOCKET END ###
 
+### WEIGHTS START
 if(${DOWNLOAD_WEIGHTS} EQUAL 1)
     download_project(PROJ crate-weights
             URL "${PROV_CRATE_URL}${PROV_CRATE_WEIGHTS_FOLDER}${PROV_CRATE_WEIGHTS_FILENAME}"
@@ -91,24 +122,8 @@ if(${DOWNLOAD_WEIGHTS} EQUAL 1)
             DOWNLOAD_NO_EXTRACT 1
             DOWNLOAD_NO_PROGRESS 1)
 endif()
+### WEIGHTS END ###
 
-set(rplidar_SDK_DIR ${rplidar_SOURCE_DIR}/sdk/sdk/)
-execute_process(COMMAND uname -s
-        OUTPUT_VARIABLE RPLIDAR_PLATFORM
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-set(rplidar_OUTPUT_DIR ${rplidar_SOURCE_DIR}/sdk/output/${RPLIDAR_PLATFORM}/Release/)
-
-set(ntcore_GRADLE_DIR ${ntcore_SOURCE_DIR}/build/)
-set(wpiutil_GRADLE_DIR ${wpiutil_SOURCE_DIR}/build/)
-
-include_directories(${rplidar_SDK_DIR}/include/)
-include_directories(${darknet_SOURCE_DIR}/src/)
-include_directories(${wpiutil_SOURCE_DIR}/src/main/native/include/)
-include_directories(${ntcore_SOURCE_DIR}/src/main/native/include/)
-include_directories(${ntcore_SOURCE_DIR}/src/main/native/cpp/)
-include_directories(${websocket_SOURCE_DIR})
-
-link_directories(${rplidar_OUTPUT_DIR})
 link_directories(${CMAKE_BINARY_DIR})
 
 add_executable(field ${CORE_SRC}
