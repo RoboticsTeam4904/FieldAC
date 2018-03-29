@@ -17,8 +17,8 @@
 #define NETWORKTABLES_PORT 1735
 #define FT(CM) (CM * 0.0328084)
 #define TEAM_NUMBER 4904
-#define NACHI_SUQQQQ 1000
-#define CUBE_SIZE 13
+#define FOCAL_LENGTH 0.367
+#define CUBE_SIZE 31.3
 #define DEGRADATION_AMOUNT 0.05
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 #define ZRAND RAND -0.5
@@ -167,8 +167,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         Pose cubePose;
         auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
         std::cout << "Found cube at " << std::get<0>(angles)*180/M_PI << " degrees" << std::endl;
-        auto distance = i.h; // TODO: some function of the height/width
-        distance = 10; // for now just hard code it to a random value lol
+        float distance = (CUBE_SIZE * FOCAL_LENGTH) / (0.5 * (i.h + i.w));
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
         cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
         cubePose.dist = distance;
