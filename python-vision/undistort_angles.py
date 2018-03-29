@@ -174,6 +174,7 @@ def undistortW(row, col, img): # number of black corners in row and column on ch
 	dst = dst[y:y+h, x:x+w]
 	cv2.imwrite('calibresult2.png',dst)
 	print('done')
+
 	#print xy_undistorted
 	return xy_undistorted
 
@@ -246,7 +247,7 @@ def calculateXYAngles(dists, center_board_coords, side_length):
 	true_dists[row-1,0] = dist_to_bottom_left
 	true_dists[row-1,col-1] = dist_to_bottom_right
 
-	board_height = side_length*(row-1) #TODO
+	board_height = side_length*(row-1) 
 	board_width = side_length*(col-1)
 
 	def calcAngle(a, b, c):
@@ -286,7 +287,7 @@ def calculateXYAngles(dists, center_board_coords, side_length):
 			thetas[i,j,0] = x_theta * (180/math.pi)
 			thetas[i,j,1] = y_theta * (180/math.pi)
 
-	return thetas.reshape(col, row, 2)
+	return thetas#thetas.reshape(col, row, 2)
 
 side_length = 2.3
 dist_to_top_left = 12.942 #cm, units dont matter as long as all are in same units
@@ -302,21 +303,30 @@ center = np.array([img_width/2, img_height/2])
 
 distorted_corners = findBoard(img, col, row)
 corner_coords = undistortW(row, col, img)
-print corner_coords
 corner_coords = np.reshape(corner_coords, (col, row, 2))
 
 pixel_coords, board_coords = findPixelTile(center, corner_coords, row, col)
-print board_coords
 center_board_coords = findPixelBoardCoords(center, pixel_coords, board_coords)
-print center_board_coords
 thetas = calculateXYAngles(dists, center_board_coords, side_length)
+new_thetas = np.zeros((col, row, 2))
+for r in range(row):
+	thetas[r] = np.flipud(thetas[r])
+
+
+thetaXs = np.array((col, row))
+thetaYs = np.array((col, row))
+for j in range(col):
+	for i in range(row):
+		new_thetas[j,i] = thetas[i,j]
 
 pixelXs = corner_coords[:,:,0]
 pixelYs = corner_coords[:,:,1]
-#print corner_coords, thetas
-thetaXs = thetas[:,:,0]
-thetaYs = thetas[:,:,1]
-print thetaXs, thetaYs
+# #print corner_coords, thetas
+thetaXs = new_thetas[:,:,0]
+thetaYs = new_thetas[:,:,1]
+#print corner_coords, new_thetas
+
+print thetaXs[0]
 
 np.savetxt(fname='thetaXs.csv', X=thetaXs, delimiter=';')
 np.savetxt(fname='thetaYs.csv', X=thetaYs, delimiter=';')
