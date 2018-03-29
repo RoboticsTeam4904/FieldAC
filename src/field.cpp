@@ -206,10 +206,7 @@ void Field::run() {
             p.yaw = static_cast<float>(0);
         }
         this->scan_mutex.lock();
-        BotLocale::step(pose_distribution, static_cast<const float>(0),
-                        static_cast<const float>(0),
-                        old_data, latest_data,
-                        lidar_scans);
+        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
         render();
         this->scan_mutex.unlock();
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);

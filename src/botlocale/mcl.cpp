@@ -16,10 +16,7 @@ Pose *BotLocale::init() {
     return poses;
 }
 
-Pose *BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, const float measuredAccelLateral,
-                      SensorData prevData, SensorData currData, std::deque<LidarScan> scans) {
-    prevData.yaw = 0;
-    currData.yaw = 0;
+Pose *BotLocale::step(Pose input[1000], SensorData prevData, SensorData currData, std::deque<LidarScan> scans) {
     Pose n[SAMPLES];
     float weights[SAMPLES];
     float weightsSum = 0;
