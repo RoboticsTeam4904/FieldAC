@@ -217,10 +217,10 @@ std::tuple<cv::Vec2f, float> LidarScan::calcOffset(std::deque<LidarScan> scans) 
             avg += cv::Vec2f(posX, posY);
         }
         avg /= goodMeasurements;
-        scanDiff = avg - scanDiff;
+        scanDiff += scanDiff;
         yawOffset = yaw - yawOffset;
     }
-    return std::make_tuple(scanDiff, yawOffset);
+    return std::make_tuple(scanDiff / (int) scans.size(), yawOffset);
 };
 
 double LidarScan::raytrace(Pose robot_pose) {
