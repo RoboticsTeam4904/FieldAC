@@ -108,7 +108,7 @@ void Field::load() {
     me.y = 0;
     me.yaw = 0; // forward/up
     nt_inst = nt::GetDefaultInstance();
-    nt::StartClient(nt_inst, "localhost", NETWORKTABLES_PORT);
+    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
     while (!nt::IsConnected(nt_inst))
         continue;
 
