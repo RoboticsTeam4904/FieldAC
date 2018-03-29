@@ -214,14 +214,17 @@ void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector
     }
 }
 
-void Field::put_arrays_nt(std::string mainKey, std::string parent, int count, ...) {
-    va_list values;
-    va_start(values, count);
-    for (int i = 0; i < count; ++i) {
-        std::pair<std::string, std::vector<double>> data = va_arg(i, std::pair<std::string, std::vector<double>>);
-        nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + data.first, nt::Value::MakeDoubleArray(data.second));
-    }
-}
+// void Field::put_arrays_nt(std::string mainKey, std::string parent, int count, ...) {
+//     count *= 2;
+//     va_list values;
+//     va_start(values, count);
+//     for (int i = 0; i < count; i += 2) {
+//         std::string key = va_arg(values, std::string);
+//         std::vector<double> data = va_arg(values, std::vector<double>);
+//         nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + key, nt::Value::MakeDoubleArray(data));
+//     }
+//     va_end(values);
+// }
 
 void Field::put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
@@ -231,12 +234,15 @@ void Field::put_values_nt(std::string mainKey, std::map<std::string, double> dat
 }
 
 void Field::put_values_nt(std::string mainKey, std::string parent, int count, ...) {
+    count *= 2;
     va_list values;
     va_start(values, count);
-    for (int i = 0; i < count; ++i) {
-        std::pair<std::string, double> data = va_arg(i, std::pair<std::string, std::vector<double>>);
-        nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + data.first, nt::Value::MakeDouble(data.second));
+    for (int i = 0; i < count; i += 2) {
+        char* key = va_arg(values, char*);
+        double data = va_arg(values, double);
+        nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + key, nt::Value::MakeDouble(data));
     }
+    va_end(values);
 }
 
 void Field::put_value_nt(std::string key, double data, std::string parent = "vision") {
@@ -269,9 +275,9 @@ void Field::tick() {
     this->render();
     this->put_pose_nt(this->objects, "cubes");
     std::printf("published cube data\n");
-    this->put_values_nt("localization", "vision", 3, std::make_pair("frontDist", dist_front_obstacle()), 
-        std::make_pair("x", FT(me.x)), 
-        std::make_pair("y", FT(me.y)));
+    this->put_values_nt("localization", "vision", 3, "frontObstacleDist", dist_front_obstacle(), 
+            "x", FT(me.x), 
+            "y", FT(me.y));
     std::printf("published localization data\n");
     this->old_data = latest_data;
     this->get_sensor_data_nt();
