@@ -86,14 +86,14 @@ namespace Vision {
         float y_rad = y_deg * M_PI/180;
         // Parameters calculated based on curvature of camera
         return std::make_tuple(x_rad, y_rad);
-
-        double w = image.cols;
-        double h = image.rows;
-        double fov_radians = fov_degrees * M_PI / 180;
-        double fw = (w / 2.0) / tan(fov_radians / 2.0);
-        float x_rad = static_cast<float>(atan(x / fw));
-        double fh = (h / 2.0) / tan(fov_radians / 2.0);
-        float y_rad = static_cast<float>(atan(y / fh));
-        return std::make_tuple(x_rad, y_rad);
+//
+//        double w = image.cols;
+//        double h = image.rows;
+//        double fov_radians = fov_degrees * M_PI / 180;
+//        double fw = (w / 2.0) / tan(fov_radians / 2.0);
+//        float x_rad = static_cast<float>(atan(x / fw));
+//        double fh = (h / 2.0) / tan(fov_radians / 2.0);
+//        float y_rad = static_cast<float>(atan(y / fh));
+//        return std::make_tuple(x_rad, y_rad);
     };
 }
