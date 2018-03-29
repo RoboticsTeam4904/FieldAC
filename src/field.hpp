@@ -12,25 +12,15 @@
 #include <networktables/NetworkTable.h>
 #include "botlocale/lidar.hpp"
 
-
-struct SensorData {
-    double leftEncoder;
-    double rightEncoder;
-    double accelX;
-    double accelZ;
-    double accelY;
-    double yaw;
-    bool operator==(const SensorData other) {
-        return (leftEncoder == other.leftEncoder && rightEncoder == other.rightEncoder && accelX == other.accelX);
-    }
-};
-
 class Field {
 private:
     Field();
-    static Field* instance;
+
+    static Field *instance;
+    mutable std::mutex scan_mutex;
 public:
-    static Field* getInstance();
+    static Field *getInstance();
+
     void load();
     void update(std::vector<bbox_t>);
     void update(LidarScan);
@@ -56,8 +46,10 @@ public:
     SensorData latest_data;
     SensorData old_data;
     LidarScan latest_lidar_scan;
+    LidarScan old_lidar_scan;
     double field_width;
     double field_height;
+    cv::Mat cameraFrame;
 };
 
 #endif

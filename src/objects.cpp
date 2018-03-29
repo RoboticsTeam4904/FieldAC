@@ -1,17 +1,35 @@
 #include "objects.hpp"
+#include "botlocale/lidar.hpp"
 #include <math.h>
 #include <cmath>
+#include <opencv2/core/matx.hpp>
+#include <iostream>
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
 #define ZRAND (RAND - 0.5)
 
-#define VELOCITY_NOISE 0.001
+#define VELOCITY_NOISE 1
 
-#define YAW_RATE_NOISE 0.001
-
+#define YAW_RATE_NOISE 0.005
 
 Pose::Pose() = default;
+
+Pose::Pose(const Pose prev, const cv::Vec2f scanDiff, float yaw_diff, SensorData sensorData) {
+    auto lidar_dx = scanDiff[0];
+    auto lidar_dy = scanDiff[1];
+
+    auto imu_dx = sensorData.accelX; // TODO NOT SURE WHICH ACCEL IS WHICH
+    auto imu_dy = sensorData.accelY; // ^^^
+
+    dx = (((dx*2 + lidar_dx + (imu_dx*3)) / 6)) + (ZRAND * VELOCITY_NOISE);
+    dy = (((dx*2 + lidar_dy + (imu_dy*3)) / 6)) + (ZRAND * VELOCITY_NOISE);
+
+    x = prev.x + dx;
+    y = prev.y + dy;
+
+    yaw = sensorData.yaw + (ZRAND * YAW_RATE_NOISE);
+}
 
 Pose::Pose(const Pose prev, const float measuredAccelForward, const float measuredAccelLateral,
            const float measuredAccelYaw) {
@@ -19,17 +37,17 @@ Pose::Pose(const Pose prev, const float measuredAccelForward, const float measur
     y = prev.y + prev.dy;
 
     dx = static_cast<float>(prev.dx + measuredAccelForward * cos(prev.yaw) - measuredAccelLateral * sin(prev.yaw) +
-            (ZRAND * VELOCITY_NOISE));
+                            (ZRAND * VELOCITY_NOISE));
     dy = static_cast<float>(prev.dy + measuredAccelForward * sin(prev.yaw) + measuredAccelLateral * cos(prev.yaw) +
-            (ZRAND * VELOCITY_NOISE));
+                            (ZRAND * VELOCITY_NOISE));
 
     yaw = prev.yaw + prev.rateYaw;
     rateYaw = static_cast<float>(prev.rateYaw + measuredAccelYaw + (ZRAND * YAW_RATE_NOISE));
 }
 
 void Pose::seed() {
-    x = RAND*849;
-    y = RAND*1700;
+    x = RAND * 800;
+    y = RAND * 1700;
     dx = 0;
     dy = 0;
     rateYaw = 0;
@@ -59,9 +77,26 @@ Pose &Pose::operator/(const int &other) {
     tmp.x = this->x / other;
     tmp.y = this->y / other;
     tmp.yaw = this->yaw / other;
+    while (tmp.yaw > (M_PI * 2)) {
+        tmp.yaw -= M_PI * 2;
+    }
     tmp.dx = this->dx / other;
     tmp.dy = this->dy / other;
-    tmp.rateYaw = this->rateYaw + other;
+    tmp.rateYaw = this->rateYaw / other;
+    return tmp;
+}
+
+Pose &Pose::operator*(const float &other) {
+    static auto tmp = Pose();
+    tmp.x = this->x * other;
+    tmp.y = this->y * other;
+    tmp.yaw = this->yaw * other;
+    while (tmp.yaw > (M_PI * 2)) {
+        tmp.yaw -= M_PI * 2;
+    }
+    tmp.dx = this->dx * other;
+    tmp.dy = this->dy * other;
+    tmp.rateYaw = this->rateYaw * other;
     return tmp;
 }
 

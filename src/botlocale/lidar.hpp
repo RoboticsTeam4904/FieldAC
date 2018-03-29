@@ -10,6 +10,7 @@
 #include <vector>
 #include <tuple>
 #include <opencv/cv.h>
+#include <queue>
 
 #ifndef _countof
 #define _countof(_Array) (int)((sizeof(_Array)) / (sizeof(_Array[0])))
@@ -19,40 +20,54 @@ using namespace rp::standalone;
 
 class LidarScan {
 public:
-	std::tuple<float, float> measurements[360];
-	int offset;
+    std::tuple<float, float> measurements[360];
+    int offset;
+    std::vector<double> confidence;
 public:
-	LidarScan();
-	LidarScan(const LidarScan& other, int newOffset);
-	LidarScan generateExpected(const Pose& pose);
-	LidarScan getAtLocation(int xCm, int yCm);
-	double raytrace(Pose);
-    cv::Point2f* intersect_ray_with_segment(cv::Point2f origin, cv::Vec2f direction, Segment seg);
+    LidarScan();
+
+    LidarScan(const LidarScan &other, int newOffset);
+
+    LidarScan generateExpected(const Pose &pose);
+
+    LidarScan getAtLocation(int xCm, int yCm);
+
+    double raytrace(Pose);
+
+
+    cv::Point2f *intersect_ray_with_segment(cv::Point2f origin, cv::Vec2f direction, Segment seg);
+
+    static std::tuple<cv::Vec2f, float>
+    calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees);
+
+    double raytrace_visual(Pose robot_pose, cv::Mat &img);
 
     inline float getAtAngle(int angle) const {
-		int o = angle + offset;
-		if(o >= 360)
-			o-=360;
-		return std::get<1>(measurements[o]);
-	}
+        return std::get<1>(measurements[angle]);
+    }
+
 private:
 
 
-	float calc(float amount, float x, float y, float t1);
+    float calc(float amount, float x, float y, float t1);
 };
 
 class Lidar {
 protected:
-	_u32 baudrate;
-	std::string path;
+    _u32 baudrate;
+    std::string path;
 public:
-	rplidar::RPlidarDriver *driver;
+    rplidar::RPlidarDriver *driver;
 public:
-	Lidar(std::string path, _u32 baudrate);
-	void run(const bool* stop);
-	void stop();
-	bool checkHealth();
-	LidarScan current_scan;
+    Lidar(std::string path, _u32 baudrate);
+
+    void run(const bool *stop);
+
+    void stop();
+
+    bool checkHealth();
+
+    LidarScan current_scan;
 };
 
 cv::Point2f tuple_to_point(std::tuple<double, double>);

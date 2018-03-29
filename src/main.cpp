@@ -89,20 +89,7 @@ int main(int argc, const char **argv) {
     std::printf("Initializing Lidar...\n");
     Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
                              parser.get<uint32_t>("ldr_baud"));
-
-//    This code is non-threaded but also serves as a
-//    slightly cleaner demonstration of what's really being run.
-//
-//    network->run([defaultDev]() {
-//        return defaultDev->getFrame();
-//    },
-//                 {
-//                         {"cube", [cubeTracker](std::vector<Target> targets) {
-//                             return cubeTracker->update(targets);
-//                         }}
-//                 }
-//    );
-//
+    
     std::thread networkRun(&Network::run,
                            network,
                            [defaultDev]() {
@@ -124,6 +111,7 @@ int main(int argc, const char **argv) {
 
     Field* field = Field::getInstance();
     field->load();
+    std::thread fieldRun(&Field::run, field);
     while(true) {
         if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
             return -1;
@@ -135,12 +123,11 @@ int main(int argc, const char **argv) {
             return -1;
         }
         if (ctrl_c_pressed){
-            NetworkTable::Shutdown();
             break;
         }
         field->update(cubeTracker->optflow_targets);
         field->update(lidar->current_scan);
-        field->tick();
+        field->cameraFrame = defaultDev->getFrame();
         defaultDev->displayImage(field->renderedImage, "Field");
     }
 }
