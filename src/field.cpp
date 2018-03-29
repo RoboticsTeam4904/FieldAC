@@ -311,6 +311,8 @@ void Field::render() {
                    cv::Scalar(50, 128, 50), -1);
     }
     this->lidar_scans.back().raytrace_visual(me, img);
+    cv::rotate(img, img, cv::ROTATE_90_CLOCKWISE);
+//    cv::resize(img, img, cv::Size(0.5, 0.5));
 
     renderedImage = img;
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));

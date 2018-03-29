@@ -133,7 +133,7 @@ namespace ObjectTracking {
                 cv::cvtColor(this->track_optflow_queue.front(), next_frame, CV_BGR2GRAY,
                              1); // Convert front of queue to greyscale and put it in next_frame
                 this->track_optflow_queue.pop();
-                this->track_optflow_queue.unlock();
+                this->track_optflow_mutex.unlock();
                 optflowFrame = original_current_frame;
 
                 features_prev = features_next;
