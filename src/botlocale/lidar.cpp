@@ -202,9 +202,6 @@ std::tuple<cv::Vec2f, float> LidarScan::calcOffset(LidarScan &prevScan, float pr
 std::tuple<cv::Vec2f, float> LidarScan::calcOffset(std::deque<LidarScan> scans) {
     cv::Vec2f scanDiff = cv::Vec2f(0, 0);
     float yawOffset = 0;
-    if(scans.size() < 2) {
-        return std::make_tuple(cv::Vec2f(-1, -1), 0);
-    }
     for(auto &scan : scans) {
         int goodMeasurements = 0;
         cv::Vec2f avg = cv::Vec2f(0, 0);
