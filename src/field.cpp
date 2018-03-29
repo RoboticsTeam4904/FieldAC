@@ -164,13 +164,13 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 //        std::cout << "Number of objects detected: " << objects.size() << std::endl;
 //    }
     for (auto &i : cubeTargets) {
-        if (i.w + i.h == 0) {
+        auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
+        if (i.w + i.h == 0 || std::get<1>(angles) > 63) {
             continue;
         }
         Pose cubePose;
-        auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
         std::cout << "Found cube at " << std::get<0>(angles)*180/M_PI << " degrees" << std::endl;
-        float distance = (CUBE_SIZE * FOCAL_LENGTH) / (0.5 * (i.h + i.w));
+        float distance = (CUBE_SIZE * FOCAL_LENGTH * 10) / (0.5 * (i.h + i.w));
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
         cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
         cubePose.dist = distance;
