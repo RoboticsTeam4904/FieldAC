@@ -186,6 +186,9 @@ void Field::update(LidarScan scan) {
 
 void Field::run() {
     while (true) {
+        if(this->lidar_scans.size() < 1) {
+            continue;
+        }
         this->put_vision_data();
         std::printf("published vision data\n");
         this->old_data = latest_data;
