@@ -110,6 +110,8 @@ download_project(PROJ websocket
         GIT_REPOSITORY https://github.com/eidheim/Simple-WebSocket-Server
         GIT_TAG 1162211
         GIT_SHALLOW 1)
+
+set(USE_STANDALONE_ASIO ON)
 include_directories(${websocket_SOURCE_DIR})
 ### WEBSOCKET END ###
 
