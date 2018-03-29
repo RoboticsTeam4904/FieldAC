@@ -217,7 +217,7 @@ std::tuple<cv::Vec2f, float> LidarScan::calcOffset(std::deque<LidarScan> scans) 
             avg += cv::Vec2f(posX, posY);
         }
         avg /= goodMeasurements;
-        scanDiff += scanDiff;
+        scanDiff += avg;
         yawOffset = yaw - yawOffset;
     }
     scanDiff /= (int) scans.size();
