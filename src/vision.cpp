@@ -78,7 +78,15 @@ namespace Vision {
         return this->devCapture.get(propId);
     }
 
-    std::tuple<float, float> pixel_to_angle(double x, double y, double fov_degrees, cv::Mat image) {
+    std::tuple<float, float> pixel_to_rad(float x, float y, double fov_degrees, cv::Mat image) {
+        float x_deg = -56.1927023489091905f + (0.0420295474856009175f * x) -
+                     (0.000120296917062875932f * y);
+        float y_deg = -1.12546912528484847f - (0.00105618724645736085f * x) + (0.0428289262674519595f * y);
+        float x_rad = x_deg * M_PI/180;
+        float y_rad = y_deg * M_PI/180;
+        // Parameters calculated based on curvature of camera
+        return std::make_tuple(x_rad, y_rad);
+
         double w = image.cols;
         double h = image.rows;
         double fov_radians = fov_degrees * M_PI / 180;

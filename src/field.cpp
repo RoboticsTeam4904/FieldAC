@@ -140,7 +140,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 //    }
 //    for (auto &i : cubeTargets) {
 //        Pose cubePose;
-//        auto angles = Vision::pixel_to_angle(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
+//        auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
 //        auto distance = i.h; // TODO: some function of the height/width
 //        distance = 10; // for now just hard code it to a random value lol
 //        cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
@@ -158,7 +158,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 //    }
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        auto angles = Vision::pixel_to_angle(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
+        auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
         std::cout << "Found cube at " << std::get<0>(angles)*180/M_PI << " degrees" << std::endl;
         auto distance = i.h; // TODO: some function of the height/width
         distance = 10; // for now just hard code it to a random value lol
@@ -171,10 +171,13 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 }
 
 void Field::update(LidarScan scan) {
-    auto old = latest_lidar_scan;
-    this->latest_lidar_scan = scan;
+    auto sensorData = this->get_sensor_data();
     this->scan_mutex.lock();
-    this->old_lidar_scan = old;
+    scan.yaw = (float) sensorData.yaw;
+    this->lidar_scans.push_back(scan);
+    if(this->lidar_scans.size() > 5) {
+        this->lidar_scans.pop_front();
+    }
     this->scan_mutex.unlock();
 }
 
@@ -182,7 +185,6 @@ void Field::update(LidarScan scan) {
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
 void Field::run() {
-    this->old_lidar_scan = this->latest_lidar_scan;
     while (true) {
         this->put_vision_data();
         std::printf("published vision data\n");
@@ -192,7 +194,7 @@ void Field::run() {
         // TODO not sure which accel is forward or lateral
         std::clock_t start = std::clock();
         bool lidarIsReady = false;
-        for (auto a : latest_lidar_scan.measurements) {
+        for (auto a : lidar_scans.back().measurements) {
             if (std::get<0>(a) != 0) {
                 lidarIsReady = true;
             }
@@ -207,13 +209,13 @@ void Field::run() {
         BotLocale::step(pose_distribution, static_cast<const float>(0),
                         static_cast<const float>(0),
                         old_data, latest_data,
-                        old_lidar_scan, latest_lidar_scan);
+                        lidar_scans);
         render();
         this->scan_mutex.unlock();
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
         int fps = 1000 / (ms + 1);
         std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
-        me = BotLocale::get_best_pose(pose_distribution, latest_lidar_scan);
+        me = BotLocale::get_best_pose(pose_distribution, this->lidar_scans.back());
         me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
         std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
                     me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
@@ -235,7 +237,7 @@ void Field::put_vision_data() {
     nt::SetEntryValue(y, nt::Value::MakeDoubleArray(y_vals));
 }
 
-void Field::get_sensor_data() {
+SensorData Field::get_sensor_data() {
 //    auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
 //    this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
 //    auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
@@ -257,6 +259,7 @@ void Field::get_sensor_data() {
     this->latest_data.accelX = latest_data.accelX * IMU_TO_CM_S2;
     this->latest_data.accelY = latest_data.accelY * IMU_TO_CM_S2;
     this->latest_data.accelZ = latest_data.accelZ * IMU_TO_CM_S2;
+    return this->latest_data;
 }
 
 void Field::render() {
@@ -293,19 +296,19 @@ void Field::render() {
                  cv::Scalar(128, 128, 0), 1);
     }
 
-    for (auto m : this->latest_lidar_scan.measurements) {
+    for (auto m : this->lidar_scans.back().measurements) {
         double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
         double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
         cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
                    cv::Scalar(0, 255, 0), -1);
     }
-    for (auto m : this->old_lidar_scan.measurements) {
+    for (auto m : this->lidar_scans.at(lidar_scans.size() - 2).measurements) {
         double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
         double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
         cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
                    cv::Scalar(50, 128, 50), -1);
     }
-    this->latest_lidar_scan.raytrace_visual(me, img);
+    this->lidar_scans.back().raytrace_visual(me, img);
 
     renderedImage = img;
 //    std::this_thread::sleep_for(std::chrono::milliseconds(30));
