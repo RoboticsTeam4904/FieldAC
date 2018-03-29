@@ -2,6 +2,9 @@
 #include "lidar.hpp"
 #include "../field.hpp"
 #include <tuple>
+#include <fstream>
+#include <string>
+#include <iostream>
 
 #define LIDAR_OFFSET 0
 #define dist(a, b) sqrt( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) )
@@ -62,6 +65,7 @@ void Lidar::run(const bool *stop) {
 
     this->driver->startMotor();
     this->driver->startScan();
+    std::ofstream out("output.txt");
 
     while (true) {
         //TODO: This should be rewritten to respect C++11 idioms.
@@ -92,8 +96,13 @@ void Lidar::run(const bool *stop) {
             tmp.offset = LIDAR_OFFSET;
             this->current_scan = tmp;
         }
-
+        std::string input = "\nTIME:" + std::to_string(std::time(0)) + "\n"; 
+        for (auto &measurement : this->current_scan.measurements) {
+            input += std::to_string(std::get<0>(measurement)) + ":" + std::to_string(std::get<1>(measurement)) + "\n";
+        }
+        out << input;
         if (*stop) {
+            out.close();
             break;
         }
     }

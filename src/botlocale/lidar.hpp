@@ -29,6 +29,7 @@ public:
 
     LidarScan(const LidarScan &other, int newOffset);
 
+
     LidarScan generateExpected(const Pose &pose);
 
     LidarScan getAtLocation(int xCm, int yCm);
@@ -40,6 +41,7 @@ public:
 
     static std::tuple<cv::Vec2f, float> calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees);
     static std::tuple<cv::Vec2f, float> calcOffset(std::deque<LidarScan> scans);
+
 
     double raytrace_visual(Pose robot_pose, cv::Mat &img);
 
