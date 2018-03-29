@@ -197,7 +197,6 @@ void Field::run() {
         // TODO not sure which accel is forward or lateral
         std::clock_t start = std::clock();
         bool lidarIsReady = false;
-        this->scan_mutex.lock();
         for (auto a : lidar_scans.back().measurements) {
             if (std::get<0>(a) != 0) {
                 lidarIsReady = true;
@@ -209,9 +208,10 @@ void Field::run() {
         for (auto &p : pose_distribution) {
             p.yaw = static_cast<float>(0);
         }
+        this->scan_mutex.lock();
         BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
-        this->scan_mutex.unlock();
         render();
+        this->scan_mutex.unlock();
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
         int fps = 1000 / (ms + 1);
         std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
