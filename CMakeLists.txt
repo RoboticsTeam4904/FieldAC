@@ -16,7 +16,6 @@ set(USING_OPENMP 0)
 set(DOWNLOAD_WEIGHTS 0)
 
 set(DARKNET_DEBUG 0)
-set(DARKNET_OPENMP 0)
 set(DARKNET_LIBSO_NAME libdarknet.so)
 
 set(PROV_CRATE_URL "https://crate.botprovoking.org/fieldac/")
