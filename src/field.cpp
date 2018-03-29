@@ -119,6 +119,9 @@ void Field::load() {
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
+    if (!this->isReady) {
+        return;
+    }
     this->objects.clear(); // TODO degradation stuff
     // Predict new targets, decrease probability of all, but increase probability of those that are similar to cubeTargets
     // Rotate points based on yawRate to get predicted pose
@@ -260,7 +263,7 @@ void Field::render() {
                  cv::Scalar(128, 128, 0), 1);
     }
 
-    for (auto m : this->lidar_scans.back().measurements) {
+    for (auto m : this->lidar_scans.front().measurements) {
         double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
         double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
         cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
@@ -281,7 +284,10 @@ void Field::render() {
 }
 
 float Field::dist_front_obstacle() {
-    return FT(this->lidar_scans.front().getAtAngle(0));
+    scan_mutex.lock();
+    auto val = FT(this->lidar_scans.front().getAtAngle(0));
+    scan_mutex.unlock();
+    return val;
 }
 
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
@@ -292,6 +298,9 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
         dists.push_back(FT(pose.dist));
         relangles.push_back(pose.relangle);
     }
+    if(xs.size() < 1) {
+      return;
+    };
     //hold on bois, its about to get baaaaad
     double s = 9999999;
     int e;
@@ -390,9 +399,11 @@ std::map<std::string, double> Field::get_values_nt(std::vector<std::string> keys
 void Field::run() {
     while (true) {
         if(this->lidar_scans.size() < 1) {
+            isReady = false;
             continue;
         }
-        this->put_pose_nt(this->objects, "cubes");
+        isReady = true;
+        this->put_pose_nt(this->objects, "cubes", "pose");
         std::printf("published cube data\n");
         this->put_values_nt("localization", "vision", 3, "frontObsticalDist", dist_front_obstacle(), "x", me.x, "y", me.y);
         std::printf("published localization data\n");
