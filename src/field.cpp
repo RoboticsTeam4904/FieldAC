@@ -281,7 +281,7 @@ void Field::render() {
 }
 
 float Field::dist_front_obstacle() {
-    return this->lidar_scans.front().getAtAngle(0);
+    return FT(this->lidar_scans.front().getAtAngle(0));
 }
 
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
