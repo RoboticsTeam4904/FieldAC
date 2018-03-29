@@ -206,27 +206,27 @@ void Field::put_vision_data_nt() {
 }
 
 SensorData Field::get_sensor_data() {
-//    auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
-//    this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
-//    auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
-//    this->latest_data.rightEncoder = nt::GetEntryValue(rightEncoder_table)->GetDouble();
-//    auto accelX_table = nt::GetEntry(nt_inst, "/sensorData/accelX");
-//    this->latest_data.accelX = nt::GetEntryValue(accelX_table)->GetDouble();
-//    auto accelY_table = nt::GetEntry(nt_inst, "/sensorData/accelY");
-//    this->latest_data.accelY = nt::GetEntryValue(accelY_table)->GetDouble();
-//    auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
-//    this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
-//    auto yaw = nt::GetEntry(nt_inst, "/sensorData/yaw");
-//    this->latest_data.yaw = (nt::GetEntryValue(yaw)->GetDouble()) * PI / 180;
-    this->latest_data.leftEncoder = 0;
-    this->latest_data.rightEncoder = 0;
-    this->latest_data.accelX = 0;
-    this->latest_data.accelY = 0;
-    this->latest_data.accelZ = 0;
-
-    this->latest_data.accelX = latest_data.accelX * IMU_TO_CM_S2;
-    this->latest_data.accelY = latest_data.accelY * IMU_TO_CM_S2;
-    this->latest_data.accelZ = latest_data.accelZ * IMU_TO_CM_S2;
+    auto leftEncoder_table = nt::GetEntry(nt_inst, "/sensorData/leftEncoder");
+    this->latest_data.leftEncoder = nt::GetEntryValue(leftEncoder_table)->GetDouble();
+    auto rightEncoder_table = nt::GetEntry(nt_inst, "/sensorData/rightEncoder");
+    this->latest_data.rightEncoder = nt::GetEntryValue(rightEncoder_table)->GetDouble();
+    auto accelX_table = nt::GetEntry(nt_inst, "/sensorData/accelX");
+    this->latest_data.accelX = nt::GetEntryValue(accelX_table)->GetDouble();
+    auto accelY_table = nt::GetEntry(nt_inst, "/sensorData/accelY");
+    this->latest_data.accelY = nt::GetEntryValue(accelY_table)->GetDouble();
+    auto accelZ_table = nt::GetEntry(nt_inst, "/sensorData/accelZ");
+    this->latest_data.accelZ = nt::GetEntryValue(accelZ_table)->GetDouble();
+    auto yaw = nt::GetEntry(nt_inst, "/sensorData/yaw");
+    this->latest_data.yaw = (nt::GetEntryValue(yaw)->GetDouble()) * PI / 180;
+//    this->latest_data.leftEncoder = 0;
+//    this->latest_data.rightEncoder = 0;
+//    this->latest_data.accelX = 0;
+//    this->latest_data.accelY = 0;
+//    this->latest_data.accelZ = 0;
+//
+//    this->latest_data.accelX = latest_data.accelX * IMU_TO_CM_S2;
+//    this->latest_data.accelY = latest_data.accelY * IMU_TO_CM_S2;
+//    this->latest_data.accelZ = latest_data.accelZ * IMU_TO_CM_S2;
     return this->latest_data;
 }
 
