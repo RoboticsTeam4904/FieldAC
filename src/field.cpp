@@ -118,42 +118,55 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
     this->objects.clear(); // TODO degradation stuff
     // Predict new targets, decrease probability of all, but increase probability of those that are similar to cubeTargets
     // Rotate points based on yawRate to get predicted pose
-    int i = 0;
-    for (auto &pose : this->objects) {
-        float s = sin(me.rateYaw);
-        float c = cos(me.rateYaw);
-
-        pose.x -= me.x;
-        pose.y -= me.y;
-
-        float xnew = pose.x * c - pose.y * s;
-        float ynew = pose.x * s + pose.y * c;
-
-        // translate point back:
-        pose.x = xnew + me.x;
-        pose.y = ynew + me.y;
-        pose.probability -= DEGRADATION_AMOUNT;
-        if (pose.probability < 1e-3) {
-            this->objects.erase(this->objects.begin() + i); // delet because it doesn't exist anymore
-        }
-        i++;
-    }
+//    int j = 0;
+//    for (auto &pose : this->objects) {
+//        float s = sin(me.rateYaw);
+//        float c = cos(me.rateYaw);
+//
+//        pose.x -= me.x;
+//        pose.y -= me.y;
+//
+//        float xnew = pose.x * c - pose.y * s;
+//        float ynew = pose.x * s + pose.y * c;
+//
+//        // translate point back:
+//        pose.x = xnew + me.x;
+//        pose.y = ynew + me.y;
+//        pose.probability -= DEGRADATION_AMOUNT;
+//        if (pose.probability < 1e-3) {
+//            this->objects.erase(this->objects.begin() + j); // delet because it doesn't exist anymore
+//        }
+//        j++;
+//    }
+//    for (auto &i : cubeTargets) {
+//        Pose cubePose;
+//        auto angles = Vision::pixel_to_angle(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
+//        auto distance = i.h; // TODO: some function of the height/width
+//        distance = 10; // for now just hard code it to a random value lol
+//        cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
+//        cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
+//        cubePose.probability = 0.5f + (i.prob / 2);
+//        // see if this cube was predicted
+//        for (auto &j : this->objects) {
+//            if (cubePose == j) { // yep we predicted it (== is overloaded)
+//                j = cubePose;
+//            } else { // new cube
+//                this->objects.push_back(cubePose);
+//            }
+//        }
+//        std::cout << "Number of objects detected: " << objects.size() << std::endl;
+//    }
     for (auto &i : cubeTargets) {
         Pose cubePose;
         auto angles = Vision::pixel_to_angle(i.x, i.y, 78, this->cameraFrame); // logitech c920 has 78 degree fov
+        std::cout << "Found cube at " << std::get<0>(angles)*180/M_PI << " degrees" << std::endl;
         auto distance = i.h; // TODO: some function of the height/width
         distance = 10; // for now just hard code it to a random value lol
         cubePose.x = (cos(std::get<0>(angles) + me.yaw) * distance) + me.x;
         cubePose.y = (sin(std::get<0>(angles) + me.yaw) * distance) + me.y;
         cubePose.probability = 0.5f + (i.prob / 2);
-        // see if this cube was predicted
-        for (auto &j : this->objects) {
-            if (cubePose == j) { // yep we predicted it (== is overloaded)
-                j = cubePose;
-            } else { // new cube
-                this->objects.push_back(cubePose);
-            }
-        }
+        this->objects.push_back(cubePose);
+        std::cout << "Number of objects detected: " << objects.size() << std::endl;
     }
 }
 
@@ -167,6 +180,7 @@ void Field::update(LidarScan scan) {
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
+
 void Field::run() {
     this->old_lidar_scan = this->latest_lidar_scan;
     while (true) {
@@ -197,7 +211,7 @@ void Field::run() {
         render();
         this->scan_mutex.unlock();
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
-        int fps = 1000 / (ms+1);
+        int fps = 1000 / (ms + 1);
         std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
         me = BotLocale::get_best_pose(pose_distribution, latest_lidar_scan);
         me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
@@ -205,6 +219,7 @@ void Field::run() {
                     me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
     }
 }
+
 #pragma clang diagnostic pop
 
 void Field::put_vision_data() {
@@ -241,7 +256,7 @@ void Field::get_sensor_data() {
 
     this->latest_data.accelX = latest_data.accelX * IMU_TO_CM_S2;
     this->latest_data.accelY = latest_data.accelY * IMU_TO_CM_S2;
-    this->latest_data.accelZ =latest_data.accelZ * IMU_TO_CM_S2;
+    this->latest_data.accelZ = latest_data.accelZ * IMU_TO_CM_S2;
 }
 
 void Field::render() {
@@ -274,7 +289,7 @@ void Field::render() {
     for (auto p : this->pose_distribution) {
         cv::circle(img, cv::Point2f(p.x, p.y), 3,
                    cv::Scalar(p.probability, p.probability, p.probability), -1);
-        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x+(p.dx), p.y+(p.dy)),
+        cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x + (p.dx), p.y + (p.dy)),
                  cv::Scalar(128, 128, 0), 1);
     }
 

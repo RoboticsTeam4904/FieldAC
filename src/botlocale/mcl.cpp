@@ -28,7 +28,6 @@ Pose *BotLocale::step(Pose input[SAMPLES], const float measuredAccelForward, con
     auto currYaw = currData.yaw;
     std::clock_t a = std::clock();
     auto diff = LidarScan::calcOffset(prevScan, prevYaw, currScan, currYaw);
-    std::cout << std::get<0>(diff) << std::endl;
     for (int i = 0; i < SAMPLES; i++) {
 //        n[i] = Pose(input[i], measuredAccelForward, measuredAccelLateral, 0);
         n[i] = Pose(input[i], std::get<0>(diff), std::get<1>(diff), currData);
