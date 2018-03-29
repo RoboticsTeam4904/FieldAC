@@ -90,6 +90,10 @@ int main(int argc, const char **argv) {
     Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
                              parser.get<uint32_t>("ldr_baud"));
 
+    Field* field = Field::getInstance();
+    field->load();
+    std::thread fieldRun(&Field::run, field);
+
     std::thread networkRun(&Network::run,
                            network,
                            [defaultDev]() {
@@ -108,10 +112,6 @@ int main(int argc, const char **argv) {
     std::thread lidarRun(&Lidar::run,
                          lidar,
                          &ctrl_c_pressed);
-
-    Field* field = Field::getInstance();
-    field->load();
-    std::thread fieldRun(&Field::run, field);
     while(true) {
         if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
             return -1;

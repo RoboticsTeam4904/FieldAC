@@ -18,6 +18,7 @@ private:
 
     static Field *instance;
     mutable std::mutex scan_mutex;
+    bool isReady;
 public:
     static Field *getInstance();
     void run();

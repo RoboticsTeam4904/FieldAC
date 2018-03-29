@@ -79,7 +79,7 @@ void Lidar::run(const bool *stop) {
 //                if ((int) (angle + LIDAR_OFFSET) % 360 - 90 > 0 && (int) (angle + LIDAR_OFFSET) % 360 - 90 < 270) {
 //                    distance = -1;
 //                }
-                tmp.measurements[((int) (angle + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET)) % 360,
+                tmp.measurements[((int) (angle + LIDAR_OFFSET + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET)) % 360,
                                                                                  distance);
 
 
