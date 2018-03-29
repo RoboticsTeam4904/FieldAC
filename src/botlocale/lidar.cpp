@@ -201,23 +201,32 @@ std::tuple<cv::Vec2f, float> LidarScan::calcOffset(LidarScan &prevScan, float pr
 
 std::tuple<cv::Vec2f, float> LidarScan::calcOffset(std::deque<LidarScan> scans) {
     cv::Vec2f scanDiff = cv::Vec2f(0, 0);
+    cv::Vec2f lastAvg = cv::Vec2f(0, 0);
+    if(scans.size() <= 1) {
+        return std::make_tuple(scanDiff, 0.0f);
+    }
     float yawOffset = 0;
-    for(auto &scan : scans) {
+    for(int i = 0; i < scans.size(); i++) {
+        auto scan = scans[i];
         int goodMeasurements = 0;
         cv::Vec2f avg = cv::Vec2f(0, 0);
         float yaw = scan.yaw;
-        for(int i = 0; i < 360; i++) {
-            auto posX = cos((std::get<0>(scan.measurements[i]) - yaw) * (M_PI / 180)) *
-                        std::get<1>(scan.measurements[i]);
-            auto posY = sin((std::get<0>(scan.measurements[i]) - yaw) * (M_PI / 180)) *
-                        std::get<1>(scan.measurements[i]);
-            if (std::get<1>(scan.measurements[i]) == 0) {
+        for(int j = 0; j < 360; j++) {
+            auto posX = cos((std::get<0>(scan.measurements[j]) - yaw) * (M_PI / 180)) *
+                        std::get<1>(scan.measurements[j]);
+            auto posY = sin((std::get<0>(scan.measurements[j]) - yaw) * (M_PI / 180)) *
+                        std::get<1>(scan.measurements[j]);
+            if (std::get<1>(scan.measurements[j]) == 0) {
                 goodMeasurements++;
             }
             avg += cv::Vec2f(posX, posY);
         }
         avg /= goodMeasurements;
-        scanDiff += avg;
+        if(lastAvg == cv::Vec2f(0, 0)) {
+            lastAvg = avg;
+            continue;
+        }
+        scanDiff += (avg - lastAvg);
         yawOffset = yaw - yawOffset;
     }
     scanDiff /= (int) scans.size();
