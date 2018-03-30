@@ -31,7 +31,11 @@ namespace ObjectTracking {
         while (!track_optflow_queue.empty())
             track_optflow_queue.pop(); // we're gonna track it to current time so no need to keep the old frames
         this->track_optflow_mutex.unlock();
-        this->targets = this->extrapolate_bbox_through_queue(targetsUpdate, network.skippedFrames);
+        if (!network.skippedFrames.empty()) {
+            this->targets = this->extrapolate_bbox_through_queue(targetsUpdate, network.skippedFrames);
+        } else {
+            std::printf("skippedframes empty\n");
+        }
 
         timeval newt;
         std::printf("new - ");
