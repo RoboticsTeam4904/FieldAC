@@ -209,10 +209,10 @@ namespace ObjectTracking {
                         features_next[i].y = 0;
                     }
                     if (features_next[i].x >= optflowFrame.cols) {
-                        features_next[i].x = optflowFrame.cols-1;
+                        features_next[i].x = optflowFrame.cols - 1;
                     }
                     if (features_next[i].y >= optflowFrame.rows) {
-                        features_next[i].y = optflowFrame.rows-1;
+                        features_next[i].y = optflowFrame.rows - 1;
                     }
 
                     // Carry over features which /were/ tracked.
@@ -247,6 +247,7 @@ namespace ObjectTracking {
                 this->draw_boxes(optflowFrame, opticalFlowBox, cv::Scalar(50, 200, 50));
                 this->draw_boxes(optflowFrame, this->targets, cv::Scalar(50, 50, 200));
                 optflow_targets = opticalFlowBox;
+                std::cout << optflowFrame.rows << "," << optflowFrame.cols << std::endl;
                 optflowWriter.write(optflowFrame);
             }
 
