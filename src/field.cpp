@@ -312,11 +312,8 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
         xs.push_back(FT(this->field_width - pose.x));
         ys.push_back(FT(this->field_height - pose.y));
         dists.push_back(FT(pose.dist));
-        relangles.push_back(pose.relangle);
+        relangles.push_back(pose.relangle * 180 / M_PI);
     }
-    if (xs.size() < 1) {
-        return;
-    };
     //hold on bois, its about to get baaaaad
     double s = 9999999;
     int e;
@@ -326,23 +323,26 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
             e = i;
         }
     }
-    s = xs[0];
-    xs[0] = xs[e];
-    xs[e] = s;
-    s = ys[0];
-    ys[0] = ys[e];
-    ys[e] = s;
-    s = dists[0];
-    dists[0] = dists[e];
-    dists[e] = s;
-    s = relangles[0];
-    relangles[0] = relangles[e];
-    relangles[e] = s;
+    if (xs.size() > 0) {
+        s = xs[0];
+        xs[0] = xs[e];
+        xs[e] = s;
+        s = ys[0];
+        ys[0] = ys[e];
+        ys[e] = s;
+        s = dists[0];
+        dists[0] = dists[e];
+        dists[e] = s;
+        s = relangles[0];
+        relangles[0] = relangles[e];
+        relangles[e] = s;
+    }
     mainKey = "/" + parent + "/" + mainKey;
     nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(ys));
     nt::SetEntryValue(mainKey + "/distance", nt::Value::MakeDoubleArray(dists));
     nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles));
+
 }
 
 void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data,
@@ -443,8 +443,8 @@ void Field::run() {
             p.yaw = static_cast<float>(0);
         }
         this->scan_mutex.lock();
-        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
-        render();
+//        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
+//        render();
         this->scan_mutex.unlock();
         int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
         int fps = 1000 / (ms + 1);
