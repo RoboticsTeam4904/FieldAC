@@ -176,7 +176,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 //    }
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame.cols,
+        auto angles = Vision::pixel_to_rad(i.x + (i.w / 2.0F), i.y + (i.h / 2.0F), 78, this->cameraFrame.cols,
                                            this->cameraFrame.rows); // logitech c920 has 78 degree fov
         if (i.w + i.h == 0 || std::get<1>(angles) > 63) {
             continue;
