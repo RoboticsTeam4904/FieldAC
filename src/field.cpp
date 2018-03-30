@@ -228,9 +228,9 @@ SensorData Field::get_sensor_data() {
 //    this->latest_data.accelY = 0;
 //    this->latest_data.accelZ = 0;
 //
-//    this->latest_data.accelX = latest_data.accelX * IMU_TO_CM_S2;
-//    this->latest_data.accelY = latest_data.accelY * IMU_TO_CM_S2;
-//    this->latest_data.accelZ = latest_data.accelZ * IMU_TO_CM_S2;
+    this->latest_data.accelX = latest_data.accelX * IMU_TO_CM_S2;
+    this->latest_data.accelY = latest_data.accelY * IMU_TO_CM_S2;
+    this->latest_data.accelZ = latest_data.accelZ * IMU_TO_CM_S2;
     return this->latest_data;
 }
 
