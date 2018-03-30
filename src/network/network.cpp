@@ -35,6 +35,12 @@ Network::Network(cv::String classNames, cv::String config, cv::String model, cv:
             this->classNames.emplace_back(className);
     }
     if (!save.empty()) {
+        time_t seconds;
+        time(&seconds);
+        std::stringstream ss;
+        ss << seconds;
+        std::string ts = ss.str();
+        save += "-" + ts + ".avi";
         saveWriter.open(save, CV_FOURCC('X', '2', '6', '4'), 3, cv::Size((int) capWidth, (int) capHeight), 1);
     }
     network->nms = 0.4;
