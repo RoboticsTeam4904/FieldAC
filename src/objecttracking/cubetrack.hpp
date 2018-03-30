@@ -29,6 +29,7 @@ namespace ObjectTracking {
         cv::Mat optflowFrameLast;
 
         bool recalc = false;
+        cv::VideoWriter optflowWriter;
     private:
         Network &network;
         std::vector<bbox_t> targetsLast;

@@ -61,6 +61,14 @@ namespace ObjectTracking {
         std::printf("Running CubeTracker in here!\n");
         cv::Mat frame;
         std::vector<bbox_t> opticalFlowBox;
+        time_t seconds;
+        time(&seconds);
+        std::stringstream ss;
+        ss << seconds;
+        std::string ts = ss.str();
+        optflowWriter = cv::VideoWriter("optflow-" + ts + ".avi", CV_FOURCC('M', 'J', 'P', 'G'), 30,
+                                        cv::Size(1920, 1080),
+                                        true);
 
         std::vector<cv::Point2f> features_prev, features_next;
 
@@ -239,6 +247,7 @@ namespace ObjectTracking {
                 this->draw_boxes(optflowFrame, opticalFlowBox, cv::Scalar(50, 200, 50));
                 this->draw_boxes(optflowFrame, this->targets, cv::Scalar(50, 50, 200));
                 optflow_targets = opticalFlowBox;
+                optflowWriter.write(optflowFrame);
             }
 
         }
