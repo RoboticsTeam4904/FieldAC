@@ -9,6 +9,8 @@
 #include <networktables/NetworkTable.h>
 #include "./botlocale/mcl.hpp"
 #include "vision.hpp"
+#include <string>
+#include <sstream>
 // #include <stdarg.h>
 #include <cstdarg>
 #include <cmath>
@@ -117,8 +119,14 @@ void Field::load() {
         pose_distribution[i] = randomized[i];
     }
 
-    this->fieldFrameWriter = cv::VideoWriter("field.avi", CV_FOURCC('M', 'J', 'P', 'G'), 10,
-                                             cv::Size(field_height, field_width), true); // rotated so switch field_height and field_width
+    time_t seconds;
+    time(&seconds);
+    std::stringstream ss;
+    ss << seconds;
+    std::string ts = ss.str();
+    this->fieldFrameWriter = cv::VideoWriter("field-" + ts + ".avi", CV_FOURCC('M', 'J', 'P', 'G'), 10,
+                                             cv::Size(field_height, field_width),
+                                             true); // rotated so switch field_height and field_width
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
