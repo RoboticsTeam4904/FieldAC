@@ -112,8 +112,7 @@ int main(int argc, const char **argv) {
 //    std::thread lidarRun(&Lidar::run,
 //                         lidar,
 //                         &ctrl_c_pressed);
-    std::this_thread::sleep_for(std::chrono::millisecond(3000));
-    field->cameraFrame = defaultDev->getFrame();
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     while(true) {
 //        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
 //            return -1;
@@ -121,7 +120,7 @@ int main(int argc, const char **argv) {
 //        if(cv::waitKey(10) == 32) {
 //            cubeTracker->recalc = true;
 //        }
-//        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
+//        if(defaultDev->displayImage(network->getAnnotatedFramemcnn(), "Darknet")) {
 //            return -1;
 //        }
         if (ctrl_c_pressed){
