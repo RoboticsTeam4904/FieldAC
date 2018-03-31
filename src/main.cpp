@@ -112,6 +112,7 @@ int main(int argc, const char **argv) {
 //    std::thread lidarRun(&Lidar::run,
 //                         lidar,
 //                         &ctrl_c_pressed);
+    std::this_thread::sleep_for(std::chrono::millisecond(3000));
     while(true) {
 //        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
 //            return -1;
