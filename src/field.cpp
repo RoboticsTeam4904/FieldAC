@@ -303,6 +303,15 @@ float Field::dist_front_obstacle() {
     return val;
 }
 
+std::vector<double> Field::dist_major_angles() {
+    std::vector<double> major_angles;
+    scan_mutex.lock();
+    for(int i = 0; i < 8; i++) {
+        major_angles[i] = FT(this->lidar_scans.front().getAtAngle(i * 45));
+    }
+    scan_mutex.unlock();
+};
+
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     std::vector<double> xs, ys, dists, relangles;
     if (poses.size() < 1) {
@@ -424,6 +433,8 @@ void Field::run() {
         std::printf("published cube data\n");
         this->put_values_nt("localization", "vision", 3, "frontObsticalDist", dist_front_obstacle(), "x", me.x, "y",
                             me.y);
+        
+//        this->put_arrays_nt("localization", {{"major_angles", this->dist_major_angles()}}, "vision");
         std::printf("published localization data\n");
         this->old_data = latest_data;
         this->get_sensor_data();

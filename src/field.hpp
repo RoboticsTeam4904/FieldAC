@@ -52,6 +52,8 @@ public:
     double field_height;
     cv::Mat cameraFrame;
     cv::VideoWriter fieldFrameWriter;
+
+    std::vector<double> dist_major_angles();
 };
 
 #endif
