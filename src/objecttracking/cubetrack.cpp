@@ -67,7 +67,7 @@ namespace ObjectTracking {
         ss << seconds;
         std::string ts = ss.str();
         optflowWriter = cv::VideoWriter("optflow-" + ts + ".avi", CV_FOURCC('M', 'J', 'P', 'G'), 30,
-                                        cv::Size(1920, 1080),
+                                        cv::Size(320, 240),
                                         true);
 
         std::vector<cv::Point2f> features_prev, features_next;

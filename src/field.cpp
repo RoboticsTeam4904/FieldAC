@@ -114,10 +114,10 @@ void Field::load() {
     while (!nt::IsConnected(nt_inst))
         continue;
 
-    auto randomized = BotLocale::init();
-    for (int i = 0; i < SAMPLES; ++i) {
-        pose_distribution[i] = randomized[i];
-    }
+//    auto randomized = BotLocale::init();
+//    for (int i = 0; i < SAMPLES; ++i) {
+//        pose_distribution[i] = randomized[i];
+//    }
 
     time_t seconds;
     time(&seconds);
@@ -130,9 +130,11 @@ void Field::load() {
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
-    if (!this->isReady) {
-        return;
-    }
+//    if (!this->isReady) {
+//        return;
+//    }
+    this->isReady = true;
+    this->scan_mutex.lock();
     this->objects.clear(); // TODO degradation stuff
     // Predict new targets, decrease probability of all, but increase probability of those that are similar to cubeTargets
     // Rotate points based on yawRate to get predicted pose
@@ -176,7 +178,7 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
 //    }
     for (auto &i : cubeTargets) {
         Pose cubePose;
-        auto angles = Vision::pixel_to_rad(i.x, i.y, 78, this->cameraFrame.cols,
+        auto angles = Vision::pixel_to_rad(i.x + (i.w / 2.0F), i.y + (i.h / 2.0F), 78, this->cameraFrame.cols,
                                            this->cameraFrame.rows); // logitech c920 has 78 degree fov
         if (i.w + i.h == 0 || std::get<1>(angles) > 63) {
             continue;
@@ -191,16 +193,17 @@ void Field::update(std::vector<bbox_t> cubeTargets) {
         this->objects.push_back(cubePose);
         std::cout << "Number of objects detected: " << objects.size() << std::endl;
     }
+    this->scan_mutex.unlock();
 }
 
 void Field::update(LidarScan scan) {
     auto sensorData = this->get_sensor_data();
     this->scan_mutex.lock();
     scan.yaw = (float) sensorData.yaw;
-    this->lidar_scans.push_back(scan);
-    if (this->lidar_scans.size() > 5) {
-        this->lidar_scans.pop_front();
-    }
+//    this->lidar_scans.push_back(scan);
+//    if (this->lidar_scans.size() > 5) {
+//        this->lidar_scans.pop_front();
+//    }
     this->scan_mutex.unlock();
 }
 
@@ -274,20 +277,20 @@ void Field::render() {
         cv::line(img, cv::Point2f(p.x, p.y), cv::Point2f(p.x + (p.dx), p.y + (p.dy)),
                  cv::Scalar(128, 128, 0), 1);
     }
-
-    for (auto m : this->lidar_scans.front().measurements) {
-        double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
-        double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
-        cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
-                   cv::Scalar(0, 255, 0), -1);
-    }
-    for (auto m : this->lidar_scans.at(lidar_scans.size() - 2).measurements) {
-        double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
-        double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
-        cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
-                   cv::Scalar(50, 128, 50), -1);
-    }
-    this->lidar_scans.back().raytrace_visual(me, img);
+//
+//    for (auto m : this->lidar_scans.front().measurements) {
+//        double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
+//        double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
+//        cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
+//                   cv::Scalar(0, 255, 0), -1);
+//    }
+//    for (auto m : this->lidar_scans.at(lidar_scans.size() - 2).measurements) {
+//        double x_pos = cos(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.x;
+//        double y_pos = sin(std::get<0>(m) * PI / 180 + me.yaw - (PI / 2)) * std::get<1>(m) + me.y;
+//        cv::circle(img, cv::Point2d(x_pos, y_pos), 2,
+//                   cv::Scalar(50, 128, 50), -1);
+//    }
+//    this->lidar_scans.back().raytrace_visual(me, img);
     cv::rotate(img, img, cv::ROTATE_90_CLOCKWISE);
 //    cv::resize(img, img, cv::Size(0.5, 0.5));
 
@@ -298,8 +301,9 @@ void Field::render() {
 
 float Field::dist_front_obstacle() {
     scan_mutex.lock();
-    auto val = FT(this->lidar_scans.front().getAtAngle(0));
+//    auto val = FT(this->lidar_scans.front().getAtAngle(0));
     scan_mutex.unlock();
+    auto val = 0;
     return val;
 }
 
@@ -317,15 +321,12 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
     if (poses.size() < 1) {
         return;
     }
-    for (const Pose &pose : poses) {
+    for (const Pose pose : poses) {
         xs.push_back(FT(this->field_width - pose.x));
         ys.push_back(FT(this->field_height - pose.y));
         dists.push_back(FT(pose.dist));
-        relangles.push_back(pose.relangle);
+        relangles.push_back(pose.relangle * 180 / M_PI);
     }
-    if (xs.size() < 1) {
-        return;
-    };
     //hold on bois, its about to get baaaaad
     double s = 9999999;
     int e;
@@ -335,23 +336,26 @@ void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::strin
             e = i;
         }
     }
-    s = xs[0];
-    xs[0] = xs[e];
-    xs[e] = s;
-    s = ys[0];
-    ys[0] = ys[e];
-    ys[e] = s;
-    s = dists[0];
-    dists[0] = dists[e];
-    dists[e] = s;
-    s = relangles[0];
-    relangles[0] = relangles[e];
-    relangles[e] = s;
+    if (xs.size() > 0) {
+        s = xs[0];
+        xs[0] = xs[e];
+        xs[e] = s;
+        s = ys[0];
+        ys[0] = ys[e];
+        ys[e] = s;
+        s = dists[0];
+        dists[0] = dists[e];
+        dists[e] = s;
+        s = relangles[0];
+        relangles[0] = relangles[e];
+        relangles[e] = s;
+    }
     mainKey = "/" + parent + "/" + mainKey;
     nt::SetEntryValue(mainKey + "/x", nt::Value::MakeDoubleArray(xs));
     nt::SetEntryValue(mainKey + "/y", nt::Value::MakeDoubleArray(ys));
     nt::SetEntryValue(mainKey + "/distance", nt::Value::MakeDoubleArray(dists));
     nt::SetEntryValue(mainKey + "/relangle", nt::Value::MakeDoubleArray(relangles));
+
 }
 
 void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data,
@@ -423,12 +427,12 @@ std::map<std::string, double> Field::get_values_nt(std::vector<std::string> keys
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
 void Field::run() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     while (true) {
-        if (this->lidar_scans.size() < 1) {
-            isReady = false;
+        while (this->objects.empty() || !this->isReady) {
             continue;
         }
-        isReady = true;
+        this->scan_mutex.lock();
         this->put_pose_nt(this->objects, "cubes", "pose");
         std::printf("published cube data\n");
         this->put_values_nt("localization", "vision", 3, "frontObsticalDist", dist_front_obstacle(), "x", me.x, "y",
@@ -436,36 +440,29 @@ void Field::run() {
         
 //        this->put_arrays_nt("localization", {{"major_angles", this->dist_major_angles()}}, "vision");
         std::printf("published localization data\n");
+        this->scan_mutex.unlock();
         this->old_data = latest_data;
         this->get_sensor_data();
-        std::printf("got sensor data\n");
+//        std::printf("got sensor data\n");
         // TODO not sure which accel is forward or lateral
         std::clock_t start = std::clock();
-        bool lidarIsReady = false;
-        for (auto a : lidar_scans.back().measurements) {
-            if (std::get<0>(a) != 0) {
-                lidarIsReady = true;
-            }
-        }
-        if (!lidarIsReady) {
-            continue;
-        }
-        for (auto &p : pose_distribution) {
-            p.yaw = static_cast<float>(0);
-        }
-        this->scan_mutex.lock();
-        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
-        render();
-        this->scan_mutex.unlock();
-        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
-        int fps = 1000 / (ms + 1);
-        std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
-        this->scan_mutex.lock();
-        me = BotLocale::get_best_pose(pose_distribution, this->lidar_scans.back());
-        this->scan_mutex.unlock();
-        me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
-        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
-                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
+        bool lidarIsReady = true;
+//        for (auto &p : pose_distribution) {
+//            p.yaw = static_cast<float>(0);
+//        }
+//        this->scan_mutex.lock();
+//        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
+//        render();
+//        this->scan_mutex.unlock();
+//        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
+//        int fps = 1000 / (ms + 1);
+//        std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
+//        this->scan_mutex.lock();
+//        me = BotLocale::get_best_pose(pose_distribution, this->lidar_scans.back());
+//        this->scan_mutex.unlock();
+//        me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
+//        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
+//                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
     }
 }
 

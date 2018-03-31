@@ -91,9 +91,9 @@ namespace Vision {
         double h = image_h;
         double fov_radians = fov_degrees * M_PI / 180;
         double fw = (w / 2.0) / tan(fov_radians / 2.0);
-        float x_rad = static_cast<float>(atan(x / fw));
+        float x_rad = static_cast<float>(atan(((image_w / 2.0f) - x) / fw));
         double fh = (h / 2.0) / tan(fov_radians / 2.0);
-        float y_rad = static_cast<float>(atan(y / fh));
+        float y_rad = static_cast<float>(atan(((image_h / 2.0f) - y) / fh));
         return std::make_tuple(x_rad, y_rad);
     };
 }
