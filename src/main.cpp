@@ -86,9 +86,9 @@ int main(int argc, const char **argv) {
         network->update(mat, frameCount);
     });
 
-    std::printf("Initializing Lidar...\n");
-    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
-                             parser.get<uint32_t>("ldr_baud"));
+//    std::printf("Initializing Lidar...\n");
+//    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
+//                             parser.get<uint32_t>("ldr_baud"));
 
     Field* field = Field::getInstance();
     field->load();
@@ -108,10 +108,10 @@ int main(int argc, const char **argv) {
     std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
                              cubeTracker);
     std::printf("\n");
-
-    std::thread lidarRun(&Lidar::run,
-                         lidar,
-                         &ctrl_c_pressed);
+//
+//    std::thread lidarRun(&Lidar::run,
+//                         lidar,
+//                         &ctrl_c_pressed);
     while(true) {
 //        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
 //            return -1;
@@ -126,7 +126,7 @@ int main(int argc, const char **argv) {
             break;
         }
         field->update(cubeTracker->optflow_targets);
-        field->update(lidar->current_scan);
+//        field->update(lidar->current_scan);
         field->cameraFrame = defaultDev->getFrame();
 //        defaultDev->displayImage(field->renderedImage, "Field");
     }
