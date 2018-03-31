@@ -113,6 +113,7 @@ int main(int argc, const char **argv) {
 //                         lidar,
 //                         &ctrl_c_pressed);
     std::this_thread::sleep_for(std::chrono::millisecond(3000));
+    field->cameraFrame = defaultDev->getFrame();
     while(true) {
 //        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
 //            return -1;
@@ -126,7 +127,6 @@ int main(int argc, const char **argv) {
         if (ctrl_c_pressed){
             break;
         }
-        field->cameraFrame = defaultDev->getFrame();
         field->update(cubeTracker->optflow_targets);
 //        field->update(lidar->current_scan);
 
