@@ -1,5 +1,4 @@
 #include "objects.hpp"
-#include "botlocale/lidar.hpp"
 #include <math.h>
 #include <cmath>
 #include <opencv2/core/matx.hpp>

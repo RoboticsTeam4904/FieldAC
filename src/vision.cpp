@@ -4,7 +4,6 @@
 #include <opencv2/highgui.hpp>
 #include "opencv2/imgproc/imgproc.hpp"
 
-
 namespace Vision {
     Camera::Camera(cv::String srcCapture) {
         this->devCapture = cv::VideoCapture();

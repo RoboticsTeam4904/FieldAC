@@ -1,19 +1,18 @@
+// FieldAC
+#include "vision.hpp"
 #include "field.hpp"
-#include "./network/network.hpp"
+// STD
 #include <chrono>
 #include <thread>
 #include <sys/time.h>
 #include <tuple>
-#include "./botlocale/lidar.hpp"
-#include <ntcore.h>
-#include <networktables/NetworkTable.h>
-#include "./botlocale/mcl.hpp"
-#include "vision.hpp"
 #include <string>
 #include <sstream>
-// #include <stdarg.h>
 #include <cstdarg>
 #include <cmath>
+// WPISUITE
+#include <ntcore.h>
+#include <networktables/NetworkTable.h>
 
 #define PI 3.14159265
 #define NETWORKTABLES_PORT 1735
@@ -37,96 +36,6 @@ Field *Field::getInstance() {
         instance = new Field();
     }
     return instance;
-}
-
-void Field::load() {
-    /**
-     *  TODO: Create a field from a vector graphic file-format
-     *  TODO: using an std::vector of Segments
-     */
-
-    construct.emplace_back(Segment(75, 0, 0, 90));
-    construct.emplace_back(Segment(0, 90, 0, 1572));
-    construct.emplace_back(Segment(0, 1572, 75, 1660));
-    construct.emplace_back(Segment(75, 1660, 474, 1660));
-    construct.emplace_back(Segment(530, 1660, 775, 1660));
-    construct.emplace_back(Segment(775, 1660, 850, 1572));
-    construct.emplace_back(Segment(775, 1660, 850, 1572));
-    construct.emplace_back(Segment(850, 90, 850, 1572));
-    construct.emplace_back(Segment(775, 0, 850, 90));
-    construct.emplace_back(Segment(75, 0, 320, 0));
-    construct.emplace_back(Segment(376, 0, 775, 0));
-
-    construct.emplace_back(Segment(212, 330, 212, 500));
-    construct.emplace_back(Segment(212, 500, 636, 500));
-    construct.emplace_back(Segment(212, 330, 636, 330));
-    construct.emplace_back(Segment(636, 500, 636, 330));
-
-    construct.emplace_back(Segment(290, 808, 402, 808));
-    construct.emplace_back(Segment(402, 808, 402, 802));
-    construct.emplace_back(Segment(402, 802, 448, 802));
-    construct.emplace_back(Segment(448, 802, 448, 808));
-    construct.emplace_back(Segment(448, 808, 560, 808));
-    construct.emplace_back(Segment(560, 808, 560, 852));
-    construct.emplace_back(Segment(402, 852, 402, 858));
-    construct.emplace_back(Segment(402, 858, 448, 858));
-    construct.emplace_back(Segment(448, 858, 448, 852));
-    construct.emplace_back(Segment(448, 852, 560, 852));
-    construct.emplace_back(Segment(402, 852, 290, 852));
-    construct.emplace_back(Segment(290, 852, 290, 808));
-
-    construct.emplace_back(Segment(212, 1159, 212, 1302));
-    construct.emplace_back(Segment(212, 1302, 636, 1302));
-    construct.emplace_back(Segment(212, 1159, 636, 1159));
-    construct.emplace_back(Segment(636, 1302, 636, 1159));
-
-
-//    construct.emplace_back(Segment(30, 30, 330, 30));
-//    construct.emplace_back(Segment(330, 30, 330, 230));
-//    construct.emplace_back(Segment(330, 230, 30, 230));
-//    construct.emplace_back(Segment(30, 230, 30, 30));
-
-    field_width = 0;
-    field_height = 0;
-    for (auto seg : this->construct) {
-        if (std::get<0>(seg.start) > field_width) {
-            field_width = std::get<0>(seg.start);
-        }
-        if (std::get<0>(seg.end) > field_width) {
-            field_width = std::get<0>(seg.end);
-        }
-        if (std::get<1>(seg.start) > field_height) {
-            field_height = std::get<1>(seg.start);
-        }
-        if (std::get<1>(seg.end) > field_height) {
-            field_height = std::get<1>(seg.end);
-        }
-    }
-
-
-    std::printf("Field generated.\n\tNumber of segments: %lu\n\tSize: %f x %f\n", construct.size(), field_height,
-                field_width);
-    me.x = 0;
-    me.y = 0;
-    me.yaw = 0; // forward/up
-    nt_inst = nt::GetDefaultInstance();
-    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
-    while (!nt::IsConnected(nt_inst))
-        continue;
-
-//    auto randomized = BotLocale::init();
-//    for (int i = 0; i < SAMPLES; ++i) {
-//        pose_distribution[i] = randomized[i];
-//    }
-
-    time_t seconds;
-    time(&seconds);
-    std::stringstream ss;
-    ss << seconds;
-    std::string ts = ss.str();
-    this->fieldFrameWriter = cv::VideoWriter("field-" + ts + ".avi", CV_FOURCC('M', 'J', 'P', 'G'), 10,
-                                             cv::Size(field_height, field_width),
-                                             true); // rotated so switch field_height and field_width
 }
 
 void Field::update(std::vector<bbox_t> cubeTargets) {
@@ -363,18 +272,6 @@ void Field::put_arrays_nt(std::string mainKey, std::map<std::string, std::vector
     }
 }
 
-// void Field::put_arrays_nt(std::string mainKey, std::string parent, int count, ...) {
-//     count *= 2;
-//     va_list values;
-//     va_start(values, count);
-//     for (int i = 0; i < count; i += 2) {
-//         std::string key = va_arg(values, std::string);
-//         std::vector<double> data = va_arg(values, std::vector<double>);
-//         nt::SetEntryValue("/" + parent + "/" + mainKey + "/" + key, nt::Value::MakeDoubleArray(data));
-//     }
-//     va_end(values);
-// }
-
 void Field::put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent = "vision") {
     mainKey = "/" + parent + "/" + mainKey + "/";
     for (const auto &i : data) {
@@ -461,6 +358,91 @@ void Field::run() {
 //        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
 //                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
     }
+}
+
+void Field::load() {
+    /**
+     *  TODO: Create a field from a vector graphic file-format
+     *  TODO: using an std::vector of Segments
+     */
+    construct.emplace_back(Segment(75, 0, 0, 90));
+    construct.emplace_back(Segment(0, 90, 0, 1572));
+    construct.emplace_back(Segment(0, 1572, 75, 1660));
+    construct.emplace_back(Segment(75, 1660, 474, 1660));
+    construct.emplace_back(Segment(530, 1660, 775, 1660));
+    construct.emplace_back(Segment(775, 1660, 850, 1572));
+    construct.emplace_back(Segment(775, 1660, 850, 1572));
+    construct.emplace_back(Segment(850, 90, 850, 1572));
+    construct.emplace_back(Segment(775, 0, 850, 90));
+    construct.emplace_back(Segment(75, 0, 320, 0));
+    construct.emplace_back(Segment(376, 0, 775, 0));
+
+    construct.emplace_back(Segment(212, 330, 212, 500));
+    construct.emplace_back(Segment(212, 500, 636, 500));
+    construct.emplace_back(Segment(212, 330, 636, 330));
+    construct.emplace_back(Segment(636, 500, 636, 330));
+
+    construct.emplace_back(Segment(290, 808, 402, 808));
+    construct.emplace_back(Segment(402, 808, 402, 802));
+    construct.emplace_back(Segment(402, 802, 448, 802));
+    construct.emplace_back(Segment(448, 802, 448, 808));
+    construct.emplace_back(Segment(448, 808, 560, 808));
+    construct.emplace_back(Segment(560, 808, 560, 852));
+    construct.emplace_back(Segment(402, 852, 402, 858));
+    construct.emplace_back(Segment(402, 858, 448, 858));
+    construct.emplace_back(Segment(448, 858, 448, 852));
+    construct.emplace_back(Segment(448, 852, 560, 852));
+    construct.emplace_back(Segment(402, 852, 290, 852));
+    construct.emplace_back(Segment(290, 852, 290, 808));
+
+    construct.emplace_back(Segment(212, 1159, 212, 1302));
+    construct.emplace_back(Segment(212, 1302, 636, 1302));
+    construct.emplace_back(Segment(212, 1159, 636, 1159));
+    construct.emplace_back(Segment(636, 1302, 636, 1159));
+//    construct.emplace_back(Segment(30, 30, 330, 30));
+//    construct.emplace_back(Segment(330, 30, 330, 230));
+//    construct.emplace_back(Segment(330, 230, 30, 230));
+//    construct.emplace_back(Segment(30, 230, 30, 30));
+    field_width = 0;
+    field_height = 0;
+    for (auto seg : this->construct) {
+        if (std::get<0>(seg.start) > field_width) {
+            field_width = std::get<0>(seg.start);
+        }
+        if (std::get<0>(seg.end) > field_width) {
+            field_width = std::get<0>(seg.end);
+        }
+        if (std::get<1>(seg.start) > field_height) {
+            field_height = std::get<1>(seg.start);
+        }
+        if (std::get<1>(seg.end) > field_height) {
+            field_height = std::get<1>(seg.end);
+        }
+    }
+
+    std::printf("Field generated.\n\tNumber of segments: %lu\n\tSize: %f x %f\n", construct.size(), field_height,
+                field_width);
+    me.x = 0;
+    me.y = 0;
+    me.yaw = 0; // forward/up
+    nt_inst = nt::GetDefaultInstance();
+    nt::StartClientTeam(nt_inst, TEAM_NUMBER, NETWORKTABLES_PORT);
+    while (!nt::IsConnected(nt_inst))
+        continue;
+
+//    auto randomized = BotLocale::init();
+//    for (int i = 0; i < SAMPLES; ++i) {
+//        pose_distribution[i] = randomized[i];
+//    }
+
+    time_t seconds;
+    time(&seconds);
+    std::stringstream ss;
+    ss << seconds;
+    std::string ts = ss.str();
+    this->fieldFrameWriter = cv::VideoWriter("field-" + ts + ".avi", CV_FOURCC('M', 'J', 'P', 'G'), 10,
+                                             cv::Size(field_height, field_width),
+                                             true); // rotated so switch field_height and field_width
 }
 
 #pragma clang diagnostic pop

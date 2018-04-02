@@ -1,16 +1,19 @@
 #ifndef PROV_FIELD_H
 #define PROV_FIELD_H
 
+// STD
 #include <vector>
 #include <array>
-#include "objects.hpp"
 #include <tuple>
-#include "network/network.hpp"
-#include "./botlocale/lidar.hpp"
-#include "./botlocale/mcl.hpp"
+#include <map>
+// WPISUITE
 #include <ntcore.h>
 #include <networktables/NetworkTable.h>
-#include "botlocale/lidar.hpp"
+// Darknet
+#include <yolo_v2_class.hpp>
+// FieldAC
+#include "objects.hpp"
+#include "botlocale/mcl.hpp"
 
 class Field {
 private:

@@ -1,10 +1,10 @@
 #include "mcl.hpp"
+#include "lidar.hpp"
+#include "../field.hpp"
 #include <tuple>
 #include <cmath>
 #include <vector>
 #include <iostream>
-#include "lidar.hpp"
-#include "../field.hpp"
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 
