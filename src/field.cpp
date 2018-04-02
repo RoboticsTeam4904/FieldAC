@@ -318,9 +318,6 @@ std::vector<double> Field::dist_major_angles() {
 
 void Field::put_pose_nt(std::vector<Pose> poses, std::string mainKey, std::string parent = "vision") {
     std::vector<double> xs, ys, dists, relangles;
-    if (poses.size() < 1) {
-        return;
-    }
     for (const Pose pose : poses) {
         xs.push_back(FT(this->field_width - pose.x));
         ys.push_back(FT(this->field_height - pose.y));

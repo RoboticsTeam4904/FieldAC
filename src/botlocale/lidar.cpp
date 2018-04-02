@@ -389,26 +389,3 @@ float LidarScan::calc(float amount, float x, float y, float t1) {
 cv::Point2f tuple_to_point(std::tuple<double, double> t) {
     return cv::Point2f(std::get<0>(t), std::get<1>(t));
 }
-
-//
-//float[] raytrace(float x, float y){
-//    float dists[360];
-//    outer:
-//    for(int i=0; i<360; i++){
-//        for(int seg=0; seg<field.length; seg++){
-//            float[][] s=field[seg];
-//            float* intersect=intersectRayWithLineSegment(x,y,i,s[0][0],s[0][1],s[1][0],s[1][1]);
-//            if(intersect){
-//                dists[i]=sqrt((x-intersect[0])**2 + (y-intersect[1])**2)
-//                free(intersect) idk lol
-//                continue outer
-//            }
-//        }
-//        dists[i]=-1
-//    }
-//}
-//
-//float* intersectRayWithLineSegment(float centerX, float centerY, int rayAngleDegrees, float lineSegmentStartX, float lineSegmentStartY, float lineSegmentEndX, float lineSegmentEndY){
-//    returns 0 if no intersection, otherwise returns pointer to intersection x,y
-//    get this from stackoverflow
-//}

@@ -45,9 +45,6 @@ int main(int argc, const char **argv) {
         return 0;
     }
 
-//    std::printf("Initializing Robot comms...");
-//    Socket* socket = new Socket("127.0.0.1", 5021);
-
     std::printf("Initializing Camera...\n");
     Vision::Camera* defaultDev;
     if (parser.get<cv::String>("src").empty()) {
@@ -86,9 +83,9 @@ int main(int argc, const char **argv) {
         network->update(mat, frameCount);
     });
 
-//    std::printf("Initializing Lidar...\n");
-//    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
-//                             parser.get<uint32_t>("ldr_baud"));
+    std::printf("Initializing Lidar...\n");
+    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
+                             parser.get<uint32_t>("ldr_baud"));
 
     Field* field = Field::getInstance();
     field->load();
