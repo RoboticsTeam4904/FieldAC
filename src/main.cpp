@@ -107,28 +107,19 @@ int main(int argc, const char **argv) {
 
     std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
                              cubeTracker);
-    std::printf("\n");
-//
-//    std::thread lidarRun(&Lidar::run,
-//                         lidar,
-//                         &ctrl_c_pressed);
+    std::printf("Registering object tracking listener: Field...\n");
+    cubeTracker->registerListener([field](std::vector<Pose> objects) {
+       field->update(objects);
+    });
+
+    std::thread lidarRun(&Lidar::run,
+                         lidar,
+                         &ctrl_c_pressed);
+
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     while(true) {
-//        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
-//            return -1;
-//        }
-//        if(cv::waitKey(10) == 32) {
-//            cubeTracker->recalc = true;
-//        }
-//        if(defaultDev->displayImage(network->getAnnotatedFramemcnn(), "Darknet")) {
-//            return -1;
-//        }
         if (ctrl_c_pressed){
             break;
         }
-        field->update(cubeTracker->get_objects());
-//        field->update(lidar->current_scan);
-
-//        defaultDev->displayImage(field->renderedImage, "Field");
     }
 }

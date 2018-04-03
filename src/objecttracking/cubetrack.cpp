@@ -62,7 +62,7 @@ namespace ObjectTracking {
             Pose objectPose;
             auto angles = Vision::pixel_to_rad(target.x + (target.w / 2.0F), target.y + (target.h / 2.0F), 78, this->optflowFrame.cols,
                                                this->optflowFrame.rows); // logitech c920 has 78 degree fov
-            if (i.w + i.h == 0 || std::get<1>(angles) > 63) {
+            if (target.w + target.h == 0 || std::get<1>(angles) > 63) {
                 continue;
             }
             float distance = (((float) CubeTracker::CUBE_SIZE) * Vision::Camera::FOCAL_LENGTH) / (0.5F * (target.h + target.w));
@@ -73,6 +73,20 @@ namespace ObjectTracking {
         }
         this->optflow_targets_mutex.unlock();
         return objects;
+    }
+
+    void CubeTracker::registerListener(std::function<void (std::vector<Pose>)> listener) {
+        this->listenersMutex.lock();
+        this->listeners.push_back(listener);
+        this->listenersMutex.unlock();
+    }
+
+    void CubeTracker::notifyListeners(std::vector<Pose> objects) {
+        this->listenersMutex.lock();
+        for (const auto &listener : this->listeners) {
+            listener(objects);
+        }
+        this->listenersMutex.unlock();
     }
 
 #pragma clang diagnostic push
@@ -270,6 +284,7 @@ namespace ObjectTracking {
                 optflow_targets_mutex.lock();
                 optflow_targets = opticalFlowBox;
                 optflow_targets_mutex.unlock();
+                this->notifyListeners(this->get_objects());
                 std::cout << optflowFrame.rows << "," << optflowFrame.cols << std::endl;
                 optflowWriter.write(optflowFrame);
             }

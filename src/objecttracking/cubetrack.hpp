@@ -22,8 +22,8 @@ namespace ObjectTracking {
 
     class CubeTracker {
     public:
-        static const double DRIFT_COMPENSATE = 2;
-        static const double CUBE_SIZE = 31.3;
+        static constexpr double DRIFT_COMPENSATE = 2;
+        static constexpr double CUBE_SIZE = 31.3;
 
         cv::Mat optflowFrame;
         cv::Mat optflowFrameLast;
@@ -32,8 +32,10 @@ namespace ObjectTracking {
         cv::VideoWriter optflowWriter;
 
         std::vector<bbox_t> optflow_targets;
-        std::vector<bbox_t> extrapolate_bbox_through_queue(std::vector<bbox_t>, std::queue<cv::Mat>);
     private:
+        mutable std::mutex listenersMutex;
+        std::vector<std::function<void (std::vector<Pose>)>> listeners;
+
         Network &network;
         std::vector<bbox_t> targetsLast;
         std::vector<bbox_t> targets;
@@ -54,7 +56,11 @@ namespace ObjectTracking {
         void update(cv::Mat, int);
         void run();
         void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, cv::Scalar);
+        void registerListener(std::function<void (std::vector<Pose>)> listener);
+        std::vector<bbox_t> extrapolate_bbox_through_queue(std::vector<bbox_t>, std::queue<cv::Mat>);
         std::vector<Pose> get_objects();
+    private:
+        void notifyListeners(std::vector<Pose> objects);
     };
 
 }
