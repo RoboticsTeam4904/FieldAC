@@ -6,10 +6,16 @@
 #include <opencv/cv.hpp>
 #include <unordered_map>
 #include "vision.hpp"
+#include "field.hpp"
+
+#ifdef OBJ_TRACKING
 #include "network/network.hpp"
 #include "objecttracking/cubetrack.hpp"
+#endif
+
+#ifdef BOT_LOCALIZE
 #include "botlocale/lidar.hpp"
-#include "field.hpp"
+#endif
 
 bool ctrl_c_pressed;
 void ctrlc(int)
@@ -33,7 +39,10 @@ static const char* params =
         "{ net_save |        | [Network] Detection output file. Shows what the network detects }"
         "{ net_cfd  | 0.5    | [Network] Minimum identification confidence threshold           }"
         "{ ldr_dev  |        | [LIDAR] Path to the *nix device (eg. /dev/ttyUSB0)              }"
-        "{ ldr_baud | 115200 | [LIDAR] Baudrate for serial communications                      }";
+        "{ ldr_baud | 115200 | [LIDAR] Baudrate for serial communications                      }"
+        "{ nt_team  | 4904   | [NetworkTables] Team Number used for determining connection     }"
+        "{ nt_port  | 1735   | [NetworkTables] Port that server is listening on                }"
+        "{ nt_addr  |        | [NetworkTables] Address of server. Prioritized over team if set }";
 
 int main(int argc, const char **argv) {
     cv::CommandLineParser parser(argc, argv, params);
@@ -45,9 +54,6 @@ int main(int argc, const char **argv) {
         return 0;
     }
 
-//    std::printf("Initializing Robot comms...");
-//    Socket* socket = new Socket("127.0.0.1", 5021);
-
     std::printf("Initializing Camera...\n");
     Vision::Camera* defaultDev;
     if (parser.get<cv::String>("src").empty()) {
@@ -56,11 +62,17 @@ int main(int argc, const char **argv) {
         defaultDev = new Vision::Camera(parser.get<cv::String>("src"));
     }
 
+    std::printf("Beginning camera capture...\n");
+    std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
+
+    Field* field = Field::getInstance();
+    field->load();
+    std::thread fieldRun(&Field::run, field);
+
+#ifdef OBJ_TRACKING
     std::printf("Initializing Darknet...");
     Network* network;
 
-    std::printf("Beginning camera capture...\n");
-    std::thread defaultDevCapture(&Vision::Camera::captureImages, defaultDev);
     if(parser.get<cv::String>("net_save").empty()) {
         network = new Network(parser.get<cv::String>("net_cls"),
                               parser.get<cv::String>("net_cfg"),
@@ -86,48 +98,38 @@ int main(int argc, const char **argv) {
         network->update(mat, frameCount);
     });
 
-    std::printf("Initializing Lidar...\n");
-    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
-                             parser.get<uint32_t>("ldr_baud"));
-
-    Field* field = Field::getInstance();
-    field->load();
-    std::thread fieldRun(&Field::run, field);
-
     std::thread networkRun(&Network::run,
-                           network,
-                           [defaultDev]() {
-                               return defaultDev->getFrame();
-                           }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
-                           {
-                                   {"cube", [cubeTracker](std::vector<bbox_t> targets) {
-                                       return cubeTracker->update(targets);
-                                   }}}
+                       network,
+                       [defaultDev]() {
+                           return defaultDev->getFrame();
+                       }, std::unordered_map<std::string, std::function<void(std::vector<bbox_t>)>>
+                       {
+                               {"cube", [cubeTracker](std::vector<bbox_t> targets) {
+                                   return cubeTracker->update(targets);
+                               }}}
     );
 
     std::thread cubetrackRun(&ObjectTracking::CubeTracker::run,
                              cubeTracker);
-    std::printf("\n");
+    std::printf("Registering object tracking listener: Field...\n");
+    cubeTracker->registerListener([field](std::vector<Pose> objects) {
+       field->update(objects);
+    });
+#endif
 
+#ifdef BOT_LOCALIZE
+    std::printf("Initializing Lidar...\n");
+    Lidar* lidar = new Lidar(parser.get<cv::String>("ldr_dev"),
+                             parser.get<uint32_t>("ldr_baud"));
     std::thread lidarRun(&Lidar::run,
-                         lidar,
-                         &ctrl_c_pressed);
+                     lidar,
+                     &ctrl_c_pressed);
+#endif
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     while(true) {
-        if(defaultDev->displayImage(cubeTracker->optflowFrame, "Optflow")) {
-            return -1;
-        }
-        if(cv::waitKey(10) == 32) {
-            cubeTracker->recalc = true;
-        }
-        if(defaultDev->displayImage(network->getAnnotatedFrame(), "Darknet")) {
-            return -1;
-        }
         if (ctrl_c_pressed){
             break;
         }
-        field->update(cubeTracker->optflow_targets);
-        field->update(lidar->current_scan);
-        field->cameraFrame = defaultDev->getFrame();
-        defaultDev->displayImage(field->renderedImage, "Field");
     }
 }

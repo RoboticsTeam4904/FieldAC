@@ -1,56 +1,44 @@
 #ifndef PROV_FIELD_H
 #define PROV_FIELD_H
 
+// STD
 #include <vector>
 #include <array>
-#include "objects.hpp"
 #include <tuple>
-#include "network/network.hpp"
-#include "./botlocale/lidar.hpp"
-#include "./botlocale/mcl.hpp"
-#include <ntcore.h>
-#include <networktables/NetworkTable.h>
-#include "botlocale/lidar.hpp"
+#include <map>
+// Darknet
+#include <opencv2/opencv.hpp>
+// FieldAC
+#include "objects.hpp"
 
 class Field {
+public:
+    std::vector<Segment> construct;
+    std::vector<Pose> objects;
+    std::vector<Pose> robots;
+    Pose self;
+    SensorData data_curr;
+    SensorData data_prev;
+    double field_width;
+    double field_height;
 private:
     Field();
-
     static Field *instance;
-    mutable std::mutex scan_mutex;
+    mutable std::mutex objects_mutex;
     bool isReady;
 public:
     static Field *getInstance();
     void run();
     void load();
-    void update(std::vector<bbox_t>);
-    void update(LidarScan);
-    SensorData get_sensor_data();
-    void put_vision_data_nt();
+    void update(std::vector<Pose>);
     void render();
-    float dist_front_obstacle();
-    void put_pose_nt(std::vector<Pose>, std::string mainKey, std::string parent);
-    void put_arrays_nt(std::string mainKey, std::map<std::string, std::vector<double>> data, std::string parent);
-    void put_arrays_nt(std::string mainKey, std::string parent, int count, ...);
-    void put_values_nt(std::string mainKey, std::map<std::string, double> data, std::string parent);
-    void put_values_nt(std::string mainKey, std::string parent, int count, ...);
-    void put_value_nt(std::string key, double data, std::string parent);
-    void put_value_nt(std::string key, std::vector<double> data, std::string parent);
-    void get_sensor_data_nt();
-    std::map<std::string, double> get_values_nt(std::vector<std::string> keys, std::string parent);
-    std::vector<Segment> construct;
-    std::vector<Pose> objects;
-    std::vector<Pose> robots;
-    Pose pose_distribution[SAMPLES];
-    Pose me;
-    cv::Mat renderedImage;
-    NT_Inst nt_inst;
-    SensorData latest_data;
-    SensorData old_data;
-    std::deque<LidarScan> lidar_scans;
-    double field_width;
-    double field_height;
-    cv::Mat cameraFrame;
+    std::vector<Pose> finalizeObjects();
+    cv::Mat renderMat;
+    cv::VideoWriter renderWriter;
+
+    inline static float CM_TO_FT(float CM) {
+        return CM * 0.0328084F;
+    };
 };
 
 #endif

@@ -15,6 +15,7 @@ struct SensorData {
     bool operator==(const SensorData other) {
         return (leftEncoder == other.leftEncoder && rightEncoder == other.rightEncoder && accelX == other.accelX);
     }
+    static constexpr double IMU_TO_CM_S2 = 980.6649999788;
 };
 
 struct Pose {

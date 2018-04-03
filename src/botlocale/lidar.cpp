@@ -2,6 +2,9 @@
 #include "lidar.hpp"
 #include "../field.hpp"
 #include <tuple>
+#include <fstream>
+#include <string>
+#include <iostream>
 
 #define LIDAR_OFFSET 0
 #define dist(a, b) sqrt( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) )
@@ -62,6 +65,12 @@ void Lidar::run(const bool *stop) {
 
     this->driver->startMotor();
     this->driver->startScan();
+    time_t seconds;
+    time(&seconds);
+    std::stringstream ss;
+    ss << seconds;
+    std::string ts = ss.str();
+    std::ofstream out("output-" + ts + ".txt");
 
     while (true) {
         //TODO: This should be rewritten to respect C++11 idioms.
@@ -79,8 +88,7 @@ void Lidar::run(const bool *stop) {
 //                if ((int) (angle + LIDAR_OFFSET) % 360 - 90 > 0 && (int) (angle + LIDAR_OFFSET) % 360 - 90 < 270) {
 //                    distance = -1;
 //                }
-                tmp.measurements[((int) (angle + LIDAR_OFFSET + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET)) % 360,
-                                                                                 distance);
+                tmp.measurements[((int) (angle + LIDAR_OFFSET + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET)) % 360, distance);
 
 
 //                std::printf("%s theta: %03.2f Dist: %08.2f Q: %d\n",
@@ -92,8 +100,13 @@ void Lidar::run(const bool *stop) {
             tmp.offset = LIDAR_OFFSET;
             this->current_scan = tmp;
         }
-
+        std::string input = "\nTIME:" + std::to_string(std::time(0)) + "\n";
+        for (auto &measurement : this->current_scan.measurements) {
+            input += std::to_string(std::get<0>(measurement)) + ":" + std::to_string(std::get<1>(measurement)) + "\n";
+        }
+        out << input;
         if (*stop) {
+            out.close();
             break;
         }
     }
@@ -161,57 +174,35 @@ struct SegmentComparator {
     bool operator()(Segment i, Segment j) {
         cv::Point2f i_midpoint = cv::Point2f(std::get<0>(i.start), std::get<1>(i.start)) +
                                  ((cv::Point2f(std::get<0>(i.end), std::get<1>(i.start)) -
-                                           cv::Point2f(std::get<0>(i.start), std::get<1>(i.end))) / 2);
+                                   cv::Point2f(std::get<0>(i.start), std::get<1>(i.end))) / 2);
         cv::Point2f j_midpoint = cv::Point2f(std::get<0>(j.start), std::get<1>(j.start)) +
                                  ((cv::Point2f(std::get<0>(j.end), std::get<1>(j.start)) -
-                                           cv::Point2f(std::get<0>(j.start), std::get<1>(j.end))) / 2);
-        auto i_dist = pow(pow(std::get<0>(pos) - std::abs(i_midpoint.x), 2) + pow(std::get<1>(pos) - std::abs(i_midpoint.y), 2), 0.5);
-        auto j_dist = pow(pow(std::get<0>(pos) - std::abs(j_midpoint.x), 2) + pow(std::get<1>(pos) - std::abs(j_midpoint.y), 2), 0.5);
+                                   cv::Point2f(std::get<0>(j.start), std::get<1>(j.end))) / 2);
+        auto i_dist = pow(
+                pow(std::get<0>(pos) - std::abs(i_midpoint.x), 2) + pow(std::get<1>(pos) - std::abs(i_midpoint.y), 2),
+                0.5);
+        auto j_dist = pow(
+                pow(std::get<0>(pos) - std::abs(j_midpoint.x), 2) + pow(std::get<1>(pos) - std::abs(j_midpoint.y), 2),
+                0.5);
         return (i_dist < j_dist);
     }
 
     std::tuple<double, double> pos;
 };
 
-std::tuple<cv::Vec2f, float> LidarScan::calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees) {
-    cv::Vec2f prevCenter = cv::Vec2f(0, 0);
-    cv::Vec2f currCenter = cv::Vec2f(0, 0);
-    int goodMeaurements = 0;
-    for (int i = 0; i < 360; i++) {
-        auto prevX = cos((std::get<0>(prevScan.measurements[i]) - prevYawDegrees) * (M_PI / 180)) *
-                     std::get<1>(prevScan.measurements[i]);
-        auto prevY = sin((std::get<0>(prevScan.measurements[i]) - prevYawDegrees) * (M_PI / 180)) *
-                     std::get<1>(prevScan.measurements[i]);
-        auto currX = cos((std::get<0>(currScan.measurements[i]) - currYawDegrees) * (M_PI / 180)) *
-                     std::get<1>(currScan.measurements[i]);
-        auto currY = sin((std::get<0>(currScan.measurements[i]) - currYawDegrees) * (M_PI / 180)) *
-                     std::get<1>(currScan.measurements[i]);
-        if (std::get<1>(prevScan.measurements[i]) == 0) {
-            goodMeaurements++;
-        }
-        prevCenter += cv::Vec2f(prevX, prevY);
-        currCenter += cv::Vec2f(currX, currY);
-    }
-    prevCenter /= goodMeaurements;
-    currCenter /= goodMeaurements;
-    std::cout << prevCenter << " " << currCenter << currCenter - prevCenter << std::endl;
-    cv::Vec2f scanDiff = currCenter - prevCenter;
-    return std::make_tuple(scanDiff, currYawDegrees - prevYawDegrees);
-};
-
 std::tuple<cv::Vec2f, float> LidarScan::calcOffset(std::deque<LidarScan> scans) {
     cv::Vec2f scanDiff = cv::Vec2f(0, 0);
     cv::Vec2f lastAvg = cv::Vec2f(0, 0);
-    if(scans.size() <= 1) {
+    if (scans.size() <= 1) {
         return std::make_tuple(scanDiff, 0.0f);
     }
     float yawOffset = 0;
-    for(int i = 0; i < scans.size(); i++) {
+    for (int i = 0; i < scans.size(); i++) {
         auto scan = scans[i];
         int goodMeasurements = 0;
         cv::Vec2f avg = cv::Vec2f(0, 0);
         float yaw = scan.yaw;
-        for(int j = 0; j < 360; j++) {
+        for (int j = 0; j < 360; j++) {
             auto posX = cos((std::get<0>(scan.measurements[j]) - yaw) * (M_PI / 180)) *
                         std::get<1>(scan.measurements[j]);
             auto posY = sin((std::get<0>(scan.measurements[j]) - yaw) * (M_PI / 180)) *
@@ -222,7 +213,7 @@ std::tuple<cv::Vec2f, float> LidarScan::calcOffset(std::deque<LidarScan> scans) 
             avg += cv::Vec2f(posX, posY);
         }
         avg /= goodMeasurements;
-        if(lastAvg == cv::Vec2f(0, 0)) {
+        if (lastAvg == cv::Vec2f(0, 0)) {
             lastAvg = avg;
             continue;
         }
@@ -253,7 +244,7 @@ double LidarScan::raytrace(Pose robot_pose) {
             totalErr += 500;
             continue;
         }
-        float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180 - M_PI/2;
+        float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180 - M_PI / 2;
         auto direction = cv::Vec2f(std::cos(rads), std::sin(rads));
         bool continyoo = false;
 
@@ -269,7 +260,8 @@ double LidarScan::raytrace(Pose robot_pose) {
                 numGoodMeasurements++;
                 continyoo = true;
                 cv::Point2f expected_point = *intersection;
-                cv::Point2f actual_point = cv::Point2f(std::cos(rads) * std::get<1>(measurement) + robot_pose.x, std::sin(rads) * std::get<1>(measurement) + robot_pose.y);
+                cv::Point2f actual_point = cv::Point2f(std::cos(rads) * std::get<1>(measurement) + robot_pose.x,
+                                                       std::sin(rads) * std::get<1>(measurement) + robot_pose.y);
                 // angle should be the same because math so we just compare magnitudes
                 auto expected_mag = dist(pos_point, expected_point);
                 auto actual_mag = std::get<1>(measurement);
@@ -291,7 +283,7 @@ double LidarScan::raytrace(Pose robot_pose) {
     if (totalErr == 0) {
         totalErr = 10000;
     }
-    return numGoodMeasurements/totalErr;
+    return numGoodMeasurements / totalErr;
 }
 
 
@@ -313,7 +305,7 @@ double LidarScan::raytrace_visual(Pose robot_pose, cv::Mat &img) {
         if (std::get<1>(measurement) <= 0) {
             continue;
         }
-        float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180 - M_PI/2;
+        float rads = (std::get<0>(measurement) - yaw_degrees) * M_PI / 180 - M_PI / 2;
         auto direction = cv::Vec2f(std::cos(rads), std::sin(rads));
         bool continyoo = false;
 
@@ -328,7 +320,8 @@ double LidarScan::raytrace_visual(Pose robot_pose, cv::Mat &img) {
             if (intersection) {
                 continyoo = true;
                 cv::Point2f expected_point = *intersection;
-                cv::Point2f actual_point = cv::Point2f(std::cos(rads) * std::get<1>(measurement) + robot_pose.x, std::sin(rads) * std::get<1>(measurement) + robot_pose.y);
+                cv::Point2f actual_point = cv::Point2f(std::cos(rads) * std::get<1>(measurement) + robot_pose.x,
+                                                       std::sin(rads) * std::get<1>(measurement) + robot_pose.y);
                 cv::circle(img, expected_point, 2, cv::Scalar(10, 10, 255), -1);
                 cv::line(img, actual_point, expected_point, cv::Scalar(90, 128, 255), 1);
                 // angle should be the same because math so we just compare magnitudes
@@ -367,26 +360,3 @@ float LidarScan::calc(float amount, float x, float y, float t1) {
 cv::Point2f tuple_to_point(std::tuple<double, double> t) {
     return cv::Point2f(std::get<0>(t), std::get<1>(t));
 }
-
-//
-//float[] raytrace(float x, float y){
-//    float dists[360];
-//    outer:
-//    for(int i=0; i<360; i++){
-//        for(int seg=0; seg<field.length; seg++){
-//            float[][] s=field[seg];
-//            float* intersect=intersectRayWithLineSegment(x,y,i,s[0][0],s[0][1],s[1][0],s[1][1]);
-//            if(intersect){
-//                dists[i]=sqrt((x-intersect[0])**2 + (y-intersect[1])**2)
-//                free(intersect) idk lol
-//                continue outer
-//            }
-//        }
-//        dists[i]=-1
-//    }
-//}
-//
-//float* intersectRayWithLineSegment(float centerX, float centerY, int rayAngleDegrees, float lineSegmentStartX, float lineSegmentStartY, float lineSegmentEndX, float lineSegmentEndY){
-//    returns 0 if no intersection, otherwise returns pointer to intersection x,y
-//    get this from stackoverflow
-//}

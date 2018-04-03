@@ -8,6 +8,8 @@
 
 namespace Vision {
     class Camera {
+    public:
+        static constexpr float FOCAL_LENGTH = 0.367;
     private:
         mutable std::mutex frameMutex;
         mutable std::mutex listenersMutex;
@@ -23,8 +25,6 @@ namespace Vision {
         void captureImages();
         bool displayImage(cv::Mat frame, const std::string window);
         void registerListener(std::function<void (cv::Mat, int)> listener);
-
-//        std::vector<std::tuple<int, cv::Mat>> frameList;
 
         // These are outdated, consider deprecating/removing.
         double getCapProp(int propId);
@@ -54,7 +54,7 @@ namespace Vision {
         int frameCount;
         void notifyListeners(cv::Mat update);
     };
-    std::tuple<float, float> pixel_to_rad(float x, float y, double fov_degrees, cv::Mat image);
+    std::tuple<float, float> pixel_to_rad(float x, float y, double fov_degrees, int w, int h);
 }
 
 #endif

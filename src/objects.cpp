@@ -1,16 +1,12 @@
 #include "objects.hpp"
-#include "botlocale/lidar.hpp"
 #include <math.h>
 #include <cmath>
 #include <opencv2/core/matx.hpp>
 #include <iostream>
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
-
 #define ZRAND (RAND - 0.5)
-
 #define VELOCITY_NOISE 1
-
 #define YAW_RATE_NOISE 0.005
 
 Pose::Pose() = default;
@@ -103,6 +99,8 @@ Pose &Pose::operator*(const float &other) {
 bool Pose::operator==(const Pose &other) {
     return (std::abs(this->x - other.x) < 3 && std::abs(this->y - other.y) < 3); // TODO tune this factor
 }
+
+
 
 Segment::Segment(double xi, double yi, double xf, double yf) {
     this->start = std::tuple<double, double>(xi, yi);

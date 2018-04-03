@@ -1,20 +1,19 @@
 #ifndef PROV_REMOTE_HPP
 #define PROV_REMOTE_HPP
 
-#include <string>
 
-class IRemote {
-protected:
-    std::string port;
+#include "objects.hpp"
+
+class Remote {
+private:
+    NT_Inst nt_inst;
 public:
-    IRemote(std::string port) : port(port) {};
-    virtual void run() = 0;
+    Remote(std::string address, unsigned int port);
+    Remote(unsigned int team, unsigned int port);
+
+    void put_poses(std::string location, std::vector<Pose>);
+    SensorData get_sensordata();
 };
 
-class RemoteSocket : public IRemote {
-public:
-    RemoteSocket(const std::string &port);
-    virtual void run();
-};
 
 #endif
