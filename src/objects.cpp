@@ -103,6 +103,8 @@ bool Pose::operator==(const Pose &other) {
     return (std::abs(this->x - other.x) < 3 && std::abs(this->y - other.y) < 3); // TODO tune this factor
 }
 
+
+
 Segment::Segment(double xi, double yi, double xf, double yf) {
     this->start = std::tuple<double, double>(xi, yi);
     this->end = std::tuple<double, double>(xf, yf);
