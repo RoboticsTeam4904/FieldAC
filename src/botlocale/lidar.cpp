@@ -88,9 +88,7 @@ void Lidar::run(const bool *stop) {
 //                if ((int) (angle + LIDAR_OFFSET) % 360 - 90 > 0 && (int) (angle + LIDAR_OFFSET) % 360 - 90 < 270) {
 //                    distance = -1;
 //                }
-                tmp.measurements[((int) (angle + LIDAR_OFFSET + 0.5f)) % 360] = std::make_tuple(
-                        ((int) (angle + LIDAR_OFFSET)) % 360,
-                        distance);
+                tmp.measurements[((int) (angle + LIDAR_OFFSET + 0.5f)) % 360] = std::make_tuple(((int) (angle + LIDAR_OFFSET)) % 360, distance);
 
 
 //                std::printf("%s theta: %03.2f Dist: %08.2f Q: %d\n",
@@ -190,33 +188,6 @@ struct SegmentComparator {
     }
 
     std::tuple<double, double> pos;
-};
-
-std::tuple<cv::Vec2f, float>
-LidarScan::calcOffset(LidarScan &prevScan, float prevYawDegrees, LidarScan &currScan, float currYawDegrees) {
-    cv::Vec2f prevCenter = cv::Vec2f(0, 0);
-    cv::Vec2f currCenter = cv::Vec2f(0, 0);
-    int goodMeaurements = 0;
-    for (int i = 0; i < 360; i++) {
-        auto prevX = cos((std::get<0>(prevScan.measurements[i]) - prevYawDegrees) * (M_PI / 180)) *
-                     std::get<1>(prevScan.measurements[i]);
-        auto prevY = sin((std::get<0>(prevScan.measurements[i]) - prevYawDegrees) * (M_PI / 180)) *
-                     std::get<1>(prevScan.measurements[i]);
-        auto currX = cos((std::get<0>(currScan.measurements[i]) - currYawDegrees) * (M_PI / 180)) *
-                     std::get<1>(currScan.measurements[i]);
-        auto currY = sin((std::get<0>(currScan.measurements[i]) - currYawDegrees) * (M_PI / 180)) *
-                     std::get<1>(currScan.measurements[i]);
-        if (std::get<1>(prevScan.measurements[i]) == 0) {
-            goodMeaurements++;
-        }
-        prevCenter += cv::Vec2f(prevX, prevY);
-        currCenter += cv::Vec2f(currX, currY);
-    }
-    prevCenter /= goodMeaurements;
-    currCenter /= goodMeaurements;
-    std::cout << prevCenter << " " << currCenter << currCenter - prevCenter << std::endl;
-    cv::Vec2f scanDiff = currCenter - prevCenter;
-    return std::make_tuple(scanDiff, currYawDegrees - prevYawDegrees);
 };
 
 std::tuple<cv::Vec2f, float> LidarScan::calcOffset(std::deque<LidarScan> scans) {

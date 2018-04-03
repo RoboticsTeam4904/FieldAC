@@ -1,4 +1,5 @@
 #include "cubetrack.hpp"
+#include "../vision.hpp"
 #include <thread>
 #include <sys/time.h>
 
@@ -52,6 +53,26 @@ namespace ObjectTracking {
             return;
         }
         this->track_optflow_queue.push(frameUpdate.clone());
+    }
+
+    std::vector<Pose> CubeTracker::get_objects() {
+        std::vector<Pose> objects;
+        this->optflow_targets_mutex.lock();
+        for(auto &target : this->optflow_targets) {
+            Pose objectPose;
+            auto angles = Vision::pixel_to_rad(target.x + (target.w / 2.0F), target.y + (target.h / 2.0F), 78, this->optflowFrame.cols,
+                                               this->optflowFrame.rows); // logitech c920 has 78 degree fov
+            if (i.w + i.h == 0 || std::get<1>(angles) > 63) {
+                continue;
+            }
+            float distance = (((float) CubeTracker::CUBE_SIZE) * Vision::Camera::FOCAL_LENGTH) / (0.5F * (target.h + target.w));
+            objectPose.dist = distance;
+            objectPose.relangle = std::get<0>(angles);
+            objectPose.probability = 0.5f + (target.prob / 2);
+            objects.push_back(objectPose);
+        }
+        this->optflow_targets_mutex.unlock();
+        return objects;
     }
 
 #pragma clang diagnostic push
@@ -186,8 +207,8 @@ namespace ObjectTracking {
                 for (size_t i = 0; opticalFlowBox.size() > i; i++) {
                     cv::Point2f point_next = features_next.at(i);
                     cv::Point2f point_prev = features_prev.at(i);
-                    auto dx = (point_next.x - point_prev.x) * drift_compensate;
-                    auto dy = (point_next.y - point_prev.y) * drift_compensate;
+                    auto dx = (point_next.x - point_prev.x) * DRIFT_COMPENSATE;
+                    auto dy = (point_next.y - point_prev.y) * DRIFT_COMPENSATE;
                     features_next[i].x = static_cast<float>(point_prev.x + dx);
                     features_next[i].y = static_cast<float>(point_prev.y + dy);
                     opticalFlowBox.at(i).x = static_cast<unsigned int>((point_prev.x + dx -
@@ -246,21 +267,17 @@ namespace ObjectTracking {
                 features_next.resize(j);
                 this->draw_boxes(optflowFrame, opticalFlowBox, cv::Scalar(50, 200, 50));
                 this->draw_boxes(optflowFrame, this->targets, cv::Scalar(50, 50, 200));
+                optflow_targets_mutex.lock();
                 optflow_targets = opticalFlowBox;
+                optflow_targets_mutex.unlock();
                 std::cout << optflowFrame.rows << "," << optflowFrame.cols << std::endl;
                 optflowWriter.write(optflowFrame);
             }
 
         }
-
-
-        // TODO: C++ thrashed me and wouldn't let me check if the past targets were equal.
-        // TODO: Hopefully I don't prank myself and someone else in the future fixes this
-        // TODO: In all honestly it will probably be me though.
     }
 
-    std::vector<bbox_t>
-    CubeTracker::extrapolate_bbox_through_queue(std::vector<bbox_t> original_bbox, std::queue<cv::Mat> track_queue) {
+    std::vector<bbox_t> CubeTracker::extrapolate_bbox_through_queue(std::vector<bbox_t> original_bbox, std::queue<cv::Mat> track_queue) {
         if (original_bbox.empty()) {
             return original_bbox;
         }
@@ -294,7 +311,6 @@ namespace ObjectTracking {
             std::vector<unsigned char> status;
             std::vector<float> err;
 
-
             cv::calcOpticalFlowPyrLK(
                     current_frame, next_frame, // 2 consecutive images
                     features_prev, // input point positions in first im
@@ -316,8 +332,8 @@ namespace ObjectTracking {
             for (size_t i = 0; i < original_bbox.size(); i++) {
                 cv::Point2f point_next = features_next.at(i);
                 cv::Point2f point_prev = features_prev.at(i);
-                auto dx = (point_next.x - point_prev.x) * drift_compensate;
-                auto dy = (point_next.y - point_prev.y) * drift_compensate;
+                auto dx = (point_next.x - point_prev.x) * DRIFT_COMPENSATE;
+                auto dy = (point_next.y - point_prev.y) * DRIFT_COMPENSATE;
                 features_next[i].x = static_cast<float>(point_prev.x + dx);
                 features_next[i].y = static_cast<float>(point_prev.y + dy);
                 opticalFlowBox.at(i).x = static_cast<unsigned int>((point_prev.x + dx -

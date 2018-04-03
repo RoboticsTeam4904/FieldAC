@@ -8,6 +8,8 @@
 
 namespace Vision {
     class Camera {
+    public:
+        static const float FOCAL_LENGTH = 0.367;
     private:
         mutable std::mutex frameMutex;
         mutable std::mutex listenersMutex;

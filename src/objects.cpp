@@ -5,11 +5,8 @@
 #include <iostream>
 
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
-
 #define ZRAND (RAND - 0.5)
-
 #define VELOCITY_NOISE 1
-
 #define YAW_RATE_NOISE 0.005
 
 Pose::Pose() = default;

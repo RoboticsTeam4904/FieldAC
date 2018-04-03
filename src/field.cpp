@@ -1,6 +1,7 @@
 // FieldAC
 #include "vision.hpp"
 #include "field.hpp"
+#include "botlocale/lidar.hpp"
 // STD
 #include <chrono>
 #include <thread>
@@ -14,20 +15,13 @@
 #include <vector>
 // OpenCV
 #include <opencv/cv.hpp>
-// WPISUITE
-#include <ntcore.h>
-#include <networktables/NetworkTable.h>
 
-#define PI 3.14159265
-#define NETWORKTABLES_PORT 1735
 #define FT(CM) (CM * 0.0328084)
-#define TEAM_NUMBER 4904
 #define FOCAL_LENGTH 0.367
 #define CUBE_SIZE 31.3
 #define DEGRADATION_AMOUNT 0.05
 #define RAND (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))
 #define ZRAND RAND -0.5
-
 
 #define IMU_TO_CM_S2 980.6649999788 // Gs to cm/s^2
 
@@ -42,7 +36,28 @@ Field *Field::getInstance() {
     return instance;
 }
 
-void Field::update(std::vector<bbox_t> cubeTargets) {
+void Field::update(std::vector<Pose> targetObjects) {
+    this->objects_mutex.lock();
+    this->objects.clear();
+    std::move(targetObjects.begin(), targetObjects.end(), this->objects.begin());
+    this->objects_mutex.unlock();
+}
+
+std::vector<Pose> Field::finalizeObjects() {
+    std::vector<Pose> cleanObjects;
+    this->objects_mutex.lock();
+    for(const Pose pose : this->objects) {
+        Pose cleanPose;
+        cleanPose.x = Field::CM_TO_FT(this->field_width - pose.x);
+        cleanPose.y = Field::CM_TO_FT(this->field_height - pose.y);
+        cleanPose.dist = Field::CM_TO_FT(pose.dist);
+        cleanPose.relangle = pose.relangle * 180 / M_PI;
+        cleanObjects.push_back(cleanPose);
+    }
+    this->objects_mutex.unlock();
+    bool (*sortPred)(Pose, Pose) = [](Pose a, Pose b) { return a.dist > b.dist; };
+    std::sort(cleanObjects.begin(), cleanObjects.end(), sortPred);
+    return cleanObjects;
 }
 
 #pragma clang diagnostic push
@@ -54,29 +69,41 @@ void Field::run() {
         while (this->objects.empty() || !this->isReady) {
             continue;
         }
-        this->old_data = latest_data;
+        this->data_prev = data_curr;
 //        this->get_sensor_data();
 //        std::printf("got sensor data\n");
         // TODO not sure which accel is forward or lateral
         std::clock_t start = std::clock();
         bool lidarIsReady = true;
-//        for (auto &p : pose_distribution) {
-//            p.yaw = static_cast<float>(0);
-//        }
-//        this->scan_mutex.lock();
-//        BotLocale::step(pose_distribution, old_data, latest_data, lidar_scans);
-//        render();
-//        this->scan_mutex.unlock();
-//        int ms = (std::clock() - start) / (double) (CLOCKS_PER_SEC * 2.7 / 1000);
-//        int fps = 1000 / (ms + 1);
-//        std::cout << "Stepped in " << ms << "ms (" << fps << " hz)" << std::endl;
-//        this->scan_mutex.lock();
-//        me = BotLocale::get_best_pose(pose_distribution, this->lidar_scans.back());
-//        this->scan_mutex.unlock();
-//        me.yaw = static_cast<float>((latest_data.yaw + me.yaw) / 2);
-//        std::printf("got best pose (%f, %f) at %f degrees moving (%f, %f) and turning %f\n", me.x, me.y,
-//                    me.yaw * 180 / PI, me.dx, me.dy, me.rateYaw * 180 / PI);
     }
+}
+
+void Field::render() {
+    cv::Mat img(field_height, field_width, CV_8UC3, cv::Scalar(255, 255, 255));
+    int robotRadius = 20;
+    int middle_x = img.cols / 2;
+    int middle_y = img.rows / 2;
+
+    cv::rectangle(img, cv::Rect(cv::Point2f(self.x - robotRadius / 2, self.y - robotRadius / 2),
+                                cv::Size(robotRadius, robotRadius)), cv::Scalar(0, 0, 0), 20);
+    cv::line(img, cv::Point(self.x, self.y),
+             cv::Point2f(static_cast<float>(self.x + (cos(self.yaw - (M_PI / 2)) * robotRadius * 2)),
+                         static_cast<float>(self.y + (sin(self.yaw - (M_PI / 2)) * robotRadius * 2))),
+             cv::Scalar(0, 0, 0),
+             3
+    );
+    for (auto &line : this->construct) {
+        cv::line(img, tuple_to_point(line.start), tuple_to_point(line.end), cv::Scalar(0, 0, 0), 3);
+    }
+    for (auto &i : this->objects) {
+        cv::circle(img, cv::Point2f(i.x, i.y), static_cast<int>(i.probability * i.probability * 20),
+                   cv::Scalar(20, 190, 190), -1);
+    }
+
+    cv::rotate(img, img, cv::ROTATE_90_CLOCKWISE);
+
+    this->renderMat = img;
+    this->renderWriter.write(renderMat);
 }
 
 void Field::load() {
@@ -141,19 +168,9 @@ void Field::load() {
 
     std::printf("Field generated.\n\tNumber of segments: %lu\n\tSize: %f x %f\n", construct.size(), field_height,
                 field_width);
-    me.x = 0;
-    me.y = 0;
-    me.yaw = 0; // forward/up
-//    auto randomized = BotLocale::init();
-//    for (int i = 0; i < SAMPLES; ++i) {
-//        pose_distribution[i] = randomized[i];
-//    }
-
-    time_t seconds;
-    time(&seconds);
-    std::stringstream ss;
-    ss << seconds;
-    std::string ts = ss.str();
+    self.x = 0;
+    self.y = 0;
+    self.yaw = 0;
 }
 
 #pragma clang diagnostic pop

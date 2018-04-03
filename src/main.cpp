@@ -33,7 +33,10 @@ static const char* params =
         "{ net_save |        | [Network] Detection output file. Shows what the network detects }"
         "{ net_cfd  | 0.5    | [Network] Minimum identification confidence threshold           }"
         "{ ldr_dev  |        | [LIDAR] Path to the *nix device (eg. /dev/ttyUSB0)              }"
-        "{ ldr_baud | 115200 | [LIDAR] Baudrate for serial communications                      }";
+        "{ ldr_baud | 115200 | [LIDAR] Baudrate for serial communications                      }"
+        "{ nt_team  | 4904   | [NetworkTables] Team Number used for determining connection     }"
+        "{ nt_port  | 1735   | [NetworkTables] Port that server is listening on                }"
+        "{ nt_addr  |        | [NetworkTables] Address of server. Prioritized over team if set }";
 
 int main(int argc, const char **argv) {
     cv::CommandLineParser parser(argc, argv, params);
@@ -123,7 +126,7 @@ int main(int argc, const char **argv) {
         if (ctrl_c_pressed){
             break;
         }
-        field->update(cubeTracker->optflow_targets);
+        field->update(cubeTracker->get_objects());
 //        field->update(lidar->current_scan);
 
 //        defaultDev->displayImage(field->renderedImage, "Field");
