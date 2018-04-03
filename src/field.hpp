@@ -7,7 +7,6 @@
 #include <tuple>
 #include <map>
 // Darknet
-#include <yolo_v2_class.hpp>
 #include <opencv2/opencv.hpp>
 // FieldAC
 #include "objects.hpp"
